@@ -22,6 +22,13 @@
           "quote": "The price of a 20-cigarette pack varies significantly across U.S. states and localities",
           "fetched": true,
           "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Tobacco Insider, USA: Cigarette Prices (posted 26 Aug 2026)",
+          "url": "https://tobaccoinsider.com/usa-cigarette-prices/",
+          "quote": "The sales volume-weighted average cigarette price in the USA is approximately $9.95",
+          "fetched": true,
+          "fetchedOn": "2026-11-21"
         }
       ],
       "check": {
@@ -44,6 +51,30 @@
           "quote": "average unit prices increased 165.7% from US$8.49 to US$14.07",
           "fetched": true,
           "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Diaz MC, Silver NA, Bertrand A, Schillo BA (2025). Bigger, stronger and cheaper: growth in e-cigarette market driven by disposable devices. Tobacco Control 34(1):65-70.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/37536928/",
+          "pmid": "37536928",
+          "quote": "We estimate that our data captures approximately 61% of the market in 2021",
+          "fetched": true,
+          "fetchedOn": "2026-11-21"
+        },
+        {
+          "cite": "Diaz MC, Silver NA, Bertrand A, Schillo BA (2025). Bigger, stronger and cheaper: growth in e-cigarette market driven by disposable devices. Tobacco Control 34(1):65-70.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/37536928/",
+          "pmid": "37536928",
+          "quote": "the 4-week period ending 3 September 2022",
+          "fetched": true,
+          "fetchedOn": "2026-11-21"
+        },
+        {
+          "cite": "Diaz MC, Silver NA, Bertrand A, Schillo BA (2025). Bigger, stronger and cheaper: growth in e-cigarette market driven by disposable devices. Tobacco Control 34(1):65-70.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/37536928/",
+          "pmid": "37536928",
+          "quote": "Our data do not capture sales of online or independently owned vape shops",
+          "fetched": true,
+          "fetchedOn": "2026-11-21"
         }
       ],
       "check": {
@@ -56,7 +87,7 @@
       "id": "pouches",
       "one": "can of pouches",
       "many": "cans of pouches",
-      "defaultPriceUsd": 5.64,
+      "defaultPriceUsd": 5.69,
       "defaultMinutesPerUnit": null,
       "priceRefs": [
         {
@@ -65,6 +96,20 @@
           "quote": "$5.64. That is how much the Manufacturer’s Suggested Retail Price (MSRP) is for a can of ZYN in the USA.",
           "fetched": true,
           "fetchedOn": "2026-11-18"
+        },
+        {
+          "cite": "Tobacco Insider, How much are Zyns? (September 2025 update)",
+          "url": "https://tobaccoinsider.com/how-much-are-zyns/",
+          "quote": "although the Manufacturer’s Suggested Retail Price (MSRP) remains at $5.69",
+          "fetched": true,
+          "fetchedOn": "2026-11-21"
+        },
+        {
+          "cite": "Tobacco Insider, How much are Zyns? (posted 12 Sep 2025)",
+          "url": "https://tobaccoinsider.com/how-much-are-zyns/",
+          "quote": "$3.49 for a single can purchase",
+          "fetched": true,
+          "fetchedOn": "2026-11-21"
         }
       ],
       "check": {

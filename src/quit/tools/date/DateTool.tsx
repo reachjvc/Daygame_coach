@@ -114,11 +114,21 @@ function Screens({ addiction, units, steps, course, courseNote, bb }: InnerProps
   const { screen, go, back: goBack, isResult } = useScreens(first, list.length, state !== null && rec.ready)
   useDoneCount(addiction, "date", state !== null && isResult)
 
-  // A saved unit in the shared record shows again when the answers are changed.
+  // The shared record is the truth for the numbers: when this screen opens, and whenever the record's unit changes, its
+  // numbers fill the answers here. The answers are written back only when he changes them on the "use" screen, so an
+  // older copy kept in this tool's own state never replaces numbers set elsewhere (What it costs you).
+  const syncedUnit = useRef<string | null>(null)
   useEffect(() => {
-    if (!state || !rec.ready || state.unitId !== null || !rec.record.unit) return
+    if (!state || !rec.ready || !rec.record.unit) return
     const u = rec.record.unit
-    update((s) => (s.unitId !== null ? s : { ...s, unitId: u.id, perDay: u.perDay === null ? "" : countText(u.perDay), price: String(u.priceUsd), priceTouched: u.priceBasis === "typed" }))
+    const sig = JSON.stringify(u)
+    if (syncedUnit.current === sig) return
+    syncedUnit.current = sig
+    const perDay = u.perDay === null ? "" : countText(u.perDay)
+    const price = String(u.priceUsd)
+    const priceTouched = u.priceBasis === "typed"
+    if (state.unitId === u.id && state.perDay === perDay && state.price === price && state.priceTouched === priceTouched) return
+    update((s) => ({ ...s, unitId: u.id, perDay, price, priceTouched }))
   }, [state, rec.ready, rec.record.unit, update])
 
   if (!state || !rec.ready) return null

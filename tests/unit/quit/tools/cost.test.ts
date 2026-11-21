@@ -8,7 +8,9 @@ import {
   formatCents,
   formatCount,
   formatPrice,
+  countIsClean,
   importOldCost,
+  packPriceFor,
   parseCost,
   parseCount,
   parsePackSize,
@@ -25,7 +27,7 @@ import { makeValid } from "../fixtures/valid"
 const UNITS = [
   { id: "cigarettes", defaultPriceUsd: 0.52 },
   { id: "vape", defaultPriceUsd: 14.07 },
-  { id: "pouches", defaultPriceUsd: 5.64 },
+  { id: "pouches", defaultPriceUsd: 5.69 },
 ]
 
 describe("computeCost", () => {
@@ -60,7 +62,7 @@ describe("computeCost", () => {
     expect(f.tenCents).toBe(27_110)
   })
   it("a day is the year divided by 365, a month the year divided by 12", () => {
-    for (const [n, p] of [[3, 7.5], [0.5, 14.07], [2 / 7, 5.64], [499, 999]] as const) {
+    for (const [n, p] of [[3, 7.5], [0.5, 14.07], [2 / 7, 5.69], [499, 999]] as const) {
       const f = computeCost(n, p)
       expect(f.dayCents).toBe(Math.round(f.yearCents / 365))
       expect(f.monthCents).toBe(Math.round(f.yearCents / 12))
@@ -141,7 +143,7 @@ describe("reading the form", () => {
 describe("saved state", () => {
   it("anything but the v2 shape is the empty state", () => {
     for (const j of [null, undefined, 5, "x", [], {}, { unit: "cigarettes", perDay: 20, daysPerWeek: 5, price: "0.60" }, { v: 1 }]) expect(parseCost(j)).toEqual(EMPTY_COST)
-    expect(parseCost({ v: 2, priceMode: "one", packSize: 25, countMode: "week" })).toEqual({ v: 2, priceMode: "one", packSize: 25, countMode: "week", lastByUnit: {} })
+    expect(parseCost({ v: 2, priceMode: "one", packSize: 25, countMode: "week" })).toEqual({ v: 2, priceMode: "one", packSize: 25, countMode: "week", lastByUnit: {}, packPrice: null })
     expect(parseCost({ v: 2, priceMode: "x", packSize: 0, countMode: 3 })).toEqual(EMPTY_COST)
   })
   it("lastByUnit keeps usable numbers per unit and drops the rest", () => {
@@ -159,6 +161,30 @@ describe("saved state", () => {
     expect(usableUnit({ ...u, priceUsd: -1 })).toBeNull()
     expect(usableUnit({ ...u, perDay: 501 })).toEqual({ ...u, perDay: null })
     expect(usableUnit({ ...u, perDay: null })).toEqual({ ...u, perDay: null })
+  })
+})
+
+describe("pack price and clean counts", () => {
+  it("a $7 pack of 3 comes back as 7, not 6.9999; a changed size falls back to price x size", () => {
+    const one = price4(7 / 3)
+    expect(one).toBe(2.3333)
+    expect(packPriceFor(one, 3, 7)).toBe(7)
+    expect(packPriceFor(one, 3, null)).toBe(7) // rounds to the cent
+    expect(packPriceFor(0.35, 20, 7)).toBe(7)
+    expect(packPriceFor(0.35, 25, 7)).toBe(8.75) // typed pack price no longer matches this size
+    expect(packPriceFor(0.52, 20, 10.4)).toBe(10.4)
+  })
+  it("the saved pack price is kept, checked and dropped when unusable", () => {
+    expect(parseCost({ v: 2, packPrice: 7 }).packPrice).toBe(7)
+    expect(parseCost({ v: 2, packPrice: -1 }).packPrice).toBeNull()
+    expect(parseCost({ v: 2, packPrice: 5000 }).packPrice).toBeNull()
+    expect(parseCost({ v: 2, packPrice: "7" }).packPrice).toBeNull()
+  })
+  it("a count is clean when it shows exactly as stored", () => {
+    expect(countIsClean(10)).toBe(true)
+    expect(countIsClean(2.5)).toBe(true)
+    expect(countIsClean(10 / 7)).toBe(false)
+    expect(countIsClean((10 / 7) * 7)).toBe(true)
   })
 })
 

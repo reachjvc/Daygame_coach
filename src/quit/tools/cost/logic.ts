@@ -20,9 +20,11 @@ export interface CostState {
   countMode: CountMode | null
   /** The numbers last used per unit, so tapping Vape and back to Cigarettes gives the cigarette numbers back. */
   lastByUnit: Record<string, { perDay: number | null; priceUsd: number; priceBasis: RecordUnit["priceBasis"] }>
+  /** The pack price he typed (a $7 pack of 3 reopens as 7, not 6.9999). Used only while pack × size still gives the saved price of one. */
+  packPrice: number | null
 }
 
-export const EMPTY_COST: CostState = { v: 2, priceMode: "pack", packSize: DEFAULT_PACK_SIZE, countMode: null, lastByUnit: {} }
+export const EMPTY_COST: CostState = { v: 2, priceMode: "pack", packSize: DEFAULT_PACK_SIZE, countMode: null, lastByUnit: {}, packPrice: null }
 
 function parseLast(x: unknown): CostState["lastByUnit"] {
   const out: CostState["lastByUnit"] = {}
@@ -43,6 +45,7 @@ export function parseCost(x: unknown): CostState {
     packSize: pickInt(x.packSize, 1, MAX_PACK_SIZE, DEFAULT_PACK_SIZE),
     countMode: pickOne(x.countMode, ["day", "week"] as const, null),
     lastByUnit: parseLast(x.lastByUnit),
+    packPrice: typeof x.packPrice === "number" && Number.isFinite(x.packPrice) && x.packPrice >= 0 && x.packPrice <= MAX_PRICE ? x.packPrice : null,
   }
 }
 
@@ -90,6 +93,18 @@ export function usableUnit(u: RecordUnit | null): RecordUnit | null {
 
 /** Prices of one are kept to 4 decimals (a $7 pack of 3 is $2.3333), so no long float reaches the other tools. */
 export const price4 = (n: number) => Math.round(Number((n * 10_000).toPrecision(12))) / 10_000
+
+/**
+ * The pack price to show: the one he typed, while it still gives the saved price of one at this pack size;
+ * otherwise price of one × size, to the cent.
+ */
+export function packPriceFor(priceUsd: number, size: number, typedPack: number | null): number {
+  if (typedPack !== null && Math.abs(price4(typedPack / size) - priceUsd) < 1e-9) return typedPack
+  return Math.round(priceUsd * size * 100) / 100
+}
+
+/** True when a count shows exactly as it is stored (4 decimals), so a line written with it adds up by hand. */
+export const countIsClean = (n: number): boolean => Math.abs(Number(n.toFixed(4)) - n) < 1e-9
 
 /** The yearly cost the coaching page shows, from the shared record's stored value; null without a count or a price. */
 export function yearlyCostFromRecord(stored: unknown): number | null {
