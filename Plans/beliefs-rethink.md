@@ -311,3 +311,6 @@ ok → 5 agents at once, busy → 4, game → 1. The emulator is stopped after e
 - Screens not seen are written down as "not seen", never invented.
 - Downloaded files go in their own folder and are never run.
 - Stop the emulator when done.
+
+## Round 3
+Planned 2026-11-21 (proposed): `Plans/beliefs-rethink-r3.md` (about 25 tools, a belief list page, same look page).
