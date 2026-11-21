@@ -40,10 +40,47 @@ async function heightOf(locator: Locator): Promise<number> {
 /** One wheel of a drum set, by what a screen reader calls it: "Start hour", "Hour", "Day" */
 const wheel = (scope: Locator, name: string) => scope.getByRole('listbox', { name, exact: true })
 
-/** Turn a wheel to the item with this text, as a thumb does: tap it */
+/**
+ * Turn a wheel to the item with this text, as a thumb does. An item next to the
+ * value is on screen: the thumb taps it, at the spot it is drawn, and nothing
+ * scrolls. An item further off is not on screen: the thumb flicks the wheel
+ * until it is in the band. Each is one gesture, one count.
+ *
+ * Not `locator.tap()`: it scrolls the item into view first, and on a wheel a
+ * scroll IS a choice. Under load WebKit's snapping kept moving the wheel while
+ * Playwright's retries scrolled it again (each retry with another alignment),
+ * so the wheel landed one item off and the value was not the one tapped
+ * (nightly E2E 44898862680, phone 2/2: "Start minute did not land on 30").
+ */
 async function turnTo(taps: Taps, scope: Locator, name: string, text: string): Promise<void> {
-  const option = wheel(scope, name).getByRole('option', { name: text, exact: true })
-  await taps.on(option)
+  const drum = wheel(scope, name)
+  const option = drum.getByRole('option', { name: text, exact: true })
+  await expect(option).toBeAttached()
+  taps.count++
+  const near = await option.evaluate((item) => {
+    const box = item.getBoundingClientRect()
+    const drumBox = (item.parentElement as HTMLElement).getBoundingClientRect()
+    return box.top >= drumBox.top - 1 && box.bottom <= drumBox.bottom + 1
+  })
+  if (near) {
+    // where it is drawn, once the sheet and the wheel have stopped moving
+    let box = await option.boundingBox()
+    await expect
+      .poll(async () => {
+        const before = box
+        box = await option.boundingBox()
+        return JSON.stringify(box) === JSON.stringify(before)
+      })
+      .toBe(true)
+    expect(box, `${name} ${text} is not on screen`).not.toBeNull()
+    await option.page().touchscreen.tap(box!.x + box!.width / 2, box!.y + box!.height / 2)
+  } else {
+    // a flick that comes to rest with the item in the band
+    await option.evaluate((item) => {
+      const scroller = item.parentElement as HTMLElement
+      scroller.scrollTop = (item as HTMLElement).offsetTop - (scroller.clientHeight - (item as HTMLElement).offsetHeight) / 2
+    })
+  }
   await expect(option, `${name} did not land on ${text}`).toHaveAttribute('aria-selected', 'true')
 }
 
@@ -93,6 +130,8 @@ const liveOnAccount = async (page: Page) => (await pullEntries(page)).filter((e)
  * would find there, an entry from yesterday.
  */
 async function placeOnAccount(page: Page, description: string, startedAt: string, stoppedAt: string | null): Promise<void> {
+  // the entry was just made on this phone: wait until the account has it, or there is nothing there to move
+  await expect.poll(async () => (await liveOnAccount(page)).some((e) => e.description === description), { timeout: 20_000 }).toBe(true)
   const row = (await liveOnAccount(page)).find((e) => e.description === description)
   expect(row, `no "${description}" on the account to move`).toBeDefined()
   const moved = {

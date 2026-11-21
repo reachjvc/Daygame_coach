@@ -204,7 +204,13 @@ test.describe("what you'll feel, and when @phone", () => {
 
   test("9 no console error, no sideways scroll, tap targets, the menu row opens it", async ({ page }) => {
     const errors: string[] = []
-    page.on("console", (m) => m.type() === "error" && errors.push(m.text()))
+    // WebKit reports a prefetch that a navigation cancels as a console error, "Fetch API
+    // cannot load …?_rsc=… due to access control checks" (nightly E2E 44800384257 and
+    // 44898862680, phone 2/2). Here `open` reloads the page, and the reload cancels the
+    // prefetches of its links to /quit and /quit/nicotine. That is the test's own
+    // navigation, not the page; every other console error still counts.
+    const cancelledPrefetch = /[?&]_rsc=.*due to access control checks/
+    page.on("console", (m) => m.type() === "error" && !cancelledPrefetch.test(m.text()) && errors.push(m.text()))
     page.on("pageerror", (e) => errors.push(e.message))
     await open(page, { run: -4 })
     await noSideways(page)
@@ -224,13 +230,6 @@ test.describe("what you'll feel, and when @phone", () => {
     expect(errors).toEqual([])
     // the menu row opens it
     await page.goto(quitUrl("/quit/nicotine"))
-    // Leaving a page cancels the prefetches it still had open (its links to
-    // /quit and /quit/nicotine), and WebKit reports each one as a console
-    // error, "Fetch API cannot load …?_rsc=… due to access control checks"
-    // (nightly E2E 44800384257, phone 2/2). That is this test's own goto, not
-    // the page: the tool page was checked clean just above, and errors count
-    // again from the menu's load on.
-    errors.length = 0
     await page.getByRole("link", { name: /What you'll feel, and when/ }).click()
     await expect(page).toHaveURL(/\/quit\/nicotine\/symptoms/)
     await expect(page.getByTestId("day-card")).toBeVisible()
