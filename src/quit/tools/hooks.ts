@@ -84,6 +84,14 @@ function subscribeAddress(onChange: () => void) {
 }
 const readAddress = () => window.location.search
 const readNoAddress = () => null
+/**
+ * How many entries a tool's visit has pushed behind the one shown. Each entry `go` pushes carries it in its history
+ * state (`qd`), so it is right after Back, Forward and a reload, and an entry reached by any of them knows its place.
+ */
+const depthOf = (): number => {
+  const d = (window.history.state as { qd?: unknown } | null)?.qd
+  return typeof d === "number" && Number.isInteger(d) && d > 0 && d < 200 ? d : 0
+}
 const addressMoved = () => window.dispatchEvent(new Event(ADDRESS_MOVED))
 
 /**
@@ -91,7 +99,7 @@ const addressMoved = () => window.dispatchEvent(new Event(ADDRESS_MOVED))
  * A missing or out-of-range `s` lands on the first unanswered screen.
  * Screen `total + 1` is the result.
  */
-export function useScreens(firstUnanswered: number, total: number, ready = true) {
+export function useScreens(firstUnanswered: number, total: number, ready = true, resultShown?: boolean) {
   const pathname = usePathname()
   const sp = useSearchParams()
   // The screen comes from the address bar itself, not from Next's copy of it. After a reload, each browser Back
@@ -99,7 +107,9 @@ export function useScreens(firstUnanswered: number, total: number, ready = true)
   // when it landed (address `?s=1`, screen 2 still drawn). The server render and the first client render use
   // Next's copy, which is the same address then.
   const search = useSyncExternalStore(subscribeAddress, readAddress, readNoAddress)
-  const screen = clampScreen((search === null ? sp : new URLSearchParams(search)).get("s"), firstUnanswered, total)
+  // A tool that draws its result whatever the address says (a stale `?s=N` from a Forward) passes `resultShown`; passing it
+  // (true or false) also turns on the address rewrite below.
+  const screen = resultShown === true ? total + 1 : clampScreen((search === null ? sp : new URLSearchParams(search)).get("s"), firstUnanswered, total)
 
   const hrefFor = useCallback(
     (n: number | null) => {
@@ -111,10 +121,35 @@ export function useScreens(firstUnanswered: number, total: number, ready = true)
     },
     [pathname],
   )
+  // An entry reached by Back, Forward or a reload can carry an `s` that is not the screen shown (a result, or a
+  // screen the saved answers no longer reach). It is rewritten, in place, to the address of what is shown. This
+  // runs on those moves only, never on the tool's own `go`, which changes address and answers in one transition.
+  const latest = useRef({ firstUnanswered, total, ready, resultShown })
+  latest.current = { firstUnanswered, total, ready, resultShown }
+  useEffect(() => {
+    if (latest.current.resultShown === undefined) return
+    const fix = () => {
+      const l = latest.current
+      if (!l.ready) return
+      const raw = new URLSearchParams(window.location.search).get("s")
+      if (raw === null) return
+      const want = l.resultShown ? null : clampScreen(raw, l.firstUnanswered, l.total)
+      if (want !== null && String(want) === raw) return
+      window.history.replaceState({ qd: depthOf() }, "", hrefFor(want))
+      addressMoved()
+    }
+    window.addEventListener("popstate", fix)
+    if (ready) fix()
+    return () => window.removeEventListener("popstate", fix)
+    // `fix` reads the latest values from the ref; it runs again only when the saved answers are first read.
+  }, [ready, hrefFor])
   // The screens of the history entries made in this visit, and where we are in them.
   // It starts only once the saved answers are read: before that the screen is a guess,
   // and a wrong first entry made Back step into an entry that showed the same screen twice.
   const trail = useRef<{ stack: number[]; idx: number } | null>(null)
+  // Bumped when the trail is dropped, so it starts again at the screen then shown even if that screen did not change
+  // (a result that is drawn whatever the address says stays the same screen while the visit's entries are walked back).
+  const [trailKey, setTrailKey] = useState(0)
   useEffect(() => {
     if (!ready) return
     const t = trail.current
@@ -129,7 +164,7 @@ export function useScreens(firstUnanswered: number, total: number, ready = true)
       t.stack = [...t.stack.slice(0, t.idx + 1), screen]
       t.idx += 1
     }
-  }, [screen, ready])
+  }, [screen, ready, trailKey])
 
   // A new screen takes focus, so a keyboard or screen-reader reader starts at its top.
   const shown = useRef<number | null>(null)
@@ -151,14 +186,14 @@ export function useScreens(firstUnanswered: number, total: number, ready = true)
   // Native history calls: Next syncs useSearchParams with them and no server round trip is needed.
   const go = useCallback(
     (n: number) => {
-      window.history.pushState(null, "", hrefFor(n))
+      window.history.pushState({ qd: depthOf() + 1 }, "", hrefFor(n))
       addressMoved()
     },
     [hrefFor],
   )
   const reset = useCallback(() => {
     trail.current = { stack: [1], idx: 0 }
-    window.history.replaceState(null, "", hrefFor(null))
+    window.history.replaceState({ qd: depthOf() }, "", hrefFor(null))
     addressMoved()
   }, [hrefFor])
   /** Like the browser's Back: steps back in history when the previous screen is the previous entry, else rewrites this entry. Never adds one. */
@@ -171,20 +206,21 @@ export function useScreens(firstUnanswered: number, total: number, ready = true)
       return
     }
     t.stack[t.idx] = prev
-    window.history.replaceState(null, "", hrefFor(prev))
+    window.history.replaceState({ qd: depthOf() }, "", hrefFor(prev))
     addressMoved()
   }, [screen, hrefFor])
   /** How many history entries this visit has added behind the one shown. */
-  const depth = useCallback(() => trail.current?.idx ?? 0, [])
+  const depth = useCallback(() => depthOf(), [])
   /**
    * Ends the visit's trail: goes back over every entry the visit added (`extra` more from before a reload) and
    * rewrites the entry it lands on to the plain address, so one browser Back from there leaves the tool.
    */
   const settle = useCallback(
-    (extra = 0) => {
-      const steps = depth() + extra
+    () => {
+      const steps = depth()
       if (steps <= 0) {
         trail.current = null
+        setTrailKey((k) => k + 1)
         window.history.replaceState(null, "", hrefFor(null))
         return
       }
@@ -194,6 +230,7 @@ export function useScreens(firstUnanswered: number, total: number, ready = true)
         window.history.replaceState(null, "", plain)
         // the entry we landed on is the new start of the trail
         trail.current = null
+        setTrailKey((k) => k + 1)
       }
       window.addEventListener("popstate", onPop)
       window.history.go(-steps)

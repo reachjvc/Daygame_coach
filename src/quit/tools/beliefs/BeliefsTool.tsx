@@ -1,6 +1,6 @@
 "use client"
 
-import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { startTransition, useCallback, useMemo, useRef, useState } from "react"
 import { OneQuestion, PrimaryButton } from "../../components/kit"
 import { fill, tooltext as t } from "../../tooltext"
 import type { QuitBand, QuitBelief, QuitFact, QuitNeed, ToolProps } from "../../types"
@@ -52,23 +52,6 @@ interface InnerProps {
 
 const RATING_WORDS = t.beliefs.ratings
 
-const DEPTH_KEY = "quit-lies-depth"
-
-/**
- * History entries this tab's visit has added, written as `{ d, l }` with the history length at the time.
- * A reload (or a remount) finds the same length and carries the count on; a new visit pushed an entry, so the
- * length differs and it starts at 0.
- */
-function carriedDepth(): number {
-  try {
-    const raw = JSON.parse(window.sessionStorage.getItem(DEPTH_KEY) ?? "null") as { d?: unknown; l?: unknown } | null
-    const d = raw?.d
-    return typeof d === "number" && Number.isInteger(d) && d > 0 && d < 200 && raw?.l === window.history.length ? d : 0
-  } catch {
-    return 0
-  }
-}
-
 function Inner({ addiction, present, beliefs, facts, bands, needs }: InnerProps) {
   const ids = useMemo(() => beliefs.map((b) => b.id), [beliefs])
   const parse = useCallback((x: unknown) => parseFull(x, ids), [ids])
@@ -84,26 +67,10 @@ function Inner({ addiction, present, beliefs, facts, bands, needs }: InnerProps)
   const total = list.length
   const showResult = state !== null && draft === null && results.length > 0
   const first = !state ? 1 : draft ? firstUnansweredScreen(draft, beliefs, facts) : results.length > 0 ? total + 1 : 1
-  const { screen, go, back: goBack, depth, settle } = useScreens(first, total, state !== null)
+  const { screen, go, back: goBack, settle } = useScreens(first, total, state !== null, showResult)
   useDoneCount(addiction, "beliefs", showResult)
-  // Entries a reload left behind: the trail restarts at a reload, the history does not.
-  const carried = useRef<number | null>(null)
-  useEffect(() => {
-    if (carried.current === null) carried.current = carriedDepth()
-  }, [])
-  useEffect(() => {
-    try {
-      window.sessionStorage.setItem(DEPTH_KEY, JSON.stringify({ d: depth() + (carried.current ?? 0), l: window.history.length }))
-    } catch {
-      // storage blocked: Back after a reload may stop on an old screen
-    }
-  }, [screen, depth])
   /** Leaves the visit's history entries behind, so one browser Back goes to where he was before the test. */
-  const leave = () => {
-    const extra = carried.current ?? 0
-    carried.current = 0
-    settle(extra)
-  }
+  const leave = settle
 
   if (!state) return null
 
@@ -167,10 +134,10 @@ function Inner({ addiction, present, beliefs, facts, bands, needs }: InnerProps)
         <div data-testid="stop-confirm" role="alertdialog" aria-label={t.beliefs.stopAsk} className="flex flex-col gap-2 rounded-md border border-border bg-card p-3">
           <p>{t.beliefs.stopAsk}</p>
           <div className="grid grid-cols-2 gap-2">
-            <button type="button" data-testid="stop-yes" onClick={stop} className="min-h-12 rounded-md border border-border">
+            <button type="button" data-testid="stop-yes" onClick={stop} className="min-h-12 rounded-md border border-border text-base font-medium">
               {t.beliefs.stopYes}
             </button>
-            <button type="button" data-testid="stop-no" onClick={() => setConfirmStop(false)} className="min-h-12 rounded-md bg-primary text-primary-foreground">
+            <button type="button" data-testid="stop-no" onClick={() => setConfirmStop(false)} className="min-h-12 rounded-md bg-primary text-base font-medium text-primary-foreground">
               {t.beliefs.keepGoing}
             </button>
           </div>
@@ -184,7 +151,7 @@ function Inner({ addiction, present, beliefs, facts, bands, needs }: InnerProps)
     if (cur.kind === "reply") {
       return (
         <>
-          <OneQuestion step={qn} total={qTotal} onBack={back}>
+          <OneQuestion step={qn} total={qTotal} onBack={back} backLabel={t.beliefs.previous}>
             <section data-testid="reply" className="flex flex-col gap-2">
               <h2 className="text-sm text-muted-foreground">{t.beliefs.replyTitle}</h2>
               <p data-testid="reply-counterpart" className="text-xl font-medium leading-snug">
@@ -206,7 +173,7 @@ function Inner({ addiction, present, beliefs, facts, bands, needs }: InnerProps)
     const current = draft?.ratings[b.id]
     return (
       <>
-        <OneQuestion step={qn} total={qTotal} onBack={back} showStep>
+        <OneQuestion step={qn} total={qTotal} onBack={back} backLabel={t.beliefs.previous} showStep>
           <p data-testid="scene" className={`text-muted-foreground ${present ? "text-xs leading-snug" : "text-sm"}`}>
             {usable<string>(b.scene)}
           </p>
@@ -251,8 +218,11 @@ function Inner({ addiction, present, beliefs, facts, bands, needs }: InnerProps)
     const answered = draft?.facts[f.id]
     return (
       <>
-        <OneQuestion step={qn} total={qTotal} onBack={back} showStep>
-          <p data-testid="fact-statement" className="rounded-lg border border-border bg-card p-4 text-lg leading-snug">
+        <OneQuestion step={qn} total={qTotal} onBack={back} backLabel={t.beliefs.previous} showStep>
+          <h2 data-testid="fact-heading" className="text-sm text-muted-foreground">
+            {t.beliefs.factHeading}
+          </h2>
+          <p data-testid="fact-statement" className="-mt-2 rounded-lg border border-border bg-card p-4 text-lg leading-snug">
             {f.statement}
           </p>
           {typeof answered !== "boolean" ? (
@@ -298,7 +268,7 @@ function Inner({ addiction, present, beliefs, facts, bands, needs }: InnerProps)
 
   return (
     <>
-      <OneQuestion step={qn} total={qTotal} onBack={back} showStep>
+      <OneQuestion step={qn} total={qTotal} onBack={back} backLabel={t.beliefs.previous} showStep>
         <h2 data-testid="canstop-question" className="text-2xl font-medium leading-snug">
           {t.beliefs.canStopQuestion}
         </h2>

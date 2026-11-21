@@ -214,10 +214,12 @@ interface OneQuestionProps {
   showStep?: boolean
   /** Leaves the bar out (a first screen whose step count is not known yet). */
   hideBar?: boolean
+  /** Words for the in-page back link; the shared "Back" when left out. */
+  backLabel?: string
 }
 
 /** One question per screen: progress, the question, an in-page Back. */
-export function OneQuestion({ step, total, onBack, children, showStep, hideBar }: OneQuestionProps) {
+export function OneQuestion({ step, total, onBack, children, showStep, hideBar, backLabel }: OneQuestionProps) {
   return (
     <section data-testid="question" data-step={step} className="flex flex-col gap-4">
       {showStep && (
@@ -240,7 +242,7 @@ export function OneQuestion({ step, total, onBack, children, showStep, hideBar }
       {children}
       {onBack && (
         <button type="button" data-testid="screen-back" onClick={onBack} className="inline-flex min-h-11 min-w-11 items-center self-start text-sm text-muted-foreground underline">
-          {t.common.back}
+          {backLabel ?? t.common.back}
         </button>
       )}
     </section>

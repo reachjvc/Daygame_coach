@@ -505,7 +505,9 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByTestId("canstop-line")).toHaveText(tt.beliefs.canStopLineNoneHeld)
       const link = page.getByTestId("band-link")
       await expect(link).toHaveText(tt.beliefs.readySetDate)
-      await expect(link).toHaveClass(/bg-primary/)
+      // a No on can-stop: the band action is the secondary button, not the purple one
+      await expect(link).not.toHaveClass(/bg-primary/)
+      await expect(link).toHaveClass(/bg-card/)
       const card = await page.getByTestId("band").boundingBox()
       const btn = await link.boundingBox()
       expect(btn!.width).toBeGreaterThan(card!.width - 40)
@@ -536,6 +538,134 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByTestId("scene")).toHaveText(data.beliefs[0].scene)
       await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
       await expect(page.getByRole("heading", { level: 1 })).toBeInViewport()
+    })
+    /** Opens the test the way a reader does: the menu page, then the menu row. */
+    async function viaMenu(page: Page) {
+      await page.goto(quitUrl(A))
+      await page.locator('a[href*="/nicotine/beliefs"]').first().click()
+      await expect(page.getByTestId("question")).toBeVisible()
+    }
+    const backToMenu = async (page: Page) => {
+      await page.goBack()
+      await expect(page).toHaveURL(new RegExp(`${A}(\\?preview=1)?$`))
+    }
+    /** The address and the screen shown agree: no `s` means the first screen or the result. */
+    async function inStep(page: Page) {
+      const s = new globalThis.URL(page.url()).searchParams.get("s")
+      if (await page.getByTestId("result").count()) return expect(s).toBeNull()
+      const n = Number((await page.getByTestId("step-text").textContent())!.match(/Question (\d+)/)![1])
+      expect(s === null ? 1 : Number(s)).toBe(n)
+    }
+
+    test("17 round 2: after a retake one browser Back from the result reaches the menu", async ({ page }) => {
+      await viaMenu(page)
+      await fullTest(page, ALL(3), "yes")
+      await tap(page, "again")
+      await fullTest(page, [4, ...ALL(3).slice(1)], "unsure")
+      await backToMenu(page)
+    })
+
+    test("17b round 2: Stop and keep my last result on a retake leaves no dead entry, with and without answers", async ({ page }) => {
+      await viaMenu(page)
+      await fullTest(page, ALL(3), "yes")
+      await tap(page, "again")
+      await page.getByTestId("stop-retake").click()
+      await expect(page.getByTestId("result")).toBeVisible()
+      await expect.poll(() => page.url()).not.toContain("s=")
+      await tap(page, "again")
+      await rateFrom(page, ALL(3), 0, undefined, 3)
+      await page.getByTestId("stop-retake").click()
+      await page.getByTestId("stop-yes").click()
+      await expect(page.getByTestId("result")).toBeVisible()
+      await expect.poll(() => page.url()).not.toContain("s=")
+      await backToMenu(page)
+    })
+
+    test("18 round 2: Forward after Back from a result, and after Clear all, never shows a stale address", async ({ page }) => {
+      await viaMenu(page)
+      await fullTest(page, ALL(3), "yes")
+      await tap(page, "again")
+      await fullTest(page, ALL(3), "no")
+      await backToMenu(page)
+      await page.goForward()
+      await expect(page.getByTestId("result")).toBeVisible()
+      await page.goForward().catch(() => null)
+      await expect(page.getByTestId("result")).toBeVisible()
+      await expect.poll(() => page.url()).not.toContain("s=")
+      await tap(page, "clear-answers")
+      await page.getByTestId("clear-yes").click()
+      await expect(page.getByTestId("question")).toBeVisible()
+      await backToMenu(page)
+      await page.goForward()
+      await expect(page.getByTestId("question")).toBeVisible()
+      await inStep(page)
+      await page.goForward().catch(() => null)
+      await expect(page.getByTestId("question")).toBeVisible()
+      await inStep(page)
+      await tap(page, "rate-3")
+      await expect(page.getByTestId("step-text")).toHaveText("Question 2 of 16")
+      await inStep(page)
+      expect(new globalThis.URL(page.url()).searchParams.get("s")).toBe("2")
+    })
+
+    test("19 round 2: Previous question, True or false?, no Counted line on result cards, 0 held has no noTop line", async ({ page }) => {
+      await page.goto(URL)
+      await rateFrom(page, [5, 3], 0, undefined, 2)
+      await expect(page.getByTestId("screen-back")).toHaveText(tt.beliefs.previous)
+      await expect(page.getByRole("link", { name: /Back/ }).first()).toBeVisible()
+      await rateFrom(page, ALL(3), 2)
+      await expect(page.getByTestId("fact-heading")).toHaveText(tt.beliefs.factHeading)
+      await expect(page.getByTestId("screen-back")).toHaveText(tt.beliefs.previous)
+      await answerFacts(page)
+      await expect(page.getByTestId("screen-back")).toHaveText(tt.beliefs.previous)
+      await finishWith(page, "yes")
+      await expect(page.getByTestId("held-line")).toHaveText("1 of 12 hold you")
+      await expect(page.getByTestId("top-proof")).toHaveCount(1)
+      await expect(page.getByTestId("top-proof")).not.toContainText(tt.common.counted)
+      await expect(page.getByTestId("band-link")).toHaveClass(/bg-primary/)
+      await tap(page, "again")
+      await fullTest(page, ALL(1), "yes")
+      await expect(page.getByTestId("held-line")).toHaveText("None of the 12 hold you")
+      await expect(page.locator("body")).not.toContainText(tt.beliefs.noTop)
+    })
+
+    test("20 round 2: Last time shows only when the count changed", async ({ page }) => {
+      await page.goto(URL)
+      await fullTest(page, ALL(3), "yes")
+      await expect(page.getByTestId("last-held")).toHaveCount(0)
+      await tap(page, "again")
+      await fullTest(page, ALL(3), "yes")
+      await expect(page.getByTestId("last-held")).toHaveCount(0)
+      await tap(page, "again")
+      await fullTest(page, [5, 5, ...ALL(3).slice(2)], "yes")
+      await expect(page.getByTestId("held-line")).toHaveText("2 of 12 hold you")
+      await expect(page.getByTestId("last-held")).toHaveText("Last time: 0 of 12")
+    })
+
+    test("21 round 2: Delete, Clear and Stop confirm buttons read as large as Take it again, at least 44 px", async ({ page }) => {
+      await page.goto(URL)
+      await fullTest(page, ALL(3), "yes")
+      await tap(page, "again")
+      await fullTest(page, ALL(3), "yes")
+      const size = (id: string) => page.getByTestId(id).evaluate((el) => getComputedStyle(el).fontSize)
+      const again = await size("again")
+      await page.getByTestId("earlier-delete").click()
+      await page.getByTestId("clear-answers").click()
+      for (const id of ["earlier-delete-yes", "earlier-delete-no", "clear-yes", "clear-no"]) {
+        expect(await size(id)).toBe(again)
+        const box = (await page.getByTestId(id).boundingBox())!
+        expect(box.width).toBeGreaterThanOrEqual(44)
+        expect(box.height).toBeGreaterThanOrEqual(44)
+      }
+      await tap(page, "again")
+      await tap(page, "rate-3")
+      await page.getByTestId("stop-retake").click()
+      for (const id of ["stop-yes", "stop-no"]) {
+        expect(await size(id)).toBe(again)
+        const box = (await page.getByTestId(id).boundingBox())!
+        expect(box.width).toBeGreaterThanOrEqual(44)
+        expect(box.height).toBeGreaterThanOrEqual(44)
+      }
     })
   })
 }

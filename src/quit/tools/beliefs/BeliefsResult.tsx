@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { CountedLine, FoldSummary } from "../../components/kit"
+import { FoldSummary } from "../../components/kit"
 import { liveToolIds, menu, isAddictionId } from "../../menu"
 import { useQuitRecord } from "../../record"
 import { fill, tooltext as t } from "../../tooltext"
@@ -49,7 +49,9 @@ export function BeliefsResult({ addiction, beliefs, facts, bands, needs, results
   const changes = useMemo(() => (previous ? changesSince(previous.ratings, latest.ratings, beliefs) : []), [previous, latest.ratings, beliefs])
   const lies = isAddictionId(addiction) ? menu.addictions[addiction].lies : ""
   const slots = { n: held, total: beliefs.length, lies: liesInSentence(lies) }
+  const canStop = latest.canStop
   const none = held === 0
+  const lastHeld = previous ? heldCount(previous.ratings, beliefs) : null
   const [confirmClear, setConfirmClear] = useState(false)
 
   const cardHref = carry(`/quit/${addiction}/card`, { held: String(held), v: "2" })
@@ -113,7 +115,6 @@ export function BeliefsResult({ addiction, beliefs, facts, bands, needs, results
     }
   }
 
-  const canStop = latest.canStop
   const lastCanStop = previous?.canStop && canStop && previous.canStop !== canStop ? previous.canStop : null
   const needLink = (b: QuitBelief) => {
     const need = needs.find((n) => n.id === usable<string>(b.need))
@@ -138,6 +139,11 @@ export function BeliefsResult({ addiction, beliefs, facts, bands, needs, results
         <p data-testid="held-line" className="text-2xl font-semibold">
           {fill(none ? t.beliefs.heldNone : t.beliefs.heldLine, slots)}
         </p>
+        {lastHeld !== null && lastHeld !== held && (
+          <p data-testid="last-held" className="text-sm text-muted-foreground">
+            {fill(t.beliefs.lastHeld, { n: lastHeld, total: beliefs.length })}
+          </p>
+        )}
         {band && (
           <>
             <p data-testid="band-label" className="mt-1 text-xl font-semibold text-primary">
@@ -150,7 +156,7 @@ export function BeliefsResult({ addiction, beliefs, facts, bands, needs, results
           <Link
             href={carry(action.href)}
             data-testid="band-link"
-            className="mt-3 inline-flex min-h-12 w-full items-center justify-center rounded-md bg-primary px-4 text-center font-medium text-primary-foreground"
+            className={`mt-3 inline-flex min-h-12 w-full items-center justify-center rounded-md px-4 text-center font-medium ${canStop === "no" ? "border border-border bg-card" : "bg-primary text-primary-foreground"}`}
           >
             {canStop === "no" && (action.kind === "free" || action.kind === "set") ? t.beliefs.readySetDate : BAND_LABEL[action.kind]}
           </Link>
@@ -176,7 +182,7 @@ export function BeliefsResult({ addiction, beliefs, facts, bands, needs, results
             {top.kind === "held" ? t.beliefs.topHeading : t.beliefs.softHeading}
           </h2>
         )}
-        {top.kind === "none" && <p className="text-muted-foreground">{t.beliefs.noTop}</p>}
+        {top.kind === "none" && !none && <p className="text-muted-foreground">{t.beliefs.noTop}</p>}
         <div className="mt-2 flex flex-col gap-4">
           {top.list.map((b) => (
             <article key={b.id} data-testid="top-belief" className="rounded-lg border border-border bg-card p-4">
@@ -191,7 +197,6 @@ export function BeliefsResult({ addiction, beliefs, facts, bands, needs, results
               <details data-testid="top-proof" className="group mt-3 text-sm">
                 <FoldSummary>{t.beliefs.proofFold}</FoldSummary>
                 <p>{b.proof}</p>
-                <CountedLine text={b.counted} />
                 <BeliefBasis item={b} />
               </details>
               {needLink(b)}
@@ -294,10 +299,10 @@ export function BeliefsResult({ addiction, beliefs, facts, bands, needs, results
           <div data-testid="clear-confirm" role="alertdialog" aria-label={t.beliefs.clearAsk} className="flex flex-col gap-2 rounded-md border border-border bg-card p-3">
             <p>{t.beliefs.clearAsk}</p>
             <div className="grid grid-cols-2 gap-2">
-              <button type="button" data-testid="clear-yes" onClick={onClear} className="min-h-12 rounded-md border border-border">
+              <button type="button" data-testid="clear-yes" onClick={onClear} className="min-h-12 rounded-md border border-border text-base font-medium">
                 {t.beliefs.clearYes}
               </button>
-              <button type="button" data-testid="clear-no" onClick={() => setConfirmClear(false)} className="min-h-12 rounded-md bg-primary text-primary-foreground">
+              <button type="button" data-testid="clear-no" onClick={() => setConfirmClear(false)} className="min-h-12 rounded-md bg-primary text-base font-medium text-primary-foreground">
                 {t.beliefs.keepIt}
               </button>
             </div>
@@ -352,10 +357,10 @@ function EarlierItem({ r, beliefs, bands, onDelete }: { r: BeliefResult; beliefs
         <div role="alertdialog" aria-label={t.beliefs.deleteAsk} className="flex flex-col gap-2">
           <p>{t.beliefs.deleteAsk}</p>
           <div className="grid grid-cols-2 gap-2">
-            <button type="button" data-testid="earlier-delete-yes" onClick={onDelete} className="min-h-12 rounded-md border border-border">
+            <button type="button" data-testid="earlier-delete-yes" onClick={onDelete} className="min-h-12 rounded-md border border-border text-base font-medium">
               {t.beliefs.delete}
             </button>
-            <button type="button" data-testid="earlier-delete-no" onClick={() => setAsk(false)} className="min-h-12 rounded-md bg-primary text-primary-foreground">
+            <button type="button" data-testid="earlier-delete-no" onClick={() => setAsk(false)} className="min-h-12 rounded-md bg-primary text-base font-medium text-primary-foreground">
               {t.beliefs.keepIt}
             </button>
           </div>

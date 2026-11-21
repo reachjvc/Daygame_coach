@@ -120,7 +120,10 @@
     "readySetDate": "When you’re ready: set your date",
     "canStopLineNoneHeld": "Then don’t decide it today. None of the 12 thoughts hold you much, so the no may come from somewhere else. Write down what makes it feel true.",
     "youSaid": "You said {word}.",
-    "cardAsk": "How many do you believe?"
+    "cardAsk": "How many do you believe?",
+    "previous": "Previous question",
+    "factHeading": "True or false?",
+    "lastHeld": "Last time: {n} of {total}"
   },
   "gives": {
     "pickQuestion": "What does it give you? Pick 1 to 3.",
