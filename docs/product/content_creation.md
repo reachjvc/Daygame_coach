@@ -35,7 +35,7 @@ say "I left notes".
   The full-size film was rendered on 2026-11-20 and waits for his look (film
   page listed in notes-seen.md). He watched it on 2026-11-20: right path, but
   too slow, too much blocks only, he wants himself filmed in it, and he
-  still hears breathing (his words are in the process file). A second-pass
+  still hears breathing (his words are in the history file). A second-pass
   page with a sentence check and seven cutaway spots waits for his 👍
   (listed in notes-seen.md); a breath listening test follows. He re-records
   the voice with a better microphone another day. Plan:
@@ -45,12 +45,12 @@ say "I left notes".
   films of Outvoted. He judged them not usable, and AI still paintings with
   a slow zoom are never to be made again. The next step is his Outvoted
   notes: blocks plus other animation at some spots, and himself filmed. See
-  "The first night run" in the process file.
+  "The first night run" in the history file.
 - **The process itself**: being worked out on video 01. About 40% there
   (owner, 2026-11-18). On 2026-11-20 he marked the ten ways page: 👍 on
   ways 2, 3, 5, 7 and 8, and he wants a finder for videos that outperform
   so he can say what he likes. His marks and the proposed next version are
-  in the process file. On 2026-11-21 he called the outperformer finder
+  in the history file (`content_creation_history.md`). On 2026-11-21 he called the outperformer finder
   probably the wrong direction: a channel uses the same style on all its
   videos, so studying its outliers says little about style. What he says
   we need to find instead: (1) the style he likes — the blocks in the
@@ -65,11 +65,12 @@ say "I left notes".
   each), a themed episode "men who quit for their kids" in 3 versions,
   and cast lists for two more themes. The narrator is a placeholder AI
   voice. An Opus review gate checked every version. Plan:
-  `Plans/celeb-clip-reels.md` (proposed). The method is in the process
-  file, section "Celebrity clip reels".
-  On 2026-11-21 he judged round 2 poor (words cut off, nothing longer,
-  dark cards, lost story). Round 3, three better versions of the Billy
-  reel, waits for his notes on its own page (listed in notes-seen.md).
+  `Plans/celeb-clip-reels.md` (proposed). The method and platform rules
+  are in the history file, section "Celebrity clip reels".
+  On 2026-11-21 he judged round 2 poor and round 3 "not very good
+  attempts" (his notes R3-1 to R3-6 in the history file). Round 4 replaces
+  the AI narrator with real people on camera, longer inserts, the source
+  name per picture, and no black edges (proposed).
 - **Look finder (step 1 of the proposed process)**: built 2026-11-20. 18
   YouTube videos that beat their channel's usual views, in six looks, each
   playable with a 👍 and a note (page listed in notes-seen.md). Waits for
