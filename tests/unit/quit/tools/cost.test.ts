@@ -8,6 +8,7 @@ import {
   formatCents,
   formatCount,
   formatPrice,
+  formatPart,
   countIsClean,
   importOldCost,
   packPriceFor,
@@ -257,5 +258,36 @@ describe("how groups", () => {
     expect(all.map((n) => `${n.kind}/${n.big}`)).toEqual([`hope-lifetime/${base.big}`, "hope-free-now/20 in 100"])
     expect(isSameNumber(hope, hope)).toBe(true)
     expect(isSameNumber(base, null)).toBe(false)
+  })
+})
+
+describe("review round 3", () => {
+  it("a count of 0 is the same as nothing typed, a day or a week", () => {
+    expect(parseCount("0", "day")).toEqual({ kind: "empty" })
+    expect(parseCount("0.0", "week")).toEqual({ kind: "empty" })
+    expect(parseCount("0.5", "day")).toEqual({ kind: "ok", value: 0.5 })
+  })
+  it("a price of one is kept exactly as typed; a pack price is divided to 4 decimals", () => {
+    expect(parsePrice("0.6667", "one", 20)).toEqual({ kind: "ok", value: 0.6667 })
+    expect(parsePrice("14.12345", "one", 20)).toEqual({ kind: "ok", value: 14.12345 })
+    expect(parsePrice("0.0001", "one", 20)).toEqual({ kind: "ok", value: 0.0001 })
+    expect(parsePrice("13.33", "pack", 20)).toEqual({ kind: "ok", value: 0.6665 })
+  })
+  it("prices and boxes show the decimals they hold", () => {
+    expect(formatPrice(7.995)).toBe("$7.995")
+    expect(formatPrice(0.6667)).toBe("$0.6667")
+    expect(boxNumber(14.12345, 2, 8)).toBe("14.12345")
+    expect(boxNumber(10.4, 2, 8)).toBe("10.40")
+  })
+  it("a day that rounds to nothing next to a real year says under $0.01", () => {
+    expect(formatPart(0, 52)).toBe("under $0.01")
+    expect(formatPart(0, 0)).toBe("$0.00")
+    expect(formatPart(14, 520)).toBe("$0.14")
+  })
+  it("old wave-1 counts over the limit or 0 are not set", () => {
+    const units = [{ id: "cigarettes", defaultPriceUsd: 0.52 }]
+    expect(importOldCost({ unit: "cigarettes", perDay: 9999, daysPerWeek: 7, price: "2" }, units, null)?.perDay).toBeNull()
+    expect(importOldCost({ unit: "cigarettes", perDay: 0, daysPerWeek: 7, price: "2" }, units, null)?.perDay).toBeNull()
+    expect(importOldCost({ unit: "cigarettes", perDay: 10, daysPerWeek: 7, price: "2" }, units, null)?.perDay).toBe(10)
   })
 })

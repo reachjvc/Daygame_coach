@@ -87,7 +87,8 @@ test.describe("what it costs you, phone", () => {
     await expect(page.getByTestId("cost-saved")).toHaveText("Saved on this device.")
     expect(await unitInRecord(page)).toEqual({ id: "cigarettes", perDay: 10, priceUsd: 0.52, priceBasis: "default" })
     await expect(page.locator("details#sources")).toHaveCount(1)
-    await expect(page.locator("details")).toHaveCount(1)
+    await expect(page.locator("details")).toHaveCount(2)
+    await expect(page.getByTestId("cost-basis-fold")).toHaveCount(1)
     await noSideways(page)
     await shot(page, "02-result-pack-mode")
     expect(errors).toEqual([])
@@ -300,7 +301,7 @@ test.describe("what it costs you, phone", () => {
     await page.getByTestId("chip-pouches").click()
     await expect(page.getByTestId("cost-count")).toHaveValue("")
     await expect(page.getByTestId("cost-price")).toHaveValue("5.69")
-    await expect(page.getByTestId("cost-basis")).toContainText("maker suggests for one can in the US")
+    await expect(page.getByTestId("cost-basis")).toContainText("ZYN's maker suggests in the US")
     await expect(page.getByTestId("cost-basis")).not.toContainText("sales tax")
     await expect(page.getByTestId("cost-nocount")).toBeVisible()
     await expect(page.getByTestId("cost-size")).toHaveCount(0)
@@ -339,12 +340,12 @@ test.describe("what it costs you, phone", () => {
     const past = day(-7)
     await page.evaluate((p) => localStorage.setItem("quit-v1", JSON.stringify({ nicotine: { record: { quitDate: p, goal: "break", breakEnd: null, unit: { id: "cigarettes", perDay: 10, priceUsd: 0.52, priceBasis: "default" } } } })), past)
     await page.reload()
-    await expect(page.getByTestId("cost-dateline")).toHaveText(`Your break started on ${fmt(past)}. What it has kept you is in Your record.`)
+    await expect(page.getByTestId("cost-dateline")).toHaveText(new RegExp(`^Your break started on ${fmt(past)} and has kept you \\$[\\d,.]+ so far\\. The full count is in Your record\\.$`))
     await expect(page.getByTestId("cost-dateline").locator("a")).toHaveCount(1) // Your record is live: the name links to it
     await shot(page, "09-quit-date-line-past")
     await page.evaluate((r) => localStorage.setItem("quit-v1", JSON.stringify({ nicotine: { record: r } })), { quitDate: past, goal: "stop", breakEnd: null, unit: cig })
     await page.reload()
-    await expect(page.getByTestId("cost-dateline")).toHaveText(`You stopped on ${fmt(past)}. The money you have kept since then is in Your record.`)
+    await expect(page.getByTestId("cost-dateline")).toHaveText(new RegExp(`^You stopped on ${fmt(past)} and have kept \\$[\\d,.]+ since\\. The full count is in Your record\\.$`))
     await page.evaluate((r) => localStorage.setItem("quit-v1", JSON.stringify({ nicotine: { record: r } })), { quitDate: future, goal: "break", breakEnd: null, unit: cig })
     await page.reload()
     await expect(page.getByTestId("cost-dateline")).toHaveText(`Your break starts ${fmt(future)}. Each day of it saves $5.20.`)
@@ -525,7 +526,7 @@ test.describe("what it costs you, phone", () => {
   test("15 the quit-date line comes with the result and above the working; a past date says what it cost; long numbers keep whole", async ({ page }) => {
     await seed(page, { record: recordOf(day(-9), "stop", { id: "pouches", perDay: 2 / 7, priceUsd: 5.69, priceBasis: "default" }) })
     await page.goto(URL)
-    await expect(page.getByRole("heading", { name: "What it cost you" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "What it would have cost you" })).toBeVisible()
     const dl = await page.getByTestId("cost-dateline").boundingBox()
     const wk = await page.getByTestId("cost-working").boundingBox()
     expect(dl!.y).toBeLessThan(wk!.y)
@@ -567,3 +568,163 @@ test.describe("what it costs you, computer", () => {
     expect(errors).toEqual([])
   })
 })
+
+const quitV1 = (page: Page) => page.evaluate(() => localStorage.getItem("quit-v1"))
+const CIG = (perDay: number, priceUsd: number, priceBasis = "default") => ({ id: "cigarettes", perDay, priceUsd, priceBasis })
+
+// review round 3: the same walk on a phone (touch) and a computer
+for (const vp of [
+  { name: "phone", width: 390, height: 844, touch: true },
+  { name: "computer", width: 1280, height: 800, touch: false },
+]) {
+  test.describe(`what it costs you, round 3 fixes, ${vp.name}`, () => {
+    test.use({ viewport: { width: vp.width, height: vp.height }, hasTouch: vp.touch, isMobile: vp.touch })
+
+    for (const price of [0.6667, 0.3333, 0.0001, 0.52, 14.12345]) {
+      test(`r3-1 opening the tool and leaving it with no change writes nothing (price ${price})`, async ({ page }) => {
+        const rec = recordOf(day(3), "stop", price === 14.12345 ? { id: "vape", perDay: 0.5, priceUsd: price, priceBasis: "typed" } : CIG(10, price, "typed"))
+        await seed(page, { record: rec })
+        await page.goto(URL)
+        await expect(page.getByTestId("cost-summary")).toBeVisible()
+        const before = await quitV1(page)
+        await page.getByTestId("cost-change").click()
+        await page.getByTestId("cost-count").focus()
+        await commit(page)
+        await page.goto(quitUrl("/quit/nicotine/date"))
+        expect(await quitV1(page)).toEqual(before)
+      })
+    }
+
+    test("r3-1b a pack price edit keeps the pack price; a typed per-unit price keeps every decimal", async ({ page }) => {
+      await seed(page, { record: recordOf(day(3), "stop", CIG(10, 0.52)) })
+      await page.goto(URL)
+      await page.getByTestId("cost-change").click()
+      await page.getByTestId("cost-price").fill("13.33")
+      await commit(page)
+      expect((await unitInRecord(page)).priceUsd).toBe(0.6665)
+      await page.getByTestId("cost-price-mode-one").click()
+      await page.getByTestId("cost-price").fill("0.6667")
+      await commit(page)
+      const u = await unitInRecord(page)
+      expect(u.priceUsd).toBe(0.6667)
+      expect(u.priceBasis).toBe("typed")
+      await page.getByTestId("cost-price").fill("0.52")
+      await commit(page)
+      expect((await unitInRecord(page)).priceBasis).toBe("typed")
+      await page.getByTestId("cost-price").fill("0.00012345")
+      await commit(page)
+      expect((await unitInRecord(page)).priceUsd).toBe(0.00012345)
+    })
+
+    test("r3-2 a pack price of 7.995 is shown as typed and the working line adds up", async ({ page }) => {
+      await seed(page, { record: recordOf(day(3), "stop", CIG(10, 0.52)) })
+      await page.goto(URL)
+      await page.getByTestId("cost-change").click()
+      await page.getByTestId("cost-price").fill("7.995")
+      await commit(page)
+      await expect(page.getByTestId("cost-line-0")).toContainText("$7.995 a pack ÷ 20")
+    })
+
+    test("r3-3 Saved shows only after a write", async ({ page }) => {
+      await page.goto(URL)
+      await page.getByTestId("chip-cigarettes").click()
+      await expect(page.getByTestId("cost-saved")).toHaveCount(0)
+      await page.getByTestId("cost-count").fill("10")
+      await expect(page.getByTestId("cost-saved")).toHaveCount(0)
+      await commit(page)
+      await expect(page.getByTestId("cost-saved")).toBeVisible()
+      await page.getByTestId("cost-price").fill("7")
+      await expect(page.getByTestId("cost-saved")).toHaveCount(0)
+      await commit(page)
+      await expect(page.getByTestId("cost-saved")).toBeVisible()
+      await page.getByTestId("cost-count").fill("abc")
+      await expect(page.getByTestId("cost-saved")).toHaveCount(0)
+    })
+
+    test("r3-4 tapping a prefilled box selects its contents, so typing replaces", async ({ page }) => {
+      await page.goto(URL)
+      await page.getByTestId("chip-cigarettes").click()
+      const price = page.getByTestId("cost-price")
+      if (vp.touch) await price.tap()
+      else await price.click()
+      expect(await price.evaluate((e: HTMLInputElement) => [e.selectionStart, e.selectionEnd, e.value.length])).toEqual([0, 5, 5])
+      await page.keyboard.type("7")
+      await expect(price).toHaveValue("7")
+    })
+
+    test("r3-5 a count of 0 is never written; a running quit keeps its money", async ({ page }) => {
+      await seed(page, { record: recordOf(day(-20), "stop", { id: "vape", perDay: 0.5, priceUsd: 14.07, priceBasis: "default" }) })
+      await page.goto(URL)
+      await page.getByTestId("cost-change").click()
+      await page.getByTestId("cost-count").fill("0")
+      await expect(page.getByTestId("cost-nocount")).toBeVisible()
+      await expect(page.getByTestId("cost-done")).toHaveCount(0)
+      await commit(page)
+      expect((await unitInRecord(page)).perDay).toBe(0.5)
+      await page.goto(quitUrl("/quit/nicotine/record"))
+      await expect(page.getByTestId("tile-money-value")).toHaveText(/\$\d/)
+    })
+
+    test("r3-6 a tiny spend says under $0.01 a day, and old wave-1 counts over the limit are not set", async ({ page }) => {
+      await seed(page, { record: recordOf(day(3), "stop", { id: "pouches", perDay: 1 / 7, priceUsd: 0.01, priceBasis: "typed" }) })
+      await page.goto(URL)
+      await expect(page.getByTestId("cost-day")).toHaveText("under $0.01")
+      await expect(page.getByTestId("cost-dateline")).toContainText("saves under $0.01")
+    })
+
+    test("r3-6b old wave-1 counts over the limit are not set", async ({ page }) => {
+      await seed(page, { cost: { unit: "cigarettes", perDay: 9999, daysPerWeek: 7, price: "2" } })
+      await page.goto(URL)
+      await expect(page.getByTestId("cost-nocount")).toBeVisible()
+      expect(await unitInRecord(page)).toMatchObject({ id: "cigarettes", perDay: null })
+    })
+
+    test("r3-7 past quit date: heading, kept line that matches Your record, no half-cut text round the bar", async ({ page }) => {
+      await seed(page, { record: recordOf(day(-9), "stop", { id: "pouches", perDay: 1, priceUsd: 5.69, priceBasis: "default" }) })
+      await page.goto(URL)
+      await expect(page.getByRole("heading", { name: "What it would have cost you" })).toBeVisible()
+      const kept = page.getByTestId("cost-kept")
+      await expect(kept).toContainText("have kept $")
+      await expect(kept.getByRole("link", { name: "Your record" })).toBeVisible()
+      const money = (await kept.textContent())!.match(/\$([\d,.]+)/)![1]
+      await kept.getByRole("link", { name: "Your record" }).click()
+      await expect(page.getByTestId("tile-money-value")).toBeVisible()
+      const rec = (await page.getByTestId("tile-money-value").textContent())!.match(/\$([\d,.]+)/)![1]
+      expect(Math.abs(Number(rec.replace(/,/g, "")) - Number(money.replace(/,/g, "")))).toBeLessThan(6)
+    })
+
+    test("r3-8 the price explanation is in a fold under the price box; Done sits higher", async ({ page }) => {
+      await page.goto(URL)
+      await page.getByTestId("chip-cigarettes").click()
+      const fold = page.getByTestId("cost-basis-fold")
+      await expect(fold.locator("summary")).toHaveText("Where does $10.40 come from?")
+      await expect(page.getByTestId("cost-basis")).toBeHidden()
+      await page.getByTestId("cost-count").fill("10")
+      const done = await page.getByTestId("cost-done").boundingBox()
+      expect(done!.y).toBeLessThan(vp.height + 400)
+      await fold.locator("summary").click()
+      await expect(page.getByTestId("cost-basis")).toContainText("Type what you pay.")
+      await shot(page, `r3-fold-${vp.name}`)
+    })
+
+    test("r3-9 pouch line: 15-pouch can, tax, 20-pouch move; sources list the ZYN page once", async ({ page }) => {
+      await page.goto(URL)
+      await page.getByTestId("chip-pouches").click()
+      await page.getByTestId("cost-basis-fold").locator("summary").click()
+      const text = (await page.getByTestId("cost-basis").textContent())!
+      expect(text).toContain("$5.69 for a 15-pouch can")
+      expect(text).toContain("The page does not say if tax is in it; a few states add a pouch tax on top.")
+      expect(text).toContain("20 pouches")
+      expect(text).not.toContain("older")
+      await shot(page, `r3-pouch-${vp.name}`)
+    })
+
+    test("r3-10 sticky year bar has a solid backing", async ({ page }) => {
+      await page.goto(URL)
+      await page.getByTestId("chip-cigarettes").click()
+      await page.getByTestId("cost-count").fill("15")
+      await expect(page.getByTestId("cost-live")).toBeVisible()
+      await shot(page, `r3-bar-${vp.name}`)
+    })
+  })
+}

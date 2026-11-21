@@ -12,15 +12,16 @@ import { realRefs, uniqueRefs, usable } from "../common"
 import { dateText } from "../date/text"
 import { useCarry, useDoneCount, useStartCount, useToolState } from "../hooks"
 import { NotReady } from "../NotReady"
+import { Kept } from "./Kept"
 import {
   EMPTY_COST,
-  basisFor,
   boxNumber,
   computeCost,
   defaultCountMode,
   formatCents,
   formatCount,
   formatMoney,
+  formatPart,
   formatPrice,
   importOldCost,
   importedCountMode,
@@ -84,7 +85,7 @@ interface Texts {
 function seed(unit: RecordUnit | null, countMode: CountMode, priceMode: PriceMode, size: number, packPrice: number | null): Texts {
   if (!unit) return { count: "", price: "", size: String(size) }
   const count = unit.perDay === null ? "" : boxNumber(countMode === "week" ? unit.perDay * 7 : unit.perDay)
-  const price = priceMode === "pack" && unit.id === "cigarettes" ? boxNumber(packPriceFor(unit.priceUsd, size, packPrice), 2) : boxNumber(unit.priceUsd, 2)
+  const price = priceMode === "pack" && unit.id === "cigarettes" ? boxNumber(packPriceFor(unit.priceUsd, size, packPrice), 2, 8) : boxNumber(unit.priceUsd, 2, 8)
   return { count, price, size: String(size) }
 }
 
@@ -154,13 +155,19 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
   const base = record ?? draft
   // the count box holds the saved count rounded to 4 decimals: left alone, the saved count stays exact (10 a week stays 10 / 7 a day)
   const countAsSeeded = base !== null && base.perDay !== null && texts.count === boxNumber(countMode === "week" ? base.perDay * 7 : base.perDay)
+  // the price box still holds what was seeded from the record: the saved price is kept exactly as it is, never rebuilt from the box
+  const priceAsSeeded = base !== null && unit !== null && base.id === unit.id && texts.price === seed(base, countMode, priceMode, size, savedPack).price && sizeNow === size
   let pending: Pending | null = null
-  if (unit && !anyErr && priceField?.kind === "ok") {
+  if (unit && !anyErr && priceField?.kind === "ok" && base) {
     const typed = parseTyped(texts.price, MAX_PRICE)
-    const basis = basisFor(priceField.value, unit)
     pending = {
-      unit: { id: unit.id, perDay: countAsSeeded ? (base as RecordUnit).perDay : countField.kind === "ok" ? countField.value : (base?.perDay ?? null), priceUsd: basis === "default" ? (unit.defaultPriceUsd as number) : priceField.value, priceBasis: basis },
-      packPrice: priceMode === "pack" && typed.kind === "ok" ? typed.value : savedPack,
+      unit: {
+        id: unit.id,
+        perDay: countAsSeeded ? (base as RecordUnit).perDay : countField.kind === "ok" ? countField.value : (base?.perDay ?? null),
+        priceUsd: priceAsSeeded ? base.priceUsd : priceField.value,
+        priceBasis: priceAsSeeded ? base.priceBasis : "typed",
+      },
+      packPrice: priceAsSeeded ? savedPack : priceMode === "pack" && typed.kind === "ok" ? typed.value : savedPack,
       size: sizeNow,
     }
   }
@@ -216,6 +223,7 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
     const savesDraft = draft !== null && pending !== null && pending.unit.perDay !== null && touched.current
     const recNow = draft ? (savesDraft ? (pending as Pending).unit : unitRec) : (pending?.unit ?? unitRec)
     commit()
+    setSaved(false)
     touched.current = false
     update((s) => ({ ...s, countMode: null, priceMode: "pack", packSize: EMPTY_COST.packSize, packPrice: null }))
     if (recNow && recNow.id === id) {
@@ -230,14 +238,17 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
   }
   const onCount = (text: string) => {
     touched.current = true
+    setSaved(false)
     setTexts((x) => ({ ...x, count: text }))
   }
   const onPrice = (text: string) => {
     touched.current = true
+    setSaved(false)
     setTexts((x) => ({ ...x, price: text }))
   }
   const onSize = (text: string) => {
     touched.current = true
+    setSaved(false)
     setTexts((x) => ({ ...x, size: text }))
   }
   const setMode = (cm: CountMode) => {
@@ -263,7 +274,7 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
           const n = countMode === "week" ? unitRec.perDay * 7 : unitRec.perDay
           const words = formatCount(n) === "1" ? unit.one : unit.many
           return priceMode === "pack"
-            ? t.summaryPack(formatCount(n), words, perText, formatMoney(packPriceFor(unitRec.priceUsd, size, savedPack)), size)
+            ? t.summaryPack(formatCount(n), words, perText, formatPrice(packPriceFor(unitRec.priceUsd, size, savedPack)), size)
             : t.summary(formatCount(n), words, perText, formatPrice(unitRec.priceUsd))
         })()
       : null
@@ -313,7 +324,7 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
                     {t.countLabel(unit.many)}
                   </label>
                   <Switch label={t.modeLabel} testId="cost-count-mode" value={countMode} options={[{ id: "day", label: t.modeDay }, { id: "week", label: t.modeWeek }]} onChange={(id) => setMode(id as CountMode)} />
-                  <input id="cost-count" data-testid="cost-count" type="text" inputMode="decimal" maxLength={8} value={texts.count} onChange={(e) => onCount(e.target.value)} onBlur={() => commit()} aria-invalid={countErr || undefined} className={input} />
+                  <input id="cost-count" data-testid="cost-count" type="text" inputMode="decimal" maxLength={8} value={texts.count} onChange={(e) => onCount(e.target.value)} onFocus={(e) => e.currentTarget.select()} onBlur={() => commit()} aria-invalid={countErr || undefined} className={input} />
                   <span className="text-sm text-muted-foreground">{t.countHelp}</span>
                   {countErr && (
                     <span data-testid="cost-count-error" role="alert" className="text-sm font-medium text-destructive">
@@ -331,7 +342,7 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
                   <label htmlFor="cost-price" className="text-sm font-medium">
                     {priceMode === "pack" ? t.packPriceLabel : unit.id === "pouches" ? t.pouchPriceLabel : t.onePriceLabel(unit.one)}
                   </label>
-                  <input id="cost-price" data-testid="cost-price" type="text" inputMode="decimal" maxLength={10} value={texts.price} onChange={(e) => onPrice(e.target.value)} onBlur={() => commit()} aria-invalid={priceErr || undefined} className={input} />
+                  <input id="cost-price" data-testid="cost-price" type="text" inputMode="decimal" maxLength={10} value={texts.price} onChange={(e) => onPrice(e.target.value)} onFocus={(e) => e.currentTarget.select()} onBlur={() => commit()} aria-invalid={priceErr || undefined} className={input} />
                   {priceErr && (
                     <span data-testid="cost-price-error" role="alert" className="text-sm font-medium text-destructive">
                       {t.needPrice}
@@ -342,7 +353,7 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
                       <label htmlFor="cost-size" className="text-sm font-medium">
                         {t.packSizeLabel}
                       </label>
-                      <input id="cost-size" data-testid="cost-size" type="text" inputMode="numeric" maxLength={3} value={texts.size} onChange={(e) => onSize(e.target.value)} onBlur={() => commit()} aria-invalid={sizeErr || undefined} className={input} />
+                      <input id="cost-size" data-testid="cost-size" type="text" inputMode="numeric" maxLength={3} value={texts.size} onChange={(e) => onSize(e.target.value)} onFocus={(e) => e.currentTarget.select()} onBlur={() => commit()} aria-invalid={sizeErr || undefined} className={input} />
                       {sizeErr && (
                         <span data-testid="cost-size-error" role="alert" className="text-sm font-medium text-destructive">
                           {t.badSize}
@@ -350,22 +361,34 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
                       )}
                     </>
                   )}
-                  <p data-testid="cost-basis" className="break-words text-sm text-muted-foreground">
-                    {(pending?.unit ?? draft ?? unitRec)?.priceBasis === "typed" ? t.basisTyped : priceMode === "pack" ? t.basisPack : (dateText.priceBasis[unit.id] ?? "")}
-                  </p>
+                  {(pending?.unit ?? draft ?? unitRec)?.priceBasis === "typed" ? (
+                    <p data-testid="cost-basis" className="break-words text-sm text-muted-foreground">
+                      {t.basisTyped}
+                    </p>
+                  ) : (
+                    <details data-testid="cost-basis-fold" className="text-sm text-muted-foreground">
+                      <summary className="flex min-h-11 cursor-pointer items-center text-primary underline">{t.basisFold(priceMode === "pack" ? formatMoney((unit.defaultPriceUsd ?? 0) * size) : formatPrice(unit.defaultPriceUsd ?? 0))}</summary>
+                      <p data-testid="cost-basis" className="break-words">
+                        {priceMode === "pack" ? t.basisPack : (dateText.priceBasis[unit.id] ?? "")}
+                      </p>
+                    </details>
+                  )}
                 </div>
                 {showBar ? (
                   // the answer stays in sight while he types: this bar sticks to the bottom of the screen, with the saved note inside it
-                  <div className="sticky bottom-2 z-10 flex flex-wrap items-baseline justify-between gap-x-3 self-stretch rounded-md border border-primary bg-background px-3 py-2 shadow">
-                    <p data-testid="cost-live" aria-hidden="true" className="text-base font-semibold text-primary">
-                      {t.liveYear(formatCents((figures as CostFigures).yearCents))}
-                    </p>
-                    {savedLine}
+                  // a solid strip all round and a short fade above it: no half-cut line of grey text shows around the bar
+                  <div className="sticky bottom-0 z-10 -mx-4 self-stretch bg-card px-4 pb-3 pt-1 before:pointer-events-none before:absolute before:inset-x-0 before:-top-5 before:h-5 before:bg-gradient-to-t before:from-card before:to-transparent">
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-3 rounded-md border border-primary bg-background px-3 py-2 shadow">
+                      <p data-testid="cost-live" aria-hidden="true" className="text-base font-semibold text-primary">
+                        {t.liveYear(formatCents((figures as CostFigures).yearCents))}
+                      </p>
+                      {savedLine}
+                    </div>
                   </div>
                 ) : (
                   savedLine
                 )}
-                {complete && (
+                {complete && !countEmpty && (
                   <PrimaryButton
                     testId="cost-done"
                     disabled={anyErr}
@@ -396,7 +419,7 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
           size={shownSize}
           packPrice={shownPack}
           title={past ? t.resultTitlePast : t.resultTitle}
-          dateLine={<DateLine record={rec.record} figures={figures} carry={carry} addiction={addiction} />}
+          dateLine={<DateLine unitRec={rec.record.unit} record={rec.record} figures={figures} carry={carry} addiction={addiction} />}
         />
       )}
       {unit && <SourcesFold refs={uniqueRefs(realRefs(unit.priceRefs))} />}
@@ -478,9 +501,9 @@ function Result({ unit, rec, figures, bad, empty, countMode, priceMode, size, pa
             </p>
           </div>
           <div className={`grid gap-2 sm:grid-cols-3 sm:gap-3 ${wide ? "grid-cols-1" : "grid-cols-3"}`}>
-            <Tile label={t.day} id="cost-day" value={figures.dayCents} />
-            <Tile label={t.month} id="cost-month" value={figures.monthCents} />
-            <Tile label={t.ten} id="cost-ten" value={figures.tenCents} />
+            <Tile label={t.day} id="cost-day" value={figures.dayCents} text={formatPart(figures.dayCents, figures.yearCents)} />
+            <Tile label={t.month} id="cost-month" value={figures.monthCents} text={formatPart(figures.monthCents, figures.yearCents)} />
+            <Tile label={t.ten} id="cost-ten" value={figures.tenCents} text={formatCents(figures.tenCents)} />
           </div>
           <p data-testid="cost-units" className="text-base">
             {t.unitsYear(formatCount(figures.unitsYear), figures.unitsYear === 1 ? unit.one : unit.many)}
@@ -493,12 +516,12 @@ function Result({ unit, rec, figures, bad, empty, countMode, priceMode, size, pa
   )
 }
 
-function Tile({ label, id, value }: { label: string; id: string; value: number }) {
+function Tile({ label, id, value, text }: { label: string; id: string; value: number; text: string }) {
   return (
     <div className="min-w-0 rounded-lg border border-border bg-card p-2 sm:p-3">
       <p className="text-sm text-muted-foreground">{label}</p>
-      <p data-testid={id} data-value={(value / 100).toFixed(2)} className={`font-semibold ${formatCents(value).length > 13 ? "text-base sm:text-base" : "text-base sm:text-xl"}`}>
-        {formatCents(value)}
+      <p data-testid={id} data-value={(value / 100).toFixed(2)} className={`font-semibold ${text.length > 13 ? "text-base sm:text-base" : "text-base sm:text-xl"}`}>
+        {text}
       </p>
     </div>
   )
@@ -508,7 +531,7 @@ function Working({ unit, rec, figures, countMode, priceMode, size, packPrice }: 
   const perDay = rec.perDay as number
   const price = formatPrice(rec.priceUsd)
   const lines: string[] = []
-  if (rec.id === "cigarettes" && priceMode === "pack") lines.push(t.workPack(formatMoney(packPriceFor(rec.priceUsd, size, packPrice)), size, price, unit.one))
+  if (rec.id === "cigarettes" && priceMode === "pack") lines.push(t.workPack(formatPrice(packPriceFor(rec.priceUsd, size, packPrice)), size, price, unit.one))
   const year = formatCents(figures.yearCents)
   // the count shown must be the count used: a week count of 10 is 10 / 7 a day, so it is written as a week; a count that fits neither way says "about"
   const dayClean = countIsClean(perDay)
@@ -516,8 +539,8 @@ function Working({ unit, rec, figures, countMode, priceMode, size, packPrice }: 
   const asWeek = countMode === "week" ? weekClean || !dayClean : !dayClean && weekClean
   const yearText = dayClean || weekClean ? year : t.workAbout(year)
   lines.push(asWeek ? t.workYearWeek(formatCount(perDay * 7), price, yearText) : t.workYearDay(formatCount(perDay), price, yearText))
-  lines.push(t.workDay(year, formatCents(figures.dayCents)))
-  lines.push(t.workMonth(formatCents(figures.yearCents), formatCents(figures.monthCents)))
+  lines.push(t.workDay(year, formatPart(figures.dayCents, figures.yearCents)))
+  lines.push(t.workMonth(formatCents(figures.yearCents), formatPart(figures.monthCents, figures.yearCents)))
   lines.push(t.workTen(formatCents(figures.yearCents), formatCents(figures.tenCents)))
   return (
     <div data-testid="cost-working" className="flex flex-col gap-1 break-words text-sm text-muted-foreground">
@@ -532,11 +555,11 @@ function Working({ unit, rec, figures, countMode, priceMode, size, packPrice }: 
   )
 }
 
-function DateLine({ record, figures, carry, addiction }: { record: ReturnType<typeof useQuitRecord>["record"]; figures: CostFigures | null; carry: (p: string) => string; addiction: string }) {
+function DateLine({ unitRec, record, figures, carry, addiction }: { unitRec: RecordUnit | null; record: ReturnType<typeof useQuitRecord>["record"]; figures: CostFigures | null; carry: (p: string) => string; addiction: string }) {
   const today = todayIso()
   const link = (tool: string, name: string) =>
     isLiveTool(tool) ? (
-      <Link href={carry(`/quit/${addiction}/${tool}`)} className="inline-flex min-h-11 items-center text-primary underline">
+      <Link href={carry(`/quit/${addiction}/${tool}`)} className="-my-3 inline-block py-3 text-primary underline">
         {name}
       </Link>
     ) : (
@@ -554,15 +577,19 @@ function DateLine({ record, figures, carry, addiction }: { record: ReturnType<ty
       </>
     )
   } else if (date > today) {
-    if (record.goal === "break") body = figures ? t.dateBreakFuture(fmtDay(date), formatCents(figures.dayCents)) : t.dateBreakFutureBare(fmtDay(date))
-    else body = figures ? t.dateFuture(fmtDay(date), formatCents(figures.dayCents), formatCents(figures.yearCents)) : t.dateFutureBare(fmtDay(date))
+    if (record.goal === "break") body = figures ? t.dateBreakFuture(fmtDay(date), formatPart(figures.dayCents, figures.yearCents)) : t.dateBreakFutureBare(fmtDay(date))
+    else body = figures ? t.dateFuture(fmtDay(date), formatPart(figures.dayCents, figures.yearCents), formatCents(figures.yearCents)) : t.dateFutureBare(fmtDay(date))
   } else {
     body = (
-      <>
-        {record.goal === "break" ? t.dateBreakPastPre(fmtDay(date)) : t.datePastPre(fmtDay(date))}
-        {link("record", t.nameRecord)}
-        {t.datePastPost}
-      </>
+      <Kept addiction={addiction} unit={unitRec} quitDate={date}>
+        {(kept) => (
+          <span data-testid={kept ? "cost-kept" : undefined}>
+            {kept ? (record.goal === "break" ? t.keptBreak(fmtDay(date), kept) : t.keptPast(fmtDay(date), kept)) : record.goal === "break" ? t.dateBreakPastPre(fmtDay(date)) : t.datePastPre(fmtDay(date))}
+            {link("record", t.nameRecord)}
+            {t.datePastPost}
+          </span>
+        )}
+      </Kept>
     )
   }
   return (

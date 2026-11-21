@@ -24,6 +24,7 @@ export const costText = {
   pouchPriceLabel: "What does a can cost? (USD)",
   basisPack:
     "Starts at $10.40 a pack of 20: the plain average of US state prices for a mainstream pack, $10.34, is $0.517 a cigarette, rounded to $0.52, × 20. Each state counts the same; state and federal tax are included, city taxes (for example New York City or Chicago) are not. Counted by packs sold, the average is $9.95. Packs run from $7.95 (North Carolina) to $14.85 (New York) (Tobacco Insider, posted 26 Aug 2026; the page does not date its prices). Type what you pay.",
+  basisFold: (x: string) => `Where does ${x} come from?`,
   basisTyped: "Your own price.",
   badSize: "Type a whole number from 1 to 100",
   needPrice: "Type a price up to $1,000, like 7.50",
@@ -32,7 +33,7 @@ export const costText = {
   fixFirst: "Fix the number above to see the cost.",
 
   resultTitle: "Your cost",
-  resultTitlePast: "What it cost you",
+  resultTitlePast: "What it would have cost you",
   year: "A year",
   day: "A day",
   month: "A month",
@@ -57,6 +58,9 @@ export const costText = {
   dateBreakFutureBare: (day: string) => `Your break starts ${day}.`,
   datePastPre: (day: string) => `You stopped on ${day}. The money you have kept since then is in `,
   dateBreakPastPre: (day: string) => `Your break started on ${day}. What it has kept you is in `,
+  /** With the kept figure: the amount first, then where the full count is. */
+  keptPast: (day: string, kept: string) => `You stopped on ${day} and have kept ${kept} since. The full count is in `,
+  keptBreak: (day: string, kept: string) => `Your break started on ${day} and has kept you ${kept} so far. The full count is in `,
   datePastPost: ".",
   nameRecord: "Your record",
   datePickPre: "Pick your quit day in ",

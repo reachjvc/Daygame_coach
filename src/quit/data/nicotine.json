@@ -48,7 +48,7 @@
           "cite": "Diaz MC, Silver NA, Bertrand A, Schillo BA (2025). Bigger, stronger and cheaper: growth in e-cigarette market driven by disposable devices. Tobacco Control 34(1):65-70.",
           "url": "https://pubmed.ncbi.nlm.nih.gov/37536928/",
           "pmid": "37536928",
-          "quote": "average unit prices increased 165.7% from US$8.49 to US$14.07",
+          "quote": "average unit price increased from US$8.49 to US$14.07—a 65.7% increase",
           "fetched": true,
           "fetchedOn": "2026-11-18"
         },
@@ -98,7 +98,7 @@
           "fetchedOn": "2026-11-18"
         },
         {
-          "cite": "Tobacco Insider, How much are Zyns? (September 2025 update)",
+          "cite": "Tobacco Insider, How much are Zyns? (posted 12 Sep 2025)",
           "url": "https://tobaccoinsider.com/how-much-are-zyns/",
           "quote": "although the Manufacturer’s Suggested Retail Price (MSRP) remains at $5.69",
           "fetched": true,
@@ -108,6 +108,20 @@
           "cite": "Tobacco Insider, How much are Zyns? (posted 12 Sep 2025)",
           "url": "https://tobaccoinsider.com/how-much-are-zyns/",
           "quote": "$3.49 for a single can purchase",
+          "fetched": true,
+          "fetchedOn": "2026-11-21"
+        },
+        {
+          "cite": "Tobacco Insider, How much are Zyns? (posted 12 Sep 2025)",
+          "url": "https://tobaccoinsider.com/how-much-are-zyns/",
+          "quote": "there are only a few states imposing state excise tax on nicotine pouches",
+          "fetched": true,
+          "fetchedOn": "2026-11-21"
+        },
+        {
+          "cite": "Convenience Store News (NACS), PMI Sees Another Strong Quarter From Smokeless (26 Oct 2026)",
+          "url": "https://www.convenience.org/stay-current/news/2026/october/26/pmi-sees-another-strong-quarter-from-smokeless",
+          "quote": "plans to transition the majority of the Zyn flagship portfolio to 20-pouch cans (from the current 15-pouch cans)",
           "fetched": true,
           "fetchedOn": "2026-11-21"
         }

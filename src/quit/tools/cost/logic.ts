@@ -116,7 +116,7 @@ export function yearlyCostFromRecord(stored: unknown): number | null {
 /* ---------- numbers as text ---------- */
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 2 })
-const price = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 4 })
+const price = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 2, maximumFractionDigits: 8 })
 const plain = new Intl.NumberFormat("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 4 })
 
 /** "$1,898.00" */
@@ -124,9 +124,13 @@ export function formatMoney(dollars: number): string {
   return money.format(dollars)
 }
 export const formatCents = (c: number): string => formatMoney(c / 100)
-/** A price of one: to the cent, or up to 4 decimals when it is not whole cents ("$0.4495"). */
+/** A price (of one, or of a pack): to the cent, or with the decimals he typed when it is not whole cents ("$0.4495", "$7.995"). */
 export function formatPrice(dollars: number): string {
-  return price.format(Number(dollars.toFixed(4)))
+  return price.format(Number(dollars.toFixed(8)))
+}
+/** A day or month amount: "under $0.01" when it would round to nothing but the year is not nothing. */
+export function formatPart(partCents: number, yearCents: number): string {
+  return partCents === 0 && yearCents > 0 ? "under $0.01" : formatCents(partCents)
 }
 /** A count: up to 4 decimals, thousands commas. */
 export function formatCount(n: number): string {
@@ -134,9 +138,9 @@ export function formatCount(n: number): string {
 }
 
 /** For a box: no commas, up to 4 decimals, at least `min` decimals for money. */
-export function boxNumber(n: number, minDecimals = 0): string {
-  let s = Number(n.toFixed(4)).toFixed(4)
-  for (let d = 4; d > minDecimals && s.endsWith("0"); d--) s = s.slice(0, -1)
+export function boxNumber(n: number, minDecimals = 0, maxDecimals = 4): string {
+  let s = Number(n.toFixed(maxDecimals)).toFixed(maxDecimals)
+  for (let d = maxDecimals; d > minDecimals && s.endsWith("0"); d--) s = s.slice(0, -1)
   return s.includes(".") && s.endsWith(".") ? s.slice(0, -1) : s
 }
 
@@ -150,6 +154,8 @@ const thousands = (text: string) => /^\d{1,3},\d{3}$/.test(text.trim())
 export function parseCount(text: string, mode: CountMode): Field<number> {
   if (thousands(text)) return { kind: "bad" }
   const t = parseTyped(text, mode === "week" ? MAX_PER_WEEK : MAX_PER_DAY)
+  // 0 is the same as nothing typed: it is never written to the record
+  if (t.kind === "ok" && t.value === 0) return { kind: "empty" }
   return t.kind === "ok" ? { kind: "ok", value: mode === "week" ? t.value / 7 : t.value } : t
 }
 
@@ -166,7 +172,8 @@ export function parsePrice(text: string, mode: PriceMode, size: number): Field<n
   if (thousands(text)) return { kind: "bad" }
   const t = parseTyped(text, MAX_PRICE)
   if (t.kind !== "ok") return t.kind === "empty" ? { kind: "bad" } : t
-  return { kind: "ok", value: price4(mode === "pack" ? t.value / size : t.value) }
+  // a price of one is kept exactly as typed; a pack price is divided and kept to 4 decimals (the pack price itself is stored too)
+  return { kind: "ok", value: mode === "pack" ? price4(t.value / size) : t.value }
 }
 
 const sameMoney = (a: number, b: number) => Math.abs(a - b) < 1e-9
@@ -190,7 +197,9 @@ export function importOldCost(old: unknown, units: Pick<QuitUnit, "id" | "defaul
   if (typed.kind !== "ok") return null
   const rawPerDay = typeof old.perDay === "number" && Number.isFinite(old.perDay) && old.perDay >= 0 ? old.perDay : unit.id === "cigarettes" ? 10 : 1
   const days = pickInt(old.daysPerWeek, 1, 7, 7)
-  return { id: unit.id, perDay: (rawPerDay * days) / 7, priceUsd: price4(typed.value), priceBasis: basisFor(typed.value, unit) }
+  const perDay = (rawPerDay * days) / 7
+  // outside the tool's own limits (or 0) counts as not set
+  return { id: unit.id, perDay: perDay > 0 && perDay <= MAX_PER_DAY ? perDay : null, priceUsd: typed.value, priceBasis: basisFor(typed.value, unit) }
 }
 
 /** Wave-1 asked days a week: fewer than 7 reads best as a week count ("100 a week", not "14.2857 a day"). */
