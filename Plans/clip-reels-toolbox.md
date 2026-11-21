@@ -91,35 +91,40 @@ Phase 0 is done. Short form here; his exact words win wherever this differs.
 - Length: no fixed number, "somewhere in 45-85 sec for MOST videos" (RS-Q2).
 - Versions: "as many as you can realistically make that would make sense"
   (RS-Q3).
-- Risk: use short pieces from many sources; claims are something to learn
-  from, but every project and part shows its risk so he knows what he says
-  yes to (RS-Q4).
+- Risk: he doubts short pieces from many sources are a risk; a claim is
+  something to learn from. He wants to be told the risk of projects and
+  their parts so he knows what he says yes to (RS-Q4).
 - Him on camera: not reacting, but in a decent share of reels, for example
-  an outro (the science, what to do, how it relates to quitting). The
-  process must make his part easy to film (RS-Q6).
-- Checking my reading: ask him only when unsure (RS-Q7).
-- Story and hook: "(something like that)" is never copied as text; show him
-  10 to 20 options and he picks the most catching, above all for the opening
-  (RS-U7). Possibly decide together on "X appropriate things this story
+  an outro (the science, what to do, how it relates to quitting), or in many
+  ways; probably not reacting. Design the process so it is easy for him to
+  appear (RS-Q6).
+- Checking my reading: "asking me if youre unsure, so as to not waste my time" (RS-Q7).
+- Story and hook: his "(something like that)" was copied literally as story
+  text, which he did not mean; he wants 10 or 20 options and picks the most
+  catching, above all for the opening (RS-U7). Possibly decide together on "X appropriate things this story
   would be telling" (RS-U6).
 - Wider search: find things that are tangentially relevant: someone saying
   the same thing, a slightly different thing, another rockstar with the same
   story (RS-U2). Bigger hunt, done by smaller models (RS-P4).
 - Toolbox grows: animations where they make sense (RS-U6); about 20 things
   his paper idea pointed at, not papers (RS-T3); about 10 ways to make the
-  crash vivid (RS-T10); the narrator may describe the screen sometimes
-  (RS-T4).
-- Black bars: "seems more like a mistake" (RS-U4). Find once and for all how
+  crash vivid (RS-T10). Narrator "never describes the screen": he is not
+  sure (RS-T4), open question.
+- Black bars: "seems more like a mistake", and he slightly doubts others do it on reels (RS-U4). Find once and for all how
   reels should look (RS-T12).
 - More AI in the process, with the best methods (RS-R8).
 - A way to see whether we get closer to the target: what he said, about
   which version, kept as memory without fixed rules; stay creative (RS-P1).
-- The loop asks little of him. Claude suggests a research spell on how to do
-  the job when he keeps saying the same thing (RS-M5).
+- The loop requires as little of him as possible; he expects a decent amount
+  of iterations before Claude has its own editor skills. Claude should
+  suggest research on how to do the job when he keeps saying the same thing
+  (RS-M5). Keep dynamism to maximise creativity (RS-P1).
 
 ## Round 5 (proposed 2026-11-21, after his answers)
 
-Steps a–e run side by side; f needs c; g and h close the round.
+Steps a–e run side by side; f needs c; g and h close the round. A checker
+(Sonnet) compared this section with his raw notes on 2026-11-21 and its
+flags were fixed (r5/checker.json, private).
 
 - **a. Story and opening lists** (Opus). 15–20 things the Billy story could
   be telling, and 15–20 openings (first 2–3 s: line + picture). Each

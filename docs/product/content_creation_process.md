@@ -97,12 +97,13 @@ Worked, or worth more tries:
   not papers, then pick the few that work best. [his words, RS-T3]
 - Most reels "somewhere in 45-85 sec", no fixed number. [his words, RS-Q2]
   Scope: celebrity reels.
-- Openings and story lines: 10 to 20 options shown, he picks the most
-  catching; his "(something like that)" is never copied as text. [his
-  words, RS-U7]
-- He appears in a decent share of reels (for example an outro: the
-  science, what to do, how it ties to quitting), and his part must be easy
-  to film. [his words, RS-Q6]
+- Openings and story lines: "find like 10 or 20 things to show me, and i
+  pick the thing thats most catching, especially when it is the thing
+  people see initially". [his words, RS-U7]
+- "generally i will appear in a decent amount of our reels", for example
+  the outro, "or i can appear in many ways"; probably not reacting. "we
+  want to generally design a process where it is easy for me to appear".
+  [his words, RS-Q6]
 
 Did not work:
 - Cuts that chop words off: "unwatchable". [his words, 2026-11-21] Cause:
