@@ -74,6 +74,25 @@ Ids are the page's items (U = my reading, Q = question, R = research, P = way of
 
 👍 given on: U1, U3, U5, Q1, Q5, Q8, R1, R2, R3, R4, R5, R6, R7, R9, P2, P3, P4, P5, P6, T1, T2, T3, T5, T7, T8, T9, T10, T11, T13. A 👍 on a question meant "yes, go with your recommendation" (Q1 test bench, Q5 reference reels first, Q8 Trial Reels later).
 
+### Outvoted v2 loop page, his notes (page KbTowH…, 2026-11-21 18:31–18:41 UTC) [his words, verbatim]
+
+No 👍 were used; his preferences are in these notes.
+
+- S8b (scroll + wax seal, "within a few days"), 18:31 UTC: "This one i like the most, but i wonder if we couldve reached this with less "animation" costs, i.e. could we have found this iteration more easily? that is not as important as finding the right thing. Also, i still think the screen on all of these flickers too much, but it is fine that you mainly test out one thing, which here seems to be the saying of the days, so thats the right process understanding that youre sort of working towards here"
+- S7a (things drop in), 18:32 UTC: "This is pretty cool too"
+- loop 7 as a whole, 18:32 UTC: "I feel like youre really getting it now. IF we start building like this, then my narration becomes super lively at a cheap cost to me. Well done on understanding what i sort of wanted."
+- loop 6 as a whole, 18:33 UTC: "not sure if any of these are perfect. They are all reasonable, but i also think it is a bit difficult for me to truly find the right one when i am only seeing a 6 second snippet. We also have to consider the coherence of the story in total, i.e. what kind of narration are we chosen, so if i choose option C in one of them, that would change what option makes most sense in the next sequence in the "movie". But still good job on what youre doing"
+- S6a (vote board), 18:34 UTC: "out of these, this one feels the strongest"
+- S5b (tower on a little bed), 18:35 UTC: "this"
+- S5b (tower on a little bed), 18:35 UTC: "this seems to be lagging a bit, but still a much cooler way of doing it. I really like that youre being more creative, and all in all, it works well to have this smaller snippets"
+- F3 (you on the phone), 18:36 UTC: "these types of ideas i really like. It is still a cool story telling way of getting me in there. They may not need to see me all of the time, for every single video. Gj dude!"
+- F7 (you move the figure), 18:37 UTC: "i mean this i want to test out too, thats a super cool idea"
+- F8 (dark against the window), 18:37 UTC: "could also work"
+- loop 3 as a whole (filming storyboard), 18:38 UTC: "i think it reset what i was doing when you added something to the artifact, if possible, fix that for the future -- now, what i want to do tomorrow, is film a bunch of stuff that you think might work, so we can see how these will look. I think i especially like when i am there for a short amount of time, or particularly when i am part of an animation. Like the idea of me being animated out of bed in the same story figure we're using, while showing myself coming out of bed, thats such a cool idea"
+- loop 2 as a whole, 18:40 UTC: "I can actually see all of them working. I think s2a is good because of its simplicity, but s2c mightve been better, but the video (or my pc) was lagging, so it was hard to really tell. I think s2b would especially be strong in combination with the other animation of me waking up, so we will have to try a bunch of things"
+- S1c (scroll + counter), 18:41 UTC: "very good"
+- "How I read that type of animation", 18:41 UTC: "This is so much better. Now it seems youve gotten at least a majority of what i want in this process right. What i want to be careful of, is that i dotn want us to now say that we always use wooden blocks or something like that in our content creation. That is not really the strategy. But this thign of short clips, multiple variants, larger creativity. Something in here you did very well in understanding what i wanted, compared to previous rounds. Clap yourself on the shoulder my friend! (and then make sure we take some learning away from it!!)"
+
 ## Earlier sections, moved here unchanged on 2026-11-21
 
 ## The owner's words [Video 01, Track 2] [his words, summary]

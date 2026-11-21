@@ -148,6 +148,16 @@ Worked, or worth more tries:
 - The research summary on the ten ways page: "very good and useful". [his
   words, 2026-11-20]
 
+- Outvoted v2 (own films): "this thing of short clips, multiple variants,
+  larger creativity" is what he wanted; "my narration becomes super lively
+  at a cheap cost to me". [his words, 2026-11-21, type-reading and loop 7]
+  His limit, same note: not "that we always use wooden blocks": "that is not
+  really the strategy". The blocks are one look, not the rule. [his words]
+- Filmed himself: "they may not need to see me all of the time, for every
+  single video"; he likes being there for a short time, or being part of
+  an animation (F3, F7, F8; "me animated out of bed in the same story
+  figure"). [his words, 2026-11-21, loop 3]
+
 Did not work:
 - Question rounds on single items: too slow. Rough sketches and single
   options: too hard to decide from. [his words, 2026-11-18]
@@ -166,6 +176,15 @@ Did not work:
 - Claude's own check of its night output ("came out well"), with nothing to
   compare against. [his words 2026-11-21 on the result; cause is Claude's
   reading; history "Why it went wrong"]
+
+- Outvoted v2: a 6-second snippet makes the right pick hard; the choice
+  in one spot changes what fits the next, so the story has to be judged as a
+  whole. [his words, 2026-11-21, loop 6] Open: not solved yet.
+- "The screen on all of these flickers too much" [his words, 2026-11-21,
+  S8b]. Open. [measured: it is film grain re-drawn every frame, not render
+  noise; test of lower grain in progress]
+- Updating his review page while he works "reset what i was doing" [his
+  words, 2026-11-21, loop 3]. Open: publish less often while he is on it.
 
 Not judged yet: the look finder page; three looks of the same ten seconds;
 Outvoted v2 (`Plans/outvoted-animation-round.md`).
