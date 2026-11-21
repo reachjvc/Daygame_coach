@@ -25,6 +25,22 @@ reel". Details stay in the private folders an entry points to.
 
 ## Entries
 
+### H17 · 2026-11-21 · Track 2 · Outvoted v2 loops: options that never reached him
+- What happened: 19 short options were built for seven spots. 11 passed the
+  automatic checks and a fresh reviewer and went on his page. 8 were held
+  back after up to three fix rounds: every wooden-figure option but one
+  (loose-looking limbs, poses that read as broken, a carried block that
+  seemed to float), the light-drawing option (read as a flat overlay), and
+  the one local AI video clip (almost no motion, water that looked carved).
+  The spot "That guy, deciding late at night" got no new option.
+- Cause: the shared wooden figure was built quickly in the first loop and
+  never made to read as one body at phone size; light drawn as thin lines
+  lights nothing, so it looks pasted on (Claude's reading).
+- What changed in the process: nothing yet. Proposed: rebuild the figure
+  before more figure options; light effects must light the scene they are in.
+- Where: `~/.cache/daygame-research/content/reel-outvoted/film/DECISIONS.md`
+  (D17-D33), `film/loops.md`.
+
 ### H16 · 2026-11-21 · Track 1 · Round 4 rules made too fixed from his words
 - What happened: On the round 4 page he called W1 "the closest we've gotten
   to something that is different from the original viral, and still

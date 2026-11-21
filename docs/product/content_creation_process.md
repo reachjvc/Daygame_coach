@@ -18,6 +18,9 @@ standard; short loops; GPU by day when free, the night always has work).
 [his words; history "The owner's words"] Plan:
 `Plans/outvoted-animation-round.md`. A night session builds only from this
 line; if it is out of date, the night does not start. [Claude, proposed]
+Status 2026-11-21 19:40: seven spot loops, the filming storyboard and the
+whole v2 film (101 s) are on his loop page; waits for his 👍 and notes.
+[record]
 
 Tracks (proposed 2026-11-21): **Track 1** celebrity clip reels; **Track 2**
 our own films (Outvoted, the next reels); **Video 01**; **Finding the
