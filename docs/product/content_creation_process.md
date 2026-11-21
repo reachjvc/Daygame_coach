@@ -350,6 +350,27 @@ What the platforms say (checked 2026-11-20):
 - Copyright is a separate question. The show owners' matching systems
   ignore credit lines and edits, and posting each reel stays his call.
 
+### His verdict on round 2 (owner, 2026-11-21)
+
+- Quite disappointed in the quality. What he asked for was to improve on
+  the existing video (the base reel), not eight different things.
+- Positive: narration plus other pictures or other interviews, combined,
+  still has "some inkling" that it could be quite successful. On the page:
+  A5 "some narration could work"; A7 "career pictures also has some
+  potential, but it is cut very weird now".
+- The execution was bad in about 95% of cases:
+  - Taken too far: none of the versions was longer. ("Don't only make them
+    longer" did not mean "never longer".)
+  - The biggest mistake, never again: cuts that chop words off. Those
+    reels are unwatchable.
+  - A plain black card with words ("he did XYZ") is boring.
+  - Some versions lost the story we are telling and turned it into
+    something weird.
+- He wants a retry, and the process improved as we go.
+- The content documents should record what we tried, what worked and what
+  did not, with one track for celebrity reels and one for other reels. He
+  may check them closely so Claude is not misled by its own writing.
+
 Tools (private): `~/.cache/daygame-research/celeb-reels/code/`.
 - `render.py` makes one-source reels: captions, a face-tracked 9:16 crop,
   the hook and the source tag.
