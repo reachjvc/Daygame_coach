@@ -174,6 +174,7 @@ test.describe("quit wave 1 part 1 @phone", () => {
     await expect(page.getByTestId("cost-year")).toHaveText("$1,898.00")
     await noSideways(page)
     await shot(page, "cost-result")
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur()) // the record is written when the box is left
     const unit = await page.evaluate(() => JSON.parse(localStorage.getItem("quit-v1") ?? "{}").nicotine.record.unit)
     expect(unit).toEqual({ id: "cigarettes", perDay: 10, priceUsd: 0.52, priceBasis: "default" })
   })
