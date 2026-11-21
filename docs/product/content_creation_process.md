@@ -208,7 +208,8 @@ Every reel:
 7. **He watches the finished film once** and writes notes with a time.
    Each note is fixed and saved as a rule for later reels (way 5).
 8. **Nights.** Several different whole films of the same voice are built
-   while he sleeps, as many as the limits allow (way 6).
+   while he sleeps, as many as the limits allow (way 6). Changed after the
+   first night went wrong: see "The first night run" below.
 9. **After posting.** The retention graph is laid over the sentences and
    feeds the next sentence check.
 
@@ -222,6 +223,75 @@ Open questions:
 - Prices for the picture and clip tools. Found so far: $2 to $6 for a
   15-second clip and about $20 a reel after retries (one creator), about
   $40 for 44 seconds (a seller). No price found for pictures.
+
+## The first night run (2026-11-20 to 21) and his verdict
+
+What he asked for (2026-11-20, 20:06): keep his GPU rendering reels at full
+capacity until 06:00, with Claude choosing the work from the content chats.
+The work should be mostly animation, not token use.
+
+What Claude made: 18 whole "Outvoted" films. Every scene was an AI still
+painting (Stable Diffusion XL on his PC) with a slow camera zoom or pan. That
+was 6 painted looks × 3 versions of the same 32 shots.
+
+### His verdict (owner, 2026-11-21) — his rule: never make this kind again
+
+- Not usable at all. It is the same video in a few looks, with almost no
+  creativity. The variance is far too low.
+- AI still paintings with a slow zoom are the opposite of what he enjoys
+  about AI. The quality is low: wrong fingers, pictures often all wrong, no
+  real animation, only zooming in and out.
+- **Do not make these pictures, paintings or videos again.** This drops way
+  8 (AI paintings with a slow camera) and step 8's "same voice in many
+  looks".
+- What he had said he liked: the blocks film, with **more** kinds of
+  animation at some spots (his notes of 2026-11-20, under "The owner's
+  words"). The night did not apply any of those notes to the Outvoted film.
+- He does not trust that the GPU was near full. He wants a way to be sure.
+
+### Why it went wrong (Claude's own reading)
+
+1. **The wrong brief won.** The doc held his Outvoted film notes (keep the
+   blocks, add other animation at "at night" and "in the morning", film
+   himself) and, lower down, the 👍 on way 8 and step 8. The night session
+   built from the newer list and never named his film notes. No line said
+   "this is the film to improve next".
+2. **"Little token use" was read as "no Claude at all".** Adding new
+   animated scenes to the blocks film takes Claude work to build each
+   scene. The night picked the one thing a GPU can do alone: still
+   pictures. The right split is that Claude builds the scenes in the
+   evening and the GPU renders them at night.
+3. **Volume was planned, not variety.** The queue repeated one shot list.
+4. **Claude judged its own output.** It called the first painting "came out
+   well" and never compared it with the film he liked. It did not check the
+   hands either.
+5. **"Full use" was claimed, not measured.** Only one GPU reading a minute
+   was kept, and each new reading replaced the old one. Another session's
+   capture batch shared the card all night. For the first 45 minutes and
+   from 01:19 to 01:39 the reel work was nearly stopped.
+
+### Proposed change (Claude, proposed 2026-11-21, not decided)
+
+From Claude's own reading, not researched:
+
+- **A night brief before every night.** One short message names the film,
+  the notes of his it carries out, and what "done" looks like. Claude sends
+  it before the night starts, so he can stop a wrong night in one line.
+- **Variety by design.** A night tries different kinds of animation for the
+  same spots, not the same shots in other colours.
+- **Evening build, night render.** Claude builds the new scenes (code and
+  3D, like the blocks) by evening. Then the GPU renders full-size versions
+  overnight.
+- **A check against what he liked.** Before a night's output reaches him,
+  a reviewer compares frames with the film he liked and checks hands and
+  faces. A failed kind is cut early, not rendered 18 times.
+- **Proof of GPU use.** A logger records GPU use every 10 seconds all
+  night. The morning page shows a chart: busy % per hour, and every stretch
+  under 80%. On WSL the GPU tool cannot name the programs using the card.
+  So the reels' share comes from the render log: seconds per picture or
+  frame, against its speed with the card to itself. A drop under 80% for 5 minutes wakes Claude. The queue always holds
+  more than one night of work. Tool:
+  `~/.cache/daygame-research/tools/gpu_log.sh` (start and summary).
 
 ## Celebrity clip reels (owner, 2026-11-20)
 

@@ -41,6 +41,11 @@ say "I left notes".
   the voice with a better microphone another day. Plan:
   `Plans/reel-outvoted.md` (proposed). Private folder:
   `~/.cache/daygame-research/content/reel-outvoted/`.
+- **First night run (2026-11-20 to 21) failed.** It made 18 AI-painting
+  films of Outvoted. He judged them not usable, and AI still paintings with
+  a slow zoom are never to be made again. The next step is his Outvoted
+  notes: blocks plus other animation at some spots, and himself filmed. See
+  "The first night run" in the process file.
 - **The process itself**: being worked out on video 01. About 40% there
   (owner, 2026-11-18). On 2026-11-20 he marked the ten ways page: 👍 on
   ways 2, 3, 5, 7 and 8, and he wants a finder for videos that outperform
