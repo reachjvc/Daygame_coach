@@ -682,6 +682,9 @@ test.describe("your record, desktop", () => {
       await shot(page, `d-${id}`)
     }
     await page.goto(URL)
+    // Wait until the page has read both stores: a clear that lands between the two reads (the quit record first, the
+    // Black Box a render later) leaves the record in memory beside empty storage, and the page starts a run from it.
+    await expect(page.getByTestId("record")).toBeVisible()
     await page.evaluate(() => localStorage.clear())
     await page.reload()
     await expect(page.getByTestId("empty-title")).toBeVisible()
