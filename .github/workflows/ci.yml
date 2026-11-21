@@ -130,8 +130,18 @@ jobs:
       - name: Unit tests
         run: npm test -- --shard=${{ matrix.shard }}
 
+  # The database suite in two halves, each with its own throwaway backend on
+  # its own runner. One job grew from 50 files in ~85 s to 62 files in
+  # 100-145 s on 2026-11-19/20 (new tests, not slower ones: CI 44595110355 vs
+  # 44853530491), past the nightly ratchet's 95 s. Display names `database 1/2`
+  # and `database 2/2` are what docs/testing/durations.json looks for.
   database:
+    name: database ${{ matrix.shard }}
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ['1/2', '2/2']
     steps:
       # FIRST, BEFORE ANYTHING TOUCHES THE NETWORK. The test backend's ports
       # (55320-55329, tests/db/supabase/config.toml) sit inside Linux's
@@ -169,7 +179,7 @@ jobs:
           version: 2.120.0
 
       - name: Database tests
-        run: npm run test:integration
+        run: npm run test:integration -- --shard=${{ matrix.shard }}
         timeout-minutes: 15
 
   # ===========================================================================

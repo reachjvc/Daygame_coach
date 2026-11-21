@@ -5,7 +5,8 @@
   "suites": [
     { "workflow": "ci.yml", "job": "unit 1/2", "step": "Unit tests", "seconds": 97 },
     { "workflow": "ci.yml", "job": "unit 2/2", "step": "Unit tests", "seconds": 97 },
-    { "workflow": "ci.yml", "job": "database", "step": "Database tests", "seconds": 73 },
+    { "workflow": "ci.yml", "job": "database 1/2", "step": "Database tests", "seconds": 73 },
+    { "workflow": "ci.yml", "job": "database 2/2", "step": "Database tests", "seconds": 73 },
     { "workflow": "e2e.yml", "job": "e2e-fast", "seconds": 378 },
     { "workflow": "e2e.yml", "job": "desktop 1/8", "seconds": 300 },
     { "workflow": "e2e.yml", "job": "desktop 2/8", "seconds": 300 },
