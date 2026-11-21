@@ -168,7 +168,7 @@ test("example data and day 12 on a desktop width", async ({ page }) => {
   await page.goto(URL)
   await page.getByTestId("setup-seed").click()
   await expect(page.getByTestId("example-bar")).toBeVisible()
-  await expect(page.getByTestId("best-day")).toHaveText(/^2[34]$/)
+  await expect(page.getByTestId("best-day")).toHaveText(/^2[45]$/) // seed = now - 23d 4h 23m: calendar day 24, or 25 between local 00:00 and 04:23
   await shot(page, "desktop-example", 1280)
 })
 
