@@ -48,7 +48,7 @@ small steps from the last instead of several different tries.
 
 ## Phases
 
-- **Phase 0, his answers** (owner). Read the reset page's notes and 👍
+- **Phase 0, his answers** (owner; done 2026-11-21, see below). Read the reset page's notes and 👍
   (db `notes`, `thumbs`). Record his notes verbatim in the history file.
   Nothing below starts before this. Model: Opus.
 - **Phase 1, reference reels** (only if Q5 = yes). Find 6 strong celebrity
@@ -81,6 +81,72 @@ small steps from the last instead of several different tries.
   on the next page, stop only when unsure.
 - Q8 Trial Reels with real viewers: recommend later, once two versions are
   liked; posting is his call.
+
+## His answers on the Reset page (2026-11-21, word for word in the history file, RS-*)
+
+Phase 0 is done. Short form here; his exact words win wherever this differs.
+- 👍 on Q1 (Billy = test bench), Q5 (reference reels first), Q8 (Trial
+  Reels later), P2, P3, P5, P6, all research items except R8, and tools T1,
+  T2, T3, T5, T7, T8, T9, T10, T11, T13.
+- Length: no fixed number, "somewhere in 45-85 sec for MOST videos" (RS-Q2).
+- Versions: "as many as you can realistically make that would make sense"
+  (RS-Q3).
+- Risk: use short pieces from many sources; claims are something to learn
+  from, but every project and part shows its risk so he knows what he says
+  yes to (RS-Q4).
+- Him on camera: not reacting, but in a decent share of reels, for example
+  an outro (the science, what to do, how it relates to quitting). The
+  process must make his part easy to film (RS-Q6).
+- Checking my reading: ask him only when unsure (RS-Q7).
+- Story and hook: "(something like that)" is never copied as text; show him
+  10 to 20 options and he picks the most catching, above all for the opening
+  (RS-U7). Possibly decide together on "X appropriate things this story
+  would be telling" (RS-U6).
+- Wider search: find things that are tangentially relevant: someone saying
+  the same thing, a slightly different thing, another rockstar with the same
+  story (RS-U2). Bigger hunt, done by smaller models (RS-P4).
+- Toolbox grows: animations where they make sense (RS-U6); about 20 things
+  his paper idea pointed at, not papers (RS-T3); about 10 ways to make the
+  crash vivid (RS-T10); the narrator may describe the screen sometimes
+  (RS-T4).
+- Black bars: "seems more like a mistake" (RS-U4). Find once and for all how
+  reels should look (RS-T12).
+- More AI in the process, with the best methods (RS-R8).
+- A way to see whether we get closer to the target: what he said, about
+  which version, kept as memory without fixed rules; stay creative (RS-P1).
+- The loop asks little of him. Claude suggests a research spell on how to do
+  the job when he keeps saying the same thing (RS-M5).
+
+## Round 5 (proposed 2026-11-21, after his answers)
+
+Steps a–e run side by side; f needs c; g and h close the round.
+
+- **a. Story and opening lists** (Opus). 15–20 things the Billy story could
+  be telling, and 15–20 openings (first 2–3 s: line + picture). Each
+  version in f uses a different pair; the page shows the full lists for his
+  pick.
+- **b. How reels look, once** (Sonnet research, Opus judges). Measure 20–30
+  strong celebrity story reels on YouTube Shorts and TikTok (no Instagram
+  reads): full screen or framed, caption place and size, text on top,
+  source names, length, cut pace. One look sheet with the counts. 6–8 of
+  them play at the top of the page (Q5).
+- **c. Wide footage hunt** (Haiku scouts, Sonnet sorts). Search angles per
+  story beat: Billy elsewhere, other rockstars with the same story, people
+  saying the same or a slightly different thing. Library with contact
+  sheets, checked words, and a claim-risk label.
+- **d. Idea lists** (Opus). ~20 things the paper idea pointed at; ~10 ways
+  to make the crash vivid; animation tools we can make.
+- **e. Research** (Sonnet). Best AI methods for this kind of editing (R8),
+  and Claude's suggestion from RS-M5: why an AI keeps reading examples
+  literally, and how editors and AI tools widen options.
+- **f. Versions** (Sonnet builds, Opus gate). As many as make sense, most
+  45–85 s, each a different story + opening + tool mix, recipe strip,
+  risk label, cuts checked by ear. One or two leave a slot for his outro.
+- **g. Target log** (proposed). Per version: his words tied to the time
+  and the tools in it, and one tap "how close to what you want" (1–10), so
+  rounds can be compared.
+- **h. Page** "Clip Reels Round 5": my reading of his notes with kinds,
+  the checker's flags, lists from a and d, look sheet, versions.
 
 ## Blockers
 

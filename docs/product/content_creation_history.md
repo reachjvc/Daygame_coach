@@ -43,6 +43,37 @@ track in brackets. Labels in brackets after a heading: [his words],
 - **chg-4**: "I more likely asked if this was how it is supposed to be. I dont really watch reels, so are reels supposed to be like that"
 - **chg-6**: "also, one of the cuts was bad, because he said ".." something at the end, so it was just cut wrong"
 
+### Celebrity reels, Reset page notes (page WYXKRQ…, 2026-11-21) [Track 1] [his words]
+
+Ids are the page's items (U = my reading, Q = question, R = research, P = way of working, T = tool, M = mix). Every note word for word, typos kept.
+
+- **RS-U2** (my reading: go much wider for footage, 13:12 UTC): "yes exactly. Specifically this thing of, how do we broaden our horizon in order to search correctly so that we find things that are tangentially relevant, like some1 saying the same thing, or a slightly different thing, or another rockstar with the same story"
+- **RS-U4** (my reading: your questions are questions, not orders (black bars), 13:13 UTC): "well it seems more like a mistake then, as i feel like you just copied the youtube format without thinking, even if some do it like that on reels too (which i slightly doubt)"
+- **RS-U6** (my reading: W1 was the closest; its faults, 13:15 UTC): "yes, and it still was not genius in any way. We should also expand the toolbox more, so that you can make animations too, when these makes sense. Also i am not sure how we work best on it, but perhaps i need to help you more with story lines, or we could decide on X appropriate things this story would be telling, because we could use transitions, text, narration, but all of these become worse if we dont tell a good story that actually makes sense."
+- **RS-U7** (my reading: the story stays ("why never again never worked"), 13:16 UTC): "When i say, (something like that) i dont mean that you should fucking literally copy that as story text. That is exactly the pattern where you need to find like 10 or 20 things to show me, and i pick the thing thats most catching, especially when it is the thing people see initially."
+- **RS-Q2** (how long should most versions be, 13:16 UTC): "no fixed number, but somewhere in 45-85 sec for MOST videos seem right"
+- **RS-Q3** (how many versions per round, 13:16 UTC): "I would rather say as many as you can realistically make that would make sense"
+- **RS-Q3** (how many versions per round, 13:17 UTC): "but that depends on your ability to figure out what would make sense and what would not"
+- **RS-Q4** (is any footage off limits, 13:18 UTC): "i still doubt it would be a risk to use 5 seconds of some material, if its from all different sources. And if t he biggest risk is a copyright claim, then we can just learn from it. But you should notice me about the risk of various projects or parts of a project, so i know what were saying yes to"
+- **RS-Q6** (should you appear on camera, 13:19 UTC): "well probably not reacting, but generally i will appear in a decent amount of our reels. It could be that i appear in the outro, saying something (like the science, or what to do, or how this relates to quitting), or i can appear in many ways. But we want to generally design a process where it is easy for me to appear, i.e. we dont want to make it a requirement that i film myself jumping out of an airplane holding a billy idol blowup doll"
+- **RS-Q7** (how should I check my reading of your notes, 13:19 UTC): "Definitely more something like asking me if youre unsure, so as to not waste my time"
+- **RS-R8** (research: AI in the process, 13:22 UTC): "lets do more with AI, but find the best methods"
+- **RS-P1** (the toolbox replaces the rule list, 13:24 UTC): "Yes, and we should have a way of knowing when we're getting closer to target, exactly what i said, what i said it to etc., so that we can begin working better together. The main thing you need to do, is align yourself with the idea that we're currently establishing how to work together, so you need to have some way of having a memory of what i expect of you, what worked etc., without making fixed rules that are not dynamic enough, or worse yet, are entirely wrong from what i actually say. (that would be like hiring an editor, saying that we do all about bananas, and he makes a rule that says we do all about apples). AI is great at creativity, so i also want you to maintain dynamism to maximize creativity"
+- **RS-P4** (a bigger footage hunt before any cutting, 13:24 UTC): "yes, this should be expanded. You can just use lesser models to do more work"
+- **RS-T3** (tool: the research paper on screen, 13:25 UTC): "yeah, but again, this was just a general idea. Can you find like 20 different things that my idea was pointing at, that was not research papers? thats more in line with what you should be trying to do, then deciding on the few that works best here"
+- **RS-T4** (tool: narrator, never describes the screen, 13:25 UTC): "i dunno. I am not sure about never describing the screen"
+- **RS-T6** (tool: text over moving pictures of him, 13:26 UTC): "yeah, just think about making it as interesting as possible, obviously. Obviously = this must be important and should already be understood implicitly"
+- **RS-T10** (tool: freeze frame with a label, 13:26 UTC): "maybe, or maybe 10 other things to make the crash vivid and interesting and entertaining"
+- **RS-T11** (tool: his own music under the story, 13:26 UTC): "can try"
+- **RS-T12** (tool: framed layout (16:9 in the middle), 13:27 UTC): "just figure out once and for all how reels should really look, thjen we can stop having this discussion"
+- **RS-M1** (mix "His life on screen", 13:27 UTC): "maybe, maybe not"
+- **RS-M2** (mix "Many voices", 13:27 UTC): "could be"
+- **RS-M3** (mix "Told story", 13:27 UTC): "maybe, less likely tho.. many possibilities"
+- **RS-M4** (mix "Then and now", 13:27 UTC): "yes, can work, sometimes"
+- **RS-M5** (the loop, 13:29 UTC): "the loop should require as little of me as possible, but i expect that we need a decent amount of iterations before you fully have built your own skills as an editor. You should also periodically be intelligent enough to suggest that you spend some time researching HOW to do your job, so that you can learn, when you repeatedly see that i am saying the same things. It may be that you need to understand more of the failure modes of AI (Or any number of things, this is again, just an example, not something for you to immediately just go one dimentionally towards)"
+
+👍 given on: U1, U3, U5, Q1, Q5, Q8, R1, R2, R3, R4, R5, R6, R7, R9, P2, P3, P4, P5, P6, T1, T2, T3, T5, T7, T8, T9, T10, T11, T13. A 👍 on a question meant "yes, go with your recommendation" (Q1 test bench, Q5 reference reels first, Q8 Trial Reels later).
+
 ## Earlier sections, moved here unchanged on 2026-11-21
 
 ## The owner's words [Video 01, Track 2] [his words, summary]

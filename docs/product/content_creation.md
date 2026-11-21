@@ -84,7 +84,9 @@ say "I left notes".
   notes-seen.md) shows Claude's reading of his notes, eight questions,
   research on what makers of this kind of reel do, and a proposed toolbox
   with several versions per round. Plan: `Plans/clip-reels-toolbox.md`
-  (proposed). Nothing is built until he answers on that page.
+  (proposed). He answered on that page on 2026-11-21 (notes RS-* in the
+  history file); round 5 (story and opening lists, how reels look, a wide
+  footage hunt, versions) is being built by that plan.
 - **Look finder (step 1 of the proposed process)**: built 2026-11-20. 18
   YouTube videos that beat their channel's usual views, in six looks, each
   playable with a 👍 and a note (page listed in notes-seen.md). Waits for

@@ -93,6 +93,16 @@ Worked, or worth more tries:
   say"), in place of the AI narrator. [his words, R3-1]
 - Idea, his "just an idea": show the research paper on screen when the
   reel names a finding (the abstinence violation effect). [his words, R3-4]
+  It was "just a general idea": find about 20 things it points at that are
+  not papers, then pick the few that work best. [his words, RS-T3]
+- Most reels "somewhere in 45-85 sec", no fixed number. [his words, RS-Q2]
+  Scope: celebrity reels.
+- Openings and story lines: 10 to 20 options shown, he picks the most
+  catching; his "(something like that)" is never copied as text. [his
+  words, RS-U7]
+- He appears in a decent share of reels (for example an outro: the
+  science, what to do, how it ties to quitting), and his part must be easy
+  to film. [his words, RS-Q6]
 
 Did not work:
 - Cuts that chop words off: "unwatchable". [his words, 2026-11-21] Cause:
@@ -100,12 +110,12 @@ Did not work:
   the cut check on the sound (`cutsafe.py`).
 - Black bars or blurred bands, including black edges inside the picture
   (photos in a frame, VHS edges). [his words, 2026-11-20, R3-3, R3-4]
+  The framed layout "seems more like a mistake". [his words, RS-U4]
   [measured] round 3 had black edges in all three versions; `barscheck.py`
   finds them.
 - Short inserts between the interview: "so short and irrelevant", "weird
   and make no sense to a real watcher, like they could simply be longer, so
-  we watch less of the original footage". [his words, R3-1, R3-4] Scope:
-  the Billy reel; probably all clip reels. [Claude's reading]
+  we watch less of the original footage". [his words, R3-1, R3-4]
 - One source name on screen the whole time. The name should come up for
   the source actually on screen ("it isnt cbs all the time"). [his words,
   R3-2]
