@@ -279,7 +279,7 @@ page after round 2 (Phase 4b).
 - A failed copy goes back to its builder; at most 3 gate rounds. A copy that still fails is not shown; the page
   lists it as "not ready" with the reasons.
 
-### Phase 4b: your look, round 2 (Sonnet builds the page; you decide) — depends on Phase 3c
+### Phase 4b: your look, round 2 (Sonnet builds the page; you decide) — depends on Phase 3c — page round 2 published 2026-11-21 (5 copies passed the gate: r1, r2, r3, r4, r5; not ready: r2b, r4b)
 - Brief `rethink/LOOK-PAGE-BRIEF.md`. Same private page, same address. Per passed copy: "Open the copy" (full
   screen on your phone), 4 pictures of the real screen beside the copy, three one-line "felt like" notes, 👍 and a
   note box that saves as you type. The three questions you already answered are removed. Short.
