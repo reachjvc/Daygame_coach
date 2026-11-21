@@ -18,6 +18,15 @@ back here.
 - **R3-5** (on the record line "No version longer than the base"): "yeah, i never said that NO VERSION must never be longer"
 - **R3-6** (chat, 2026-11-21): "theres still much improvement to be done. You need to find a way to prune the process document in an ongoing fashion too, so only the real insights stay. The issue is that you tend to drift away from what i want, and then make fixed rules that actually serve to make future versions drift too"
 
+### Celebrity reels, after round 4 (chat, 2026-11-21)
+
+- **R4-1**: "Yes, i made insert something like him rocking out on stage, instead of the CBS interview, for part of the interview. That was one idea, one tool, i wanted you to test out. But what you need to understand, is that i want you to have atool box, and then make several versions from using that toolbox, and then we find something that works."
+- **R4-2**: "i didnt mean specifically that it had to be an anchor, just that the internet is vast, and if you did a larger job, you could cut all sorts of things up."
+- **R4-3**: "I mean, show the CBS source, down in the bottom corner, when it is the cbs image, then the others and so on."
+- **R4-4**: "the paper was also just an idea, another tool."
+- **R4-5**: "What we need now, is a new prompt, one that zooms out entirely, and somehow finds a way where you can ask me questions that are relevant, or come up with new ways of doing this. We're not anywhere near what i want to be able for us to produce i nterms of quality or our alignment of understanding, which is still very far apart."
+- **R4-6** (on the round 4 page, chat): "theres a w1 and a w2 on this page, is this all roudn 4? i dont understand the artifact fully. Also, you keep misunderstanding my feedback at the least slightly"
+
 ## Earlier sections, moved here unchanged on 2026-11-21
 
 ## The owner's words
