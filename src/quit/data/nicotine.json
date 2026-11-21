@@ -636,11 +636,11 @@
       "limiting": "I’ve smoked too long. It’s too late.",
       "counterpart": "It’s not too late. Even stopping at 60 gave years back.",
       "whenThought": "Write the thought down, and next to it: “Even stopping at 60 gave years back.” Then write one thing you would do with those years.",
-      "editNote": "2026-11-19: 12 lies test review round 1: claims held to the abstract",
-      "test": "This week, write down the longest you have gone without it since you started, and what was going on in that stretch.",
+      "editNote": "2026-11-21: 12 lies test review round 2: claims held to the abstract",
+      "test": "Write down the longest you have gone without it since you started, and what was going on in that stretch.",
       "proof": "Male British doctors who stopped smoking as late as 60 still gained about 3 years of life, on average.",
       "severity": "users",
-      "counted": "34,439 male British doctors who smoked, not checked for addiction",
+      "counted": "34,439 male British doctors, smokers and non-smokers, not checked for addiction",
       "refs": [
         {
           "cite": "Doll R, Peto R, Boreham J, Sutherland I (2004). Mortality in relation to smoking: 50 years' observations on male British doctors. BMJ 328(7455):1519.",
@@ -685,12 +685,12 @@
       "limiting": "Quitting will be hell. I can’t handle the withdrawal.",
       "counterpart": "I’ve got through rougher weeks than this. And this one ends.",
       "whenThought": "Write the thought down, and next to it: “I’ve got through rougher weeks than this. And this one ends.” Still using? Pick your day 1 and write it next to the thought. Already off it? Name the urge, “there is a craving,” and walk or drink water until it fades.",
-      "editNote": "2026-11-19: 12 lies test review round 1: claims held to the abstract",
-      "test": "This week, time your next strong urge on your phone, from the moment it starts until it fades. Write down the minutes.",
+      "editNote": "2026-11-21: 12 lies test review round 2: claims held to the abstract",
+      "test": "Time your next strong urge on your phone, from the moment it starts until it fades. Write down the minutes.",
       "proof": "In smokers who stopped, anger, anxiety, low mood, restlessness and poor sleep peaked in the first week and were gone by week 2–4.",
       "severity": "users",
       "counted": "smokers who stopped, not checked for addiction",
-      "weak": "One author chose the 120 papers and judged them on his own. The times are typical, not a promise for one person.",
+      "weak": "One author chose the 120 papers and judged them on his own. The times are typical, not a promise for one person. The review left out craving and hunger, so urges are not covered by these times.",
       "refs": [
         {
           "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
@@ -714,6 +714,14 @@
           "fetched": true,
           "quote": "Data collection and interpretation were based solely on the author's subjective judgments.",
           "fetchedOn": "2026-11-19"
+        },
+        {
+          "cite": "Hughes JR (2007). Effects of abstinence from tobacco: valid symptoms and time course. Nicotine & Tobacco Research 9(3):315-27.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/17365764/",
+          "pmid": "17365764",
+          "fetched": true,
+          "quote": "For brevity, the review does not evaluate craving, hunger, performance, and several other possible outcomes as withdrawal symptoms.",
+          "fetchedOn": "2026-11-21"
         }
       ],
       "check": {
@@ -732,7 +740,7 @@
       "need": "relief",
       "blackBoxEnding": "stress",
       "limiting": "Nicotine is the only thing that calms me down.",
-      "counterpart": "People who stay off end up less stressed, not more.",
+      "counterpart": "People who stay off tend to end up less stressed, not more.",
       "whenThought": "When stress brings the thought, write it down, and next to it: “People who stay off end up less stressed.” Then take ten slow breaths or a two-minute walk before you decide anything.",
       "test": "The next time something stresses you this week, rate it 0–10, note what you did, and rate it again ten minutes later.",
       "proof": "In 469 heavily hooked heart patients who wanted to stop, stress fell more over a year in those who stayed off than in those who kept smoking.",
@@ -779,7 +787,7 @@
         "notes": "checked after revision: corrections applied to beliefs[2].test"
       },
       "n": "469 heart patients who wanted to stop",
-      "editNote": "2026-11-19: 12 lies test review round 1: claims held to the abstract"
+      "editNote": "2026-11-21: 12 lies test review round 2: claims held to the abstract"
     },
     {
       "id": "b4",
@@ -792,7 +800,7 @@
       "counterpart": "“Just one” is rarely just one. In those trials, most who smoked at all in week two were smoking again at six months.",
       "whenThought": "Answer it like a non-smoker, “No thanks, I don’t,” and leave the room for five minutes. Then text someone who knows you’re quitting that the thought came and you said no.",
       "test": "Each time the “just one” thought shows up this week, write down the time and what set it off.",
-      "proof": "Of daily smokers on a nicotine patch who smoked at all in week 2, 17 in 100 were off at 6 months, against 46 in 100 of those who stayed clear.",
+      "proof": "Of daily smokers on a patch who smoked at all in week 2, 83 in 100 were smoking at 6 months. Of those who stayed clear in week 2, 46 in 100 were still off.",
       "severity": "heavy",
       "counted": "one patch trial, 88 smokers; addiction scored, not checked to pick them",
       "refs": [
@@ -826,17 +834,25 @@
           "fetched": true,
           "quote": "Pretreatment markers, such as the Fagerstrom Tolerance Questionnaire score",
           "fetchedOn": "2026-11-19"
+        },
+        {
+          "cite": "Kenford SL, Fiore MC, Jorenby DE, Smith SS, Wetter D, Baker TB (1994). Predicting smoking cessation: who will quit with and without the nicotine patch. JAMA 271(8):589-94.",
+          "url": "https://pubmed.ncbi.nlm.nih.gov/8301790/",
+          "pmid": "8301790",
+          "fetched": true,
+          "quote": "Among active nicotine patch patients who were totally abstinent during week 2 after quitting, 46% and 41% (studies 1 and 2, respectively) were abstinent at 6-month follow-up.",
+          "fetchedOn": "2026-11-21"
         }
       ],
-      "weak": "Smokers in patch trials were studied, not people hooked on vapes or pouches. This is the first trial (88 smokers); the second (112 smokers) found 3 in 100 off against 41 in 100.",
+      "weak": "Smokers in patch trials were studied, not people hooked on vapes or pouches. This is the first trial (88 smokers); in the second (112 smokers) it was 97 in 100 smoking against 41 in 100 still off.",
       "check": {
         "by": "revision checker a (nicotine)",
         "on": "2026-11-09",
         "verdict": "ok",
         "notes": "checked after revision: corrections applied to beliefs[3].test"
       },
-      "editNote": "2026-11-19: 12 lies test review round 1: claims held to the abstract",
-      "n": "Eighty-eight smokers in trial 1 and 112 in trial 2, some on a dummy patch; how many smoked in week 2 is not in the line we quote"
+      "editNote": "2026-11-21: 12 lies test review round 2: claims held to the abstract",
+      "n": "Eighty-eight smokers in trial 1 and 112 in trial 2, some on a dummy patch; how many smoked in week 2 is not in the study summary"
     },
     {
       "id": "b5",
@@ -848,9 +864,9 @@
       "counterpart": "A vape is a step down, not a way out.",
       "whenThought": "Write the thought down, and next to it: “A vape is a step down, not a way out.” Then the vape is what you’re quitting: give it a date too.",
       "test": "On one ordinary afternoon this week, count every time you reach for the vape or pouches. Write the number down.",
-      "proof": "In 3,609 ex-smokers who now vape, dependence on the vape rose with stronger liquid and with longer use.",
+      "proof": "In 3,609 ex-smokers who had switched to vaping, dependence on the vape was lower than on cigarettes before (8.1 against 14.5 out of 20). It was higher with stronger liquid and longer vaping.",
       "severity": "users",
-      "counted": "ex-smokers who now only vape, not checked for addiction",
+      "counted": "ex-smokers who now vape, not checked for addiction",
       "weak": "An online survey of people who had already switched; they rated their old cigarette dependence from memory (14.5 against 8.1 out of 20 for the vape). It measures dependence, not harm.",
       "refs": [
         {
@@ -915,7 +931,7 @@
         "verdict": "ok",
         "notes": "checked after revision"
       },
-      "editNote": "2026-11-19: 12 lies test finish (Tool 5): wording, basis size from the abstract",
+      "editNote": "2026-11-21: 12 lies test review round 2: claims held to the abstract",
       "n": "3,609 ex-smokers who vape"
     },
     {
@@ -1029,7 +1045,7 @@
           "quote": "Participants reported craving target and strength (0-100)"
         }
       ],
-      "weak": "31 students over one week; cravings of all kinds, not only nicotine. The game tested was falling blocks, not the number-tile puzzle under Craving now?",
+      "weak": "31 students over one week; cravings of all kinds, not only nicotine. The game tested was falling blocks, not the Block puzzle under Craving now?",
       "check": {
         "by": "quit-tool checker (opus)",
         "on": "2026-11-18",
@@ -1045,7 +1061,7 @@
       "short": "Breaks are where I talk",
       "need": "connection",
       "limiting": "Smoke or vape breaks are where I talk to people.",
-      "counterpart": "I keep the break and the people. The nicotine was never the point.",
+      "counterpart": "I keep the break and the people. They can stay without the nicotine.",
       "whenThought": "Bring a coffee or gum to the break and ask the first person you see about their day.",
       "test": "Text one person from your break group this week and suggest a coffee somewhere else. Notice whether the talking needs nicotine.",
       "proof": "In a long US study of 12,067 people, a person’s own chances of smoking fell by 36% when a friend quit.",
@@ -1076,7 +1092,7 @@
         "verdict": "ok"
       },
       "n": "12,067 people in one US town, followed 1971 to 2003",
-      "editNote": "2026-11-19: 12 lies test finish (Tool 5): wording, basis size from the abstract"
+      "editNote": "2026-11-21: 12 lies test review round 2: claims held to the abstract"
     },
     {
       "id": "b9",
@@ -1085,7 +1101,7 @@
       "short": "It helps me sleep",
       "need": "sleep",
       "limiting": "One last hit before bed helps me wind down and sleep.",
-      "counterpart": "Smokers fall asleep slower and sleep shorter. The rough nights after stopping pass in weeks.",
+      "counterpart": "Smokers tend to fall asleep slower and sleep shorter. The rough nights after stopping usually pass in weeks.",
       "whenThought": "Get up and brush your teeth. Then decide whether you still want it.",
       "test": "For the next three nights, write down the time of your last nicotine, the time you fell asleep and how rested you feel. Compare the three.",
       "proof": "In a sleep lab, 44 smokers took longer to fall asleep and slept for a shorter period than 44 never-smokers of the same age and sex.",
@@ -1174,7 +1190,7 @@
           "quote": "for 7 days starting on their quit date"
         }
       ],
-      "weak": "All 300 were women, and the abstract gives no share of slips that happened while drinking, so no N in 100 is given.",
+      "weak": "All 300 were women. The study does not say what share of slips happened while drinking.",
       "check": {
         "by": "quit-tool checker (opus)",
         "on": "2026-11-18",
@@ -1187,13 +1203,13 @@
       "id": "b11",
       "kind": "hard",
       "scene": "You press your stomach in the mirror and think: quitting means gaining.",
-      "short": "I’ll put on weight",
+      "short": "I’ll get fat",
       "need": "substance",
-      "limiting": "If I quit, I’ll put on weight.",
+      "limiting": "If I quit, I’ll get fat. It’s not worth it.",
       "counterpart": "Weight is a risk I can plan for, and most of it comes in the first three months.",
       "whenThought": "Put a piece of fruit or something you like within reach, then go for a short walk.",
       "test": "For the next week, write down what you eat each day without changing any of it.",
-      "proof": "A year after quitting, an estimated 53 in 100 unaided quitters had lost weight or gained less than 5 kg.",
+      "proof": "A year after quitting, 16 in 100 unaided quitters had lost weight and 37 in 100 had gained less than 5 kg.",
       "severity": "treatment",
       "counted": "quitters in quit trials, not checked for addiction",
       "refs": [
@@ -1222,14 +1238,14 @@
           "quote": "62 studies were included."
         }
       ],
-      "weak": "Worked out from average weight changes in trials, not counted person by person; the other 47 in 100 gained 5 kg or more.",
+      "weak": "Worked out from average weight changes in 62 studies, not counted person by person. Most quitters do gain some: 34 in 100 gained 5–10 kg and 13 in 100 more than 10 kg.",
       "check": {
         "by": "quit-tool checker (opus)",
         "on": "2026-11-18",
         "verdict": "ok"
       },
       "n": "62 studies",
-      "editNote": "2026-11-19: 12 lies test finish (Tool 5): wording, basis size from the abstract"
+      "editNote": "2026-11-21: 12 lies test review round 2: claims held to the abstract"
     },
     {
       "id": "b12",
@@ -1239,12 +1255,12 @@
       "need": "relief",
       "blackBoxEnding": "stress",
       "limiting": "I’ll quit when things calm down.",
-      "counterpart": "There is no calm week coming. A date soon beats a date someday.",
+      "counterpart": "A calm week may never come. A date soon beats a date someday.",
       "whenThought": "Open your calendar and put a marker on the nearest day you can, right now.",
       "test": "Look back at the last four weeks of your calendar and count the calm days. Then mark a quit day inside the next few weeks.",
-      "proof": "In a trial of smokers who chose their own quit day, the model expected 40 in 100 who chose week 1 to be off at 6 months, against 4 in 100 for week 13.",
+      "proof": "In a trial of smokers who chose their own quit day, the model expected about 40 in 100 who chose week 1 to be off at 6 months, against about 4 in 100 for week 13.",
       "severity": "treatment",
-      "counted": "1,848 smokers in a US cash-reward trial; an association, not a test",
+      "counted": "1,848 smokers in a cash-reward quit trial; a link, not a test",
       "refs": [
         {
           "cite": "Anesi GL et al (2017). Time to selected quit date and subsequent rates of sustained smoking abstinence. Journal of Behavioral Medicine 40(6):989-97.",
@@ -1270,7 +1286,7 @@
         "verdict": "ok"
       },
       "n": "1,848 smokers who picked a quit day",
-      "editNote": "2026-11-19: 12 lies test finish (Tool 5): wording, basis size from the abstract"
+      "editNote": "2026-11-21: 12 lies test review round 2: claims held to the abstract"
     }
   ],
   "facts": [
@@ -3526,7 +3542,7 @@
       "min": 0,
       "max": 2,
       "label": "Mostly free",
-      "text": "None or few of these twelve hold you. Set your date and make your plan.",
+      "text": "None or few of these 12 hold you. Your date and your plan come next, when you’re ready.",
       "link": "/quit/nicotine/date"
     },
     {
@@ -3542,7 +3558,7 @@
       "min": 7,
       "max": 12,
       "label": "Mostly held",
-      "text": "Most of these hold you. Work through your top three, then set your date.",
+      "text": "Most or all of these hold you. Work through your top three, then set your date.",
       "link": "/quit/nicotine/date"
     }
   ],

@@ -58,7 +58,7 @@
     "factWrong": "Not quite.",
     "seeThrough": "You already see through these",
     "topHeading": "These hold you most",
-    "noTop": "None of the twelve hold you much.",
+    "noTop": "None of the 12 hold you much.",
     "thoughtLabel": "The thought",
     "counterLabel": "The other side",
     "proofLabel": "The proof",
@@ -77,7 +77,7 @@
     "bandFreeLink": "Make your free plan",
     "rateQuestion": "How much is this you?",
     "stopKeep": "Stop and keep my last result",
-    "stopAsk": "Stop? The answers of this new try are dropped.",
+    "stopAsk": "Stop? This new try won’t be saved.",
     "stopYes": "Stop",
     "keepGoing": "Keep going",
     "replyTitle": "The other side",
@@ -88,7 +88,7 @@
       "no": "No"
     },
     "canStopLine": {
-      "yes": "Good. Write it down where you can see it in the first week.",
+      "yes": "Good. Write “I can stop” where you can see it in your first week off.",
       "unsure": "Not sure is an honest answer. You don’t need to be sure to pick a day 1.",
       "no": "Then don’t decide it today. The thoughts that hold you below are part of why the no feels true. Start with them."
     },
@@ -112,13 +112,13 @@
     "deleteAsk": "Delete this result?",
     "keepIt": "Keep it",
     "clearAll": "Clear all my answers",
-    "clearAsk": "Clear everything? Your results and this try are removed.",
+    "clearAsk": "Clear everything? All your results are removed.",
     "clearYes": "Clear",
     "toMenu": "Back to the menu",
     "questionCard": "How many of {lies} do you believe?",
     "heldNone": "None of the {total} hold you",
     "readySetDate": "When you’re ready: set your date",
-    "canStopLineNoneHeld": "Then don’t decide it today. None of the twelve thoughts hold you much, so the no may come from somewhere else. Write down what makes it feel true.",
+    "canStopLineNoneHeld": "Then don’t decide it today. None of the 12 thoughts hold you much, so the no may come from somewhere else. Write down what makes it feel true.",
     "youSaid": "You said {word}.",
     "cardAsk": "How many do you believe?"
   },
