@@ -45,6 +45,10 @@ his footage could go in. He picks ways and films when he wants. Then v3 puts him
   - Breath test: vC = speech detector (strict, 0.75, 20 ms pads) plus gate. His note: "probably
     the best", may retake "I am perfection".
   - Pace (measured 2026-11-20): 117 s long, 30 s of it pauses.
+  - His verdict on the finder (2026-11-21, recorded by another session in
+    `content_creation.md`): the blocks in Outvoted are the best style he has seen yet, and he
+    likes the more beautiful animations. So every new option must look at least as beautiful as
+    the blocks. The gate checks this (C5, G2).
 
 ## Checked today, and from memory
 
@@ -200,7 +204,11 @@ round".** His words from the request for this plan, written down without changes
   (proposed): faster, breaths gone, other kinds of animation at seven spots, his filmed part
   storyboarded first."
 - The "First night run failed" bullet gets: "Mistakes are kept in `docs/product/content_history.md`."
-- The look finder bullet stays as it is: it still waits for his marks.
+- The look finder bullet already holds his verdict of 2026-11-21 (commit 6048851e, another
+  session): the finder is probably the wrong direction. The Outvoted blocks are the best style
+  he has seen yet, and he likes the more beautiful animations. Leave that bullet as it is. Copy
+  his words into "The owner's words" in the process doc as well, if that session has not
+  already done so.
 
 **A8. A check before committing A** (done in Phase 1):
 - A script lists every line in the old docs that holds "[his words]", "(owner" or "His words".
@@ -370,7 +378,8 @@ a number:
 
 It answers per option, in a fixed form:
 - fits the line (yes/no + why);
-- craft at least v1's (yes/no + the weakest frame number);
+- craft and beauty at least v1's blocks (yes/no + the weakest frame number), because he called
+  the blocks the best style he has seen yet;
 - hands and faces (count fingers where shown; any drift);
 - is it a real animation, not a zoom;
 - different from the neighbouring spots' family;
