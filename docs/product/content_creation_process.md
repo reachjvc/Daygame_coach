@@ -46,7 +46,8 @@ Did not work:
 Not judged yet:
 - Round 1's ten reels, as reels to post.
 - The kids episode (B1 to B3) and the theme cast lists.
-- Round 3 (three better Billy versions, 2026-11-21).
+- Round 3 (three better Billy versions, 2026-11-21): V1 archive only, V2
+  narrator-led, V3 archive plus our point at the end.
 
 ### Track 2: Other reels (our own films)
 
@@ -470,3 +471,18 @@ Tools (private): `~/.cache/daygame-research/celeb-reels/code/`.
   - Measure caption width against the right-side buttons.
   - The review gate found facts a card overstated. It also found two
     versions that were only recuts, with nothing added.
+- Round 3 (2026-11-21) uses `render3.py` (render2 plus the fixes below):
+  - Cut gate: `code/cutsafe.py` measures the sound itself (10 ms
+    loudness) at every cut of a speech clip. A cut must sit in a gap at
+    least 10 dB below the speech level, or nothing renders. Transcript
+    word times are not enough: they end before the sound does.
+  - The interview answer stays one uncut clip. Where the show cuts to the
+    interviewer listening, `pics` lays a picture of him over it and the
+    sound is untouched.
+  - Captions come from the checked source transcript, not from re-hearing
+    the final mix (that dropped mumbled words such as "I try").
+  - After rendering, every source word within 1.2 s of a cut must be heard
+    near its place, or the word is reported. Flags are checked by hand.
+  - No dark cards. The source tag is 22 px in the bottom-left corner.
+  - Narrator lines over footage of him; music under the narrator comes
+    from concert footage (`bed`), never a cut inside speech.

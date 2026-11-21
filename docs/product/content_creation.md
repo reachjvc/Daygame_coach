@@ -67,6 +67,9 @@ say "I left notes".
   voice. An Opus review gate checked every version. Plan:
   `Plans/celeb-clip-reels.md` (proposed). The method is in the process
   file, section "Celebrity clip reels".
+  On 2026-11-21 he judged round 2 poor (words cut off, nothing longer,
+  dark cards, lost story). Round 3, three better versions of the Billy
+  reel, waits for his notes on its own page (listed in notes-seen.md).
 - **Look finder (step 1 of the proposed process)**: built 2026-11-20. 18
   YouTube videos that beat their channel's usual views, in six looks, each
   playable with a 👍 and a note (page listed in notes-seen.md). Waits for
