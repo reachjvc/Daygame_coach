@@ -284,7 +284,7 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
                     </>
                   )}
                   <p data-testid="cost-basis" className="break-words text-sm text-muted-foreground">
-                    {unitRec.priceBasis === "typed" ? t.basisTyped : priceMode === "pack" ? t.basisPack : (t.basisOne[unit.id] ?? "")}
+                    {unitRec.priceBasis === "typed" ? t.basisTyped : priceMode === "pack" ? t.basisPack : (dateText.priceBasis[unit.id] ?? "")}
                   </p>
                 </div>
                 {saved && (
