@@ -85,8 +85,11 @@ say "I left notes".
   research on what makers of this kind of reel do, and a proposed toolbox
   with several versions per round. Plan: `Plans/clip-reels-toolbox.md`
   (proposed). He answered on that page on 2026-11-21 (notes RS-* in the
-  history file); round 5 (story and opening lists, how reels look, a wide
-  footage hunt, versions) is being built by that plan.
+  history file). Round 5 was built the same day and waits for his notes on
+  its own page (listed in notes-seen.md): six versions, each a different
+  story and opening; 22 openings and 21 story angles to pick from; eight
+  measured reference reels and how strong reels look (0 of 30 use black
+  bars).
 - **Look finder (step 1 of the proposed process)**: built 2026-11-20. 18
   YouTube videos that beat their channel's usual views, in six looks, each
   playable with a 👍 and a note (page listed in notes-seen.md). Waits for

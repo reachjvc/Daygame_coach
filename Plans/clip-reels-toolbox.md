@@ -122,6 +122,11 @@ Phase 0 is done. Short form here; his exact words win wherever this differs.
 
 ## Round 5 (proposed 2026-11-21, after his answers)
 
+Status 2026-11-21 evening: a–f and h done; the page "Clip Reels Round 5"
+is published (link in memory and notes-seen.md) and waits for his notes.
+g (the 1–10 tap) is on the page as a proposal. Lengths 46–67 s. Not done:
+the UPI headline (site blocks automated visits).
+
 Steps a–e run side by side; f needs c; g and h close the round. A checker
 (Sonnet) compared this section with his raw notes on 2026-11-21 and its
 flags were fixed (r5/checker.json, private).
