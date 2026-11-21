@@ -15,13 +15,15 @@ Three pieces of work, in this order:
   marked.
 - **B. History.** A new public file, `docs/product/content_history.md`: one entry per thing that
   went wrong, with date, what happened, cause and what changed in the process. Seeded with 13
-  entries from the process doc and memory.
-- **C. Outvoted v2.** The same blocks film, faster, breaths gone, with other kinds of animation
-  at the night and morning spots and four more spots. Claude builds the new scenes in the evening.
-  The GPU renders them at night, with a logged proof that it was busy. A reviewer that did not
-  build them checks every output against the film he liked before he sees anything. He gets one
-  short page: the new film, the changed spots, the sound, a filming storyboard, and the night's
-  GPU chart. Each item has a 👍 and notes that save while he types.
+  entries from the process doc and memory (15 with today's two).
+- **C. Outvoted v2.** The same blocks film, faster, breaths gone, with other scenes at the night
+  and morning spots and five more spots. Every new scene is the same type of animation as the
+  blocks film (real 3D, physical, moving light and camera). The work runs in **short loops**: one
+  spot at a time, 2–3 short options, on his page within about 2 hours, so he sees a small part
+  without waiting. The GPU renders whenever it is free, day or night, and the night always has a
+  full queue, with a logged proof that the card was busy. Automatic checks and a reviewer that
+  built nothing check every option before he sees it; he alone judges how it looks. One page,
+  newest loop on top, a 👍 and notes that save while he types on every item.
 
 His filmed part (his words, 2026-11-21): it is mostly **him speaking the script on camera**, put
 into the video in different ways. It is not B-roll of him doing things. Filming waits until the
@@ -140,7 +142,9 @@ by something he said later, both stay, with a line such as "(dropped by his rule
 >   morning" as the obvious spots; the blocks stay the main line; himself filmed; breathing gone;
 > - his notes of 2026-11-21: no AI still paintings or slow zooms; variety from kinds of
 >   animation; the GPU near full at night, proven with numbers; filming means him speaking the
->   script on camera.
+>   script on camera; the type of animation of the blocks film is the right one (the blocks
+>   themselves are not the gold standard); short loops, so he sees a small part without waiting
+>   hours; the GPU runs by day when free, and the night always has work.
 >
 > Plan: `Plans/outvoted-animation-round.md`. A night session builds **only** from this line.
 > If the line is out of date, the night does not start.
@@ -179,6 +183,15 @@ round".** His words from the request for this plan, written down without changes
 - The GPU is used near full when work runs at night. It must be proven with numbers, not
   claimed. Claude builds scenes in the evening, and the GPU renders at night. There is always more
   queued work than the night can finish.
+
+And, later the same day, after reading the first version of this plan:
+- He does not know if Claude can determine whether anything is less beautiful than the blocks.
+  He does not want Claude to treat the blocks as the gold standard: "that particular type of
+  animation is the correct one".
+- He wants shorter iteration loops: he sees a small part of what Claude proposes, without
+  having to wait for hours.
+- As long as there is free GPU, animations may run in the daytime too; there must always be
+  something for the night.
 
 **A5. Contradictions to mark, with the text kept:**
 - "His marks on the ten ways page", the 👍 on way 8: add "(way 8 dropped by his rule
@@ -264,6 +277,8 @@ points to.
 | H10 | 2026-11-20 | Look | Claude presented the blocks as the chosen look (way 4) | Misread his like of one film as a house look (his words) | Look is open; finder first (his words) |
 | H11 | 2026-11-20 | Look | Ways 8 and 9 were shown next to the researched ways without saying they came from memory | Not labelled (his question) | Every item says checked or memory (CLAUDE.md rule, his words) |
 | H12 | 2026-11-21 | Track 1 | Celebrity round 2: words cut off in every version, no version longer, black text cards, eight experiments instead of one better reel | Cuts placed at transcript word ends, which come before the sound ends (measured); the brief was read too narrowly (his words) | Cut checker; 2–3 better versions of one reel (his words) |
+| H15 | 2026-11-21 | Track 2 | The first version of this plan showed him results only after a whole night | Planned around the night, not around his time (Claude) | Short loops, one spot at a time, GPU by day when free (his words) |
+| H14 | 2026-11-21 | Track 2 | The first version of this plan made the blocks the bar for beauty, judged by Claude | Read "best style yet" as a standard Claude could measure (Claude) | The type of animation is the standard; he judges beauty (his words) |
 | H13 | 2026-11-21 | Track 2 | First night: 18 AI-painting films, same shots in six colours; not usable; GPU "full" not proven | Wrong brief won; "few tokens" read as "no Claude"; volume not variety; self-judged; one GPU reading kept (Claude's reading) | Never AI still paintings again (his rule); night brief, variety, gate, GPU proof (proposed, this plan) |
 
 ---
@@ -305,27 +320,29 @@ Variety means a different **kind**, not other colours. Rules:
 - AI still pictures are never used (his rule).
 - Every option is the type of animation he named (see "What was read"): real 3D, physical,
   moving light and camera. No flat 2D screens.
+- One exception, for him to judge: K4 (real-motion AI video) is not 3D, so it appears once, as
+  S1d in the first loop, marked "a different type, for you to judge". If he gives it no 👍, K4 is
+  not used again and the night queue drops it.
 
 | Family | What it is | Made with | Runs on |
 |---|---|---|---|
 | K1 Same world, new objects | New wooden objects on the same table: a phone, an alarm clock, a calendar block, small props | the three.js engine | GPU (D3D12) or CPU |
 | K2 Wooden figure | A wooden artist's mannequin (no fingers, no face to get wrong), rigged and animated in 3D in its own small 3D room (bed, lamp, window), same render engine and light model as the blocks | the three.js engine | GPU or CPU |
 | K3 Things with words, as 3D objects | A paper calendar whose pages tear, a phone whose screen lights up, a wooden vote board with flipping numbers; words live on real objects in the 3D world, never as flat screens | the three.js engine | GPU or CPU |
-| K4 Real motion from a local AI video model (one test spot only, until he has seen it in a loop) | Short clips **with no people**: rain on a dark window with city lights, low sun moving across a bedroom wall, smoke curling in a lamp beam. Real motion, no zoom-on-a-still | Wan 2.2 5B (or the 14B distilled version) in its own venv, free download | GPU |
+| K4 Real motion from a local AI video model (only S1d, until he 👍 it) | Short clips **with no people**: rain on a dark window with city lights, low sun moving across a bedroom wall, smoke curling in a lamp beam. Real motion, no zoom-on-a-still | Wan 2.2 5B (or the 14B distilled version) in its own venv, free download | GPU |
 | K5 Light drawing | Light trails, the moon and sun drawing arcs, words written in light | three.js | GPU |
-| K6 Him, filmed (v3 only) | His footage speaking the script, put in by one of the ways F1–F8 below | ffmpeg plus matting (Robust Video Matting or SAM 2, local) | GPU |
+| K6 Him, filmed (v3 only) | His footage speaking the script, put in by one of the ways F1–F9 below | ffmpeg plus matting (Robust Video Matting or SAM 2, local) | GPU |
 
 ### C4. The spots, and the options per spot
 
-Times are of the current cut (`cues_resolved.md`); the cue words decide. Each spot gets **every**
-listed option built as a draft. The gate (C5) drops the weak ones before night. The night
-renders all surviving options at full size. The gate then picks one per spot for the film; the
-picking rule is in Phase 5.
+Times are of the current cut (`cues_resolved.md`); the cue words decide. One loop per spot
+builds every new option listed for it (C7). The gate (C5) drops fails before he sees them. He
+👍s on the page; the picking rule is in Phase 5.
 
 | Spot | Line | Now (v1) | Options built for v2 | v3 (after he films) |
 |---|---|---|---|---|
 | S1 night | 2 "Late at night I would lie in bed … tomorrow I quit" (7 s) | slow push on the block | **S1a K1**: a phone lies by the amber block; it lights up 02:47 and "tomorrow I quit" types on "decide"; its blue glow lights the block. **S1b K2**: the wooden figure lies in a small 3D bed by lamplight, head turned up; the wasted day passes as small wooden props sliding by on the nightstand; "TOMORROW I QUIT" burns into the headboard. **S1c K3**: a paper scroll unrolls on the table, "QUEST: QUIT WEED · accepted", and a wooden tally counter clicks up to 1,214. **S1d K4**: rain on a dark window, city lights, 3 s, then back to the table | F-way he picks for "Late at night" |
-| S2 morning | 5 "And every morning, within an hour of waking up, I was back" (3.3 s) | light sweeps, crash | **S2a K1**: a wooden alarm clock on the table rings 07:00, the hands sweep to 07:52 in one second, then the v1 crash comes in on "back". **S2b K2**: the wooden figure sits up in a sunlit 3D bed; its mitten hand reaches for the nightstand drawer; cut to the crash on "back". **S2c K3**: a paper desk calendar on the table, "DAY 1"; a red pencil strikes it through at 07:52 and the page tears off. **S2d K4**: low sun moving across a bedroom wall, 2 s | — |
+| S2 morning | 5 "And every morning, within an hour of waking up, I was back" (3.3 s) | light sweeps, crash | **S2a K1**: a wooden alarm clock on the table rings 07:00, the hands sweep to 07:52 in one second, then the v1 crash comes in on "back". **S2b K2**: the wooden figure sits up in a sunlit 3D bed; its mitten hand reaches for the nightstand drawer; cut to the crash on "back". **S2c K3**: a paper desk calendar on the table, "DAY 1"; a red pencil strikes it through at 07:52 and the page tears off | — |
 | S3 | 6 "For a long time I thought that just made me a weak person" | crash, block on its side | keep v1 (blocks) | his face, close, to camera (F1 or F3) |
 | S4 two guys | 8–9 "That guy, deciding late at night … Or quit nicotine" | wide night frame | **S4a K2**: the wooden figure at night (moonlight) sets the tower's blocks with a flourish, like signing a contract; then back to the blocks. **S4b K5**: the moon draws the night guy's plan in light lines over the tower. **S4c** keep v1 | night-graded him (F5) |
 | S5 the morning guy | 16 "But the guy who woke up the next morning had to carry all of that" (4 s) | light sweeps, camera down the tower | **S5a K2**: the wooden figure in a 3D bed in morning light with the whole night tower standing on its chest; it can't sit up; back to the tower swaying. **S5b K1**: a small wooden bed on the table, the tower standing on it. **S5c** keep v1 | morning-graded him (F5) |
@@ -334,7 +351,9 @@ picking rule is in Phase 5.
 | S8 days | 26–27 "And eventually … within just a few days" (7 s) | light wheels DAY 1–4 | **S8a K3**: the paper desk calendar from S2c, pages flipping DAY 1 … DAY 4, each flip quicker. **S8b K3**: the paper scroll from S1c, a wax seal stamped "DAY 4". **S8c K5**: v1 time-lapse with the sun and moon drawing their arcs as light trails | — |
 | S9 ask | 28–30 "So stop trying … Comment QUIT" (15 s) | pale block, QUIT cubes | keep v1 (blocks) | him to camera for the instruction (F1), back to the cubes for QUIT |
 
-That is 22 options to build, 6 of them "keep v1". 16 are new scenes.
+That is 21 options, 6 of them "keep v1": 15 new scenes (14 in 3D, plus the one K4 test).
+A loop shows the new options of one spot; "keep v1" needs no building and is always the
+fallback.
 
 **Fixed for every option** (so the builder decides nothing):
 - Length = the spoken line's length in the new cut.
@@ -350,11 +369,12 @@ That is 22 options to build, 6 of them "keep v1". 16 are new scenes.
   - image-to-video from a code-rendered first frame, or text-to-video;
   - the prompt says no people;
   - 3 s at 16–24 fps, upscaled to 1080x1920;
-  - at least 8 seeds per option. The gate keeps the best.
+  - 4 seeds for the loop; more only if he 👍s it.
 
 ### C5. The check before he sees anything (the gate)
 
-Two parts, run twice: on drafts in the evening, and on the full-size output in the morning.
+Two parts. They run on every loop before it reaches his page, and again on full-size renders
+and on the assembled film.
 
 **G1, automatic checks** (`film/gate/gate.py`, built in Phase 0). Each check gives pass/fail with
 a number:
@@ -364,8 +384,8 @@ a number:
    - It must flag all 18 night films. Test on them first.
    - It must pass v1's tower and fall.
 2. **No AI people.** Every frame of every K4 clip runs through a person and hand detector
-   (MediaPipe). Any hit fails the clip. K2 figures are drawn by code and are exempt; a person
-   still looks at their hands (G2).
+   (MediaPipe). Any hit fails the clip. The K2 wooden figure is our own 3D model and is exempt;
+   G2 still looks at its hands.
 3. **Still stretches.** No stretch over 3 s with under 2% of pixels changing.
 4. **Pace.** Words per minute over the whole film, and the sum of pauses. Target: no gap over
    0.6 s except the three beats.
@@ -434,22 +454,25 @@ the full list:
   the start of a loop to his page, and the first loop on the page the same day Phase 3 starts.
 - Claude does not wait for his 👍 to start the next loop. His 👍 and notes on a loop are read
   before each new loop and change the next ones.
-- Order of loops: S1 night, S2 morning, S5 the morning guy, S4 two guys, S6 outvoted, S7 list,
-  S8 days.
+- Order of loops: S1 night, S2 morning, then the filming storyboard (C6, frames only, quick),
+  then S5 the morning guy, S4 two guys, S6 outvoted, S7 list, S8 days.
+- The time from the start of each loop to his page is logged in `film/loops.md` and reported.
+  A loop over 2 hours gets a line saying why.
 
 **The GPU in the daytime:** whenever the card is free (no League match, other jobs not using
 it), loop renders and full-size renders of options he 👍'd run at once. `load.sh` and
-`gpu_guard.py` stay attached.
+`gpu_guard.py` stay attached. `gpu_log.sh` runs from the first render of the day, so the proof
+covers day and night.
 
 **Night (Phase 4), as the queue's priority order** (there is always something for the night):
 1. Full-size frames of the v2 film: the retimed blocks parts, on the GPU through D3D12 (CPU
    workers run the K2 and K3 parts at the same time).
 2. Full-size frames of the options he 👍'd, then of every other option that passed the gate.
-3. K4 AI clips: 8 seeds or more per option, more seeds while the night lasts.
+3. K4 AI clips, only if he 👍'd S1d: more seeds for it.
 4. The blocks parts again at 64 samples instead of 16. Better motion blur and depth of field;
    used if G1 and G2 pass them.
-5. Overflow (real work, never padding): more K4 seeds for the night and morning spots; v1's
-   unchanged shots re-rendered at 64 samples.
+5. Overflow (real work, never padding): v1's unchanged shots re-rendered at 64 samples; full-size
+   renders of the "keep v1" spots with the new timing; the next loops' options at full size.
 
 There is always more in the queue than one night can finish (his rule).
 
@@ -527,11 +550,23 @@ and local. The only deletes are each night's own temporary PNG frames, after a c
 
 ## Phases
 
-Each phase names its model. Start build sessions with `claude --model sonnet`; give subagents
-`model: "sonnet"` or `"haiku"`. Opus is for the gate (G2), the doc edits in Phase 1 and the
-morning pick.
+Each phase names its model. The executing session runs on Sonnet (`claude --model sonnet`).
+It gives Opus subagents (`model: "opus"`) the G2 reviews, Phase 1 (docs) and the Phase 5 pick.
+Builds and checks are Sonnet; purely mechanical runs are Haiku.
+
+### Order of work, so his first loop comes fast
+
+1. Phase 0a (about 1 hour): the GPU switch and the G1 checks.
+2. Loop 1 (S1) starts at once.
+3. While loop 1's options render, Phase 1 (docs) runs as an Opus subagent and Phase 2 (voice)
+   as a Sonnet subagent.
+4. Phase 0b (the K4 test download) runs in the background; S1d joins loop 1 only if it is
+   ready in time, else it comes as a late addition to the same loop.
+5. Phase 4 runs every night from the first evening on. Phase 5 runs once every spot has a pick.
 
 ### Phase 0: tools and measurements (Sonnet)
+
+Phase 0a = steps 1, 3 and 4. Phase 0b = step 2.
 
 1. **GPU speed of the blocks film.**
    - Wait for a quiet card (`nvidia-smi` util under 10%), or measure with Q3's rule if he said yes.
@@ -558,7 +593,7 @@ the K4 attempt is recorded (works, or why not).
 ### Phase 1: process doc and history (Opus)
 
 1. Make the edits A1–A7.
-2. Write `docs/product/content_history.md` with H1–H13.
+2. Write `docs/product/content_history.md` with H1–H15.
 3. Run the A8 check (every line of his words still present).
 4. Commit with `git commit --only` on the two docs plus the history file. Ship with
    `node scripts/ship.mjs`.
@@ -581,7 +616,7 @@ plan.
 - `clipReport` is empty;
 - the length is recorded.
 
-### Phase 3: short loops, one spot at a time (Sonnet builds, Opus gate)
+### Phase 3: short loops, one spot at a time (Sonnet builds, Opus gate, his page after each)
 
 Per loop, in the C7 order:
 1. Read his 👍 and notes on the loop page. Carry them into this loop.
@@ -593,8 +628,8 @@ Per loop, in the C7 order:
 5. Put the loop on the page (C8) and post the link in chat.
 6. Add the full-size renders of the passing options to the queue.
 
-**Done when:** every spot has a loop on the page; each loop took under 2 hours; the queue holds
-more than one night of work.
+**Done when:** every spot and the filming storyboard have a loop on the page; `film/loops.md`
+lists each loop's time; the queue holds more than one night of work.
 
 ### Phase 4: the night (Sonnet starts it; the watcher is a script)
 
@@ -646,7 +681,7 @@ the link is in the final message.
 ## Cost estimate (Claude's guess, not measured)
 
 - v1 took about 2.4 million new tokens.
-- v2: Phase 1 about 150k. Phases 2–3 about 1.2–1.8 million (16 new scenes plus 9 reviewers).
+- v2: Phase 1 about 150k. Phases 2–3 about 1.2–1.8 million (15 new scenes plus 8 reviewers).
   Phase 5 about 300k.
 - The night costs computer time only.
 
