@@ -61,16 +61,16 @@ export const recordText = {
   /** Where the default price comes from, per unit: this tool's own wording. `more` sits behind a "More" toggle. */
   priceBasis: {
     cigarettes: {
-      short: "$0.52: a pack of 20 averages $10.34 across US states (each state counts the same), divided by 20. Tobacco Insider, posted 26 Aug 2026.",
-      more: "Counted by how many packs each state sells, the average is $9.95 ($0.50 each). Packs cost $7.95 (North Carolina) to $14.85 (New York).",
+      short: "$0.52: a pack of 20 averages $10.34 across US states (each state counts the same), divided by 20. Tobacco Insider, posted 26 Aug 2026; the page does not date its prices.",
+      more: "State and federal tax are included; city taxes (for example New York City or Chicago) are not. Counted by how many packs each state sells, the average is $9.95 ($0.50 each). Packs cost $7.95 (North Carolina) to $14.85 (New York).",
     },
     vape: {
       short: "$14.07: the average price of one disposable vape in US shops and gas stations, 4 weeks to 3 Sep 2022 (Diaz and others, Tobacco Control, 2025).",
-      more: "Counted by sales. Online and vape-shop sales are left out, and prices may have changed since.",
+      more: "Counted by sales; the data covers the 48 mainland states and about 61% of the market. Online and vape-shop sales are left out, and prices may have changed since.",
     },
     pouches: {
-      short: "$5.64: the price ZYN's maker suggests for one can in the US (Tobacco Insider, posted 12 Sep 2025).",
-      more: "Later on the same page it says $5.69, and single cans online from $3.49. Prices may have changed since.",
+      short: "$5.69: the price ZYN's maker suggests for one can in the US (Tobacco Insider, posted 12 Sep 2025, September 2025 update).",
+      more: "The page's older figure was $5.64, and it lists single cans online from $3.49. Prices may have changed since.",
     },
   } as Record<string, { short: string; more: string }>,
   priceMore: "More",

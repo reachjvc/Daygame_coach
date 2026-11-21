@@ -215,12 +215,15 @@ describe("shared price basis and count text", () => {
   it("every unit's basis names its amount in dollars and its source", () => {
     expect(priceBasisOne.cigarettes).toMatch(/\$0\.52/)
     expect(priceBasisOne.cigarettes).toMatch(/each state counts the same/)
-    expect(priceBasisOne.cigarettes).toMatch(/tax is included/)
+    expect(priceBasisOne.cigarettes).toMatch(/State and federal tax are included; city taxes/)
+    expect(priceBasisOne.cigarettes).toMatch(/\$9\.95/)
+    expect(priceBasisOne.cigarettes).toMatch(/does not date its prices/)
     expect(priceBasisOne.vape).toMatch(/\$14\.07/)
     expect(priceBasisOne.vape).toMatch(/4 weeks to 3 Sep 2022/)
     expect(priceBasisOne.vape).toMatch(/vape shops and online sales are left out/i)
-    expect(priceBasisOne.pouches).toMatch(/before sales tax/)
-    expect(priceBasisOne.pouches).toMatch(/\$5\.69/)
+    expect(priceBasisOne.vape).toMatch(/61%/)
+    expect(priceBasisOne.pouches).not.toMatch(/sales tax/)
+    expect(priceBasisOne.pouches).toMatch(/Starts at \$5\.69/)
   })
   it("a count shows at most two decimals", () => {
     expect(countText(1 / 7)).toBe("0.14")

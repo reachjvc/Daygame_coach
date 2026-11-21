@@ -1,9 +1,10 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { Chips, PrimaryButton, SourcesFold } from "../../components/kit"
 import { isLiveTool } from "../../menu"
+import { MAX_PRICE, parseTyped } from "../date/logic"
 import { useQuitRecord, todayIso, type RecordUnit } from "../../record"
 import { useQuitStore } from "../../store"
 import type { QuitUnit, ToolProps } from "../../types"
@@ -25,6 +26,8 @@ import {
   importedCountMode,
   usableUnit,
   isOldCost,
+  countIsClean,
+  packPriceFor,
   parseCost,
   parseCount,
   parsePackSize,
@@ -78,12 +81,21 @@ interface Texts {
   size: string
 }
 
-function seed(unit: RecordUnit | null, countMode: CountMode, priceMode: PriceMode, size: number): Texts {
+function seed(unit: RecordUnit | null, countMode: CountMode, priceMode: PriceMode, size: number, packPrice: number | null): Texts {
   if (!unit) return { count: "", price: "", size: String(size) }
   const count = unit.perDay === null ? "" : boxNumber(countMode === "week" ? unit.perDay * 7 : unit.perDay)
-  const price = priceMode === "pack" && unit.id === "cigarettes" ? boxNumber(unit.priceUsd * size, 2) : boxNumber(unit.priceUsd, 2)
+  const price = priceMode === "pack" && unit.id === "cigarettes" ? boxNumber(packPriceFor(unit.priceUsd, size, packPrice), 2) : boxNumber(unit.priceUsd, 2)
   return { count, price, size: String(size) }
 }
+
+/** What the boxes say when every box is good: the unit to save and the typed pack price and size that go with it. */
+interface Pending {
+  unit: RecordUnit
+  packPrice: number | null
+  size: number
+}
+
+const differs = (a: RecordUnit, b: RecordUnit | null) => !b || a.id !== b.id || a.perDay !== b.perDay || a.priceUsd !== b.priceUsd || a.priceBasis !== b.priceBasis
 
 function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
   const store = useQuitStore()
@@ -92,17 +104,21 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
   const started = useStartCount(addiction, "cost")
   const carry = useCarry()
   const unitRec = usableUnit(rec.record.unit)
-  const unit = units.find((u) => u.id === unitRec?.id) ?? null
+  /** A unit he tapped but has not given a count for yet: the record keeps its own unit until a complete, valid entry replaces it. */
+  const [draft, setDraft] = useState<RecordUnit | null>(null)
+  const activeId = draft?.id ?? unitRec?.id ?? null
+  const unit = units.find((u) => u.id === activeId) ?? null
   const ready = state !== null && rec.ready
 
-  // a count given elsewhere (Your quit date asks it a day) is shown a day until he picks otherwise
-  const countMode: CountMode = state?.countMode ?? (unitRec && unitRec.perDay !== null ? "day" : unit ? defaultCountMode(unit.id) : "day")
+  // The count mode is his pick on this tool; without one, a day for cigarettes and a week for vapes and pouches.
+  const countMode: CountMode = state?.countMode ?? (unit ? defaultCountMode(unit.id) : "day")
   const priceMode: PriceMode = unit?.id === "cigarettes" ? (state?.priceMode ?? "pack") : "one"
   const size = state?.packSize ?? EMPTY_COST.packSize
-  const complete = unitRec !== null && unitRec.perDay !== null
+  const savedPack = state?.packPrice ?? null
   const [open, setOpen] = useState<boolean | null>(null)
   const [texts, setTexts] = useState<Texts>({ count: "", price: "", size: "" })
   const [saved, setSaved] = useState(false)
+  const touched = useRef(false)
 
   // First read: wave-1 answers move into the shared record once; the form starts open when the record has no unit or no count.
   useEffect(() => {
@@ -120,99 +136,149 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
       update(() => ({ ...EMPTY_COST, countMode: cm }))
     }
     setOpen(!(u !== null && u.perDay !== null))
-    setTexts(seed(u, cm ?? (u && u.perDay !== null ? "day" : u ? defaultCountMode(u.id) : "day"), u?.id === "cigarettes" ? (state?.priceMode ?? "pack") : "one", size))
+    setTexts(seed(u, cm ?? (u ? defaultCountMode(u.id) : "day"), u?.id === "cigarettes" ? (state?.priceMode ?? "pack") : "one", size, savedPack))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready])
-  const figures = unitRec && unitRec.perDay !== null ? computeCost(unitRec.perDay, unitRec.priceUsd) : null
-  useDoneCount(addiction, "cost", figures !== null)
 
-  const reseed = useCallback((u: RecordUnit | null, cm: CountMode, pm: PriceMode, sz: number) => setTexts(seed(u, cm, pm, sz)), [])
-
-  if (!ready || open === null) return null
-
-  const write = (next: RecordUnit) => {
-    started()
-    rec.setUnit(next)
-    setSaved(true)
-  }
-  const countErr = parseCount(texts.count, countMode).kind === "bad"
-  const countEmpty = parseCount(texts.count, countMode).kind === "empty"
+  // What the boxes say. Only a complete, valid set of boxes is ever saved to the record; a bad box saves nothing.
+  const countField = parseCount(texts.count, countMode)
+  const countErr = countField.kind === "bad"
+  const countEmpty = countField.kind === "empty"
   const sizeField = parsePackSize(texts.size)
   const sizeErr = priceMode === "pack" && sizeField.kind !== "ok"
   const sizeNow = sizeField.kind === "ok" ? sizeField.value : size
-  const priceErr = unit !== null && parsePrice(texts.price, priceMode, sizeNow).kind === "bad"
+  const priceField = unit ? parsePrice(texts.price, priceMode, sizeNow) : null
+  const priceErr = unit !== null && priceField?.kind === "bad"
   const anyErr = countErr || priceErr || sizeErr
+  const record = draft ? null : unitRec
+  const base = record ?? draft
+  // the count box holds the saved count rounded to 4 decimals: left alone, the saved count stays exact (10 a week stays 10 / 7 a day)
+  const countAsSeeded = base !== null && base.perDay !== null && texts.count === boxNumber(countMode === "week" ? base.perDay * 7 : base.perDay)
+  let pending: Pending | null = null
+  if (unit && !anyErr && priceField?.kind === "ok") {
+    const typed = parseTyped(texts.price, MAX_PRICE)
+    const basis = basisFor(priceField.value, unit)
+    pending = {
+      unit: { id: unit.id, perDay: countAsSeeded ? (base as RecordUnit).perDay : countField.kind === "ok" ? countField.value : (base?.perDay ?? null), priceUsd: basis === "default" ? (unit.defaultPriceUsd as number) : priceField.value, priceBasis: basis },
+      packPrice: priceMode === "pack" && typed.kind === "ok" ? typed.value : savedPack,
+      size: sizeNow,
+    }
+  }
+  // the unit the page shows its figures for: what the boxes say while editing, the record otherwise
+  const eff: RecordUnit | null = open ? (pending ? pending.unit : record) : unitRec
+  const figures = eff && eff.perDay !== null && eff.perDay > 0 ? computeCost(eff.perDay, eff.priceUsd) : null
+  const complete = eff !== null && eff.perDay !== null
+  useDoneCount(addiction, "cost", figures !== null)
+
+  /** Saves the boxes to the record, when they are complete and valid. A tapped unit is saved only once he has edited it or confirmed with Done. */
+  const latest = useRef({ pending, unitRec, draft, state })
+  latest.current = { pending, unitRec, draft, state }
+  const commit = (force = false) => {
+    const L = latest.current
+    const p = L.pending
+    if (!p) return
+    if (L.draft && (p.unit.perDay === null || !(touched.current || force))) return
+    if (differs(p.unit, L.unitRec)) {
+      started()
+      const old = L.unitRec
+      if (old && old.id !== p.unit.id) update((s) => ({ ...s, lastByUnit: { ...s.lastByUnit, [old.id]: { perDay: old.perDay, priceUsd: old.priceUsd, priceBasis: old.priceBasis } } }))
+      rec.setUnit(p.unit)
+      setSaved(true)
+    }
+    if (L.draft) setDraft(null)
+    const st = L.state
+    if (st && (st.packSize !== p.size || st.packPrice !== p.packPrice)) update((s) => ({ ...s, packSize: p.size, packPrice: p.packPrice }))
+  }
+  const commitRef = useRef(commit)
+  commitRef.current = commit
+  useEffect(() => {
+    const flush = () => commitRef.current()
+    const hide = () => document.visibilityState === "hidden" && flush()
+    window.addEventListener("pagehide", flush)
+    document.addEventListener("visibilitychange", hide)
+    return () => {
+      window.removeEventListener("pagehide", flush)
+      document.removeEventListener("visibilitychange", hide)
+      flush()
+    }
+  }, [])
+
+  if (!ready || open === null) return <Subtitle />
+
+  const reseed = (u: RecordUnit | null, cm: CountMode, pm: PriceMode, sz: number, pack: number | null) => setTexts(seed(u, cm, pm, sz, pack))
+  /** The unit the boxes now describe: used to refill them after a switch. */
+  const source = pending?.unit ?? draft ?? unitRec
 
   const pickUnit = (id: string) => {
     const u = units.find((x) => x.id === id)
-    if (!u || unitRec?.id === id) return
-    // the numbers of the unit he leaves are kept here, and come back if he taps it again
+    if (!u || activeId === id) return
+    // boxes that are complete and valid are saved before he moves on; the unit he taps is only shown until he enters a count for it
+    const savesDraft = draft !== null && pending !== null && pending.unit.perDay !== null && touched.current
+    const recNow = draft ? (savesDraft ? (pending as Pending).unit : unitRec) : (pending?.unit ?? unitRec)
+    commit()
+    touched.current = false
+    update((s) => ({ ...s, countMode: null, priceMode: "pack", packSize: EMPTY_COST.packSize, packPrice: null }))
+    if (recNow && recNow.id === id) {
+      setDraft(null)
+      reseed(recNow, defaultCountMode(id), "pack", EMPTY_COST.packSize, null)
+      return
+    }
     const kept = state?.lastByUnit[id]
-    const cm = kept && kept.perDay !== null ? "day" : defaultCountMode(id)
     const next: RecordUnit = kept ? { id, ...kept } : { id, perDay: null, priceUsd: u.defaultPriceUsd ?? 0, priceBasis: "default" }
-    update((s) => ({
-      ...s,
-      countMode: cm,
-      priceMode: "pack",
-      packSize: EMPTY_COST.packSize,
-      lastByUnit: unitRec ? { ...s.lastByUnit, [unitRec.id]: { perDay: unitRec.perDay, priceUsd: unitRec.priceUsd, priceBasis: unitRec.priceBasis } } : s.lastByUnit,
-    }))
-    write(next)
-    reseed(next, cm, "pack", EMPTY_COST.packSize)
+    setDraft(next)
+    reseed(next, defaultCountMode(id), "pack", EMPTY_COST.packSize, null)
   }
   const onCount = (text: string) => {
+    touched.current = true
     setTexts((x) => ({ ...x, count: text }))
-    const f = parseCount(text, countMode)
-    // an emptied box is not written: clearing it to retype never wipes the count the other tools read
-    if (unitRec && f.kind === "ok") write({ ...unitRec, perDay: f.value })
+  }
+  const onPrice = (text: string) => {
+    touched.current = true
+    setTexts((x) => ({ ...x, price: text }))
+  }
+  const onSize = (text: string) => {
+    touched.current = true
+    setTexts((x) => ({ ...x, size: text }))
   }
   const setMode = (cm: CountMode) => {
     if (cm === countMode) return
+    commit()
     update((s) => ({ ...s, countMode: cm }))
-    reseed({ ...(unitRec as RecordUnit) }, cm, priceMode, size)
-  }
-  const savePrice = (priceText: string, sizeText: string, pm: PriceMode) => {
-    if (!unit || !unitRec) return
-    const sf = parsePackSize(sizeText)
-    const sz = sf.kind === "ok" ? sf.value : size
-    if (pm === "pack" && sf.kind !== "ok") return
-    const f = parsePrice(priceText, pm, sz)
-    if (f.kind !== "ok") return
-    const basis = basisFor(f.value, unit)
-    write({ ...unitRec, priceUsd: basis === "default" ? (unit.defaultPriceUsd as number) : f.value, priceBasis: basis })
-  }
-  const onPrice = (text: string) => {
-    setTexts((x) => ({ ...x, price: text }))
-    savePrice(text, texts.size, priceMode)
-  }
-  const onSize = (text: string) => {
-    setTexts((x) => ({ ...x, size: text }))
-    const f = parsePackSize(text)
-    // the size is kept only with a good price, so the saved price of one and the size always belong together
-    if (f.kind === "ok" && parsePrice(texts.price, priceMode, f.value).kind === "ok") update((s) => ({ ...s, packSize: f.value }))
-    savePrice(texts.price, text, priceMode)
+    reseed(source, cm, priceMode, pending?.size ?? size, pending?.packPrice ?? savedPack)
   }
   const setPriceMode = (pm: PriceMode) => {
-    if (pm === priceMode || !unitRec) return
+    if (pm === priceMode || !source) return
+    commit()
     update((s) => ({ ...s, priceMode: pm }))
-    reseed(unitRec, countMode, pm, size)
+    reseed(source, countMode, pm, pending?.size ?? size, pending?.packPrice ?? savedPack)
   }
 
   const input = "min-h-12 w-full rounded-md border border-border bg-card px-3 text-base"
   const perText = countMode === "week" ? t.modeWeek : t.modeDay
+  const shownSize = open && pending ? pending.size : size
+  const shownPack = open && pending ? pending.packPrice : savedPack
   const summary =
     unitRec && unit && unitRec.perDay !== null
       ? (() => {
           const n = countMode === "week" ? unitRec.perDay * 7 : unitRec.perDay
           const words = formatCount(n) === "1" ? unit.one : unit.many
           return priceMode === "pack"
-            ? t.summaryPack(formatCount(n), words, perText, formatMoney(Math.round(unitRec.priceUsd * size * 100) / 100), size)
+            ? t.summaryPack(formatCount(n), words, perText, formatMoney(packPriceFor(unitRec.priceUsd, size, savedPack)), size)
             : t.summary(formatCount(n), words, perText, formatPrice(unitRec.priceUsd))
         })()
       : null
+  const today = todayIso()
+  const past = rec.record.quitDate !== null && (rec.record.goal === "stop" || rec.record.goal === "break") && rec.record.quitDate <= today
+  const showBar = open && figures !== null && !anyErr && !countEmpty
+  const savedLine = saved ? (
+    <span data-testid="cost-saved" className="text-sm font-normal text-muted-foreground">
+      {t.saved}
+    </span>
+  ) : null
 
   return (
     <div className="flex flex-col gap-6">
+      <Subtitle />
       <section aria-label={t.title} data-testid="cost-numbers" className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
         {!open && summary ? (
           <>
@@ -223,7 +289,8 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
               type="button"
               data-testid="cost-change"
               onClick={() => {
-                reseed(unitRec, countMode, priceMode, size)
+                touched.current = false
+                reseed(unitRec, countMode, priceMode, size, savedPack)
                 setSaved(false)
                 setOpen(true)
               }}
@@ -237,16 +304,16 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
           <>
             <div className="flex flex-col gap-2">
               <span className="text-sm font-medium">{t.unitLabel}</span>
-              <Chips label={t.unitLabel} options={units.map((u) => ({ id: u.id, label: dateText.useUnits[u.id] ?? u.many }))} value={unitRec ? [unitRec.id] : []} onChange={([id]) => pickUnit(id)} />
+              <Chips label={t.unitLabel} options={units.map((u) => ({ id: u.id, label: dateText.useUnits[u.id] ?? u.many }))} value={activeId ? [activeId] : []} onChange={([id]) => pickUnit(id)} />
             </div>
-            {unit && unitRec && (
+            {unit && (
               <>
                 <div className="flex flex-col gap-2">
                   <label htmlFor="cost-count" className="text-sm font-medium">
                     {t.countLabel(unit.many)}
                   </label>
                   <Switch label={t.modeLabel} testId="cost-count-mode" value={countMode} options={[{ id: "day", label: t.modeDay }, { id: "week", label: t.modeWeek }]} onChange={(id) => setMode(id as CountMode)} />
-                  <input id="cost-count" data-testid="cost-count" type="text" inputMode="decimal" maxLength={8} value={texts.count} onChange={(e) => onCount(e.target.value)} aria-invalid={countErr || undefined} className={input} />
+                  <input id="cost-count" data-testid="cost-count" type="text" inputMode="decimal" maxLength={8} value={texts.count} onChange={(e) => onCount(e.target.value)} onBlur={() => commit()} aria-invalid={countErr || undefined} className={input} />
                   <span className="text-sm text-muted-foreground">{t.countHelp}</span>
                   {countErr && (
                     <span data-testid="cost-count-error" role="alert" className="text-sm font-medium text-destructive">
@@ -264,7 +331,7 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
                   <label htmlFor="cost-price" className="text-sm font-medium">
                     {priceMode === "pack" ? t.packPriceLabel : unit.id === "pouches" ? t.pouchPriceLabel : t.onePriceLabel(unit.one)}
                   </label>
-                  <input id="cost-price" data-testid="cost-price" type="text" inputMode="decimal" maxLength={10} value={texts.price} onChange={(e) => onPrice(e.target.value)} aria-invalid={priceErr || undefined} className={input} />
+                  <input id="cost-price" data-testid="cost-price" type="text" inputMode="decimal" maxLength={10} value={texts.price} onChange={(e) => onPrice(e.target.value)} onBlur={() => commit()} aria-invalid={priceErr || undefined} className={input} />
                   {priceErr && (
                     <span data-testid="cost-price-error" role="alert" className="text-sm font-medium text-destructive">
                       {t.needPrice}
@@ -275,7 +342,7 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
                       <label htmlFor="cost-size" className="text-sm font-medium">
                         {t.packSizeLabel}
                       </label>
-                      <input id="cost-size" data-testid="cost-size" type="text" inputMode="numeric" maxLength={3} value={texts.size} onChange={(e) => onSize(e.target.value)} aria-invalid={sizeErr || undefined} className={input} />
+                      <input id="cost-size" data-testid="cost-size" type="text" inputMode="numeric" maxLength={3} value={texts.size} onChange={(e) => onSize(e.target.value)} onBlur={() => commit()} aria-invalid={sizeErr || undefined} className={input} />
                       {sizeErr && (
                         <span data-testid="cost-size-error" role="alert" className="text-sm font-medium text-destructive">
                           {t.badSize}
@@ -284,25 +351,26 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
                     </>
                   )}
                   <p data-testid="cost-basis" className="break-words text-sm text-muted-foreground">
-                    {unitRec.priceBasis === "typed" ? t.basisTyped : priceMode === "pack" ? t.basisPack : (dateText.priceBasis[unit.id] ?? "")}
+                    {(pending?.unit ?? draft ?? unitRec)?.priceBasis === "typed" ? t.basisTyped : priceMode === "pack" ? t.basisPack : (dateText.priceBasis[unit.id] ?? "")}
                   </p>
                 </div>
-                {saved && (
-                  <p data-testid="cost-saved" className="text-sm text-muted-foreground">
-                    {t.saved}
-                  </p>
-                )}
-                {figures && !anyErr && !countEmpty && (
-                  // the answer stays in sight while he types: this line sticks to the bottom of the screen
-                  <p data-testid="cost-live" aria-hidden="true" className="sticky bottom-2 z-10 self-stretch rounded-md border border-primary bg-background px-3 py-2 text-base font-semibold text-primary shadow">
-                    {t.liveYear(formatCents(figures.yearCents))}
-                  </p>
+                {showBar ? (
+                  // the answer stays in sight while he types: this bar sticks to the bottom of the screen, with the saved note inside it
+                  <div className="sticky bottom-2 z-10 flex flex-wrap items-baseline justify-between gap-x-3 self-stretch rounded-md border border-primary bg-background px-3 py-2 shadow">
+                    <p data-testid="cost-live" aria-hidden="true" className="text-base font-semibold text-primary">
+                      {t.liveYear(formatCents((figures as CostFigures).yearCents))}
+                    </p>
+                    {savedLine}
+                  </div>
+                ) : (
+                  savedLine
                 )}
                 {complete && (
                   <PrimaryButton
                     testId="cost-done"
                     disabled={anyErr}
                     onClick={() => {
+                      commit(true)
                       setOpen(false)
                       requestAnimationFrame(() => document.querySelector("[data-testid=cost-result]")?.scrollIntoView({ block: "start" }))
                     }}
@@ -316,10 +384,31 @@ function Inner({ addiction, units }: { addiction: string; units: QuitUnit[] }) {
         )}
       </section>
 
-      {unit && <Result unit={unit} rec={unitRec} figures={figures} bad={open && anyErr} empty={open && countEmpty} countMode={countMode} priceMode={priceMode} size={size} />}
-      <DateLine record={rec.record} figures={figures} carry={carry} addiction={addiction} />
+      {unit && (
+        <Result
+          unit={unit}
+          rec={eff}
+          figures={figures}
+          bad={open && anyErr}
+          empty={open && countEmpty}
+          countMode={countMode}
+          priceMode={priceMode}
+          size={shownSize}
+          packPrice={shownPack}
+          title={past ? t.resultTitlePast : t.resultTitle}
+          dateLine={<DateLine record={rec.record} figures={figures} carry={carry} addiction={addiction} />}
+        />
+      )}
       {unit && <SourcesFold refs={uniqueRefs(realRefs(unit.priceRefs))} />}
     </div>
+  )
+}
+
+function Subtitle() {
+  return (
+    <p data-testid="cost-subtitle" className="text-base text-muted-foreground">
+      {t.subtitle}
+    </p>
   )
 }
 
@@ -354,14 +443,21 @@ interface ResultProps {
   countMode: CountMode
   priceMode: PriceMode
   size: number
+  packPrice: number | null
+  title: string
+  /** The quit-date line: shown with the result, above the working. */
+  dateLine: React.ReactNode
 }
 
-function Result({ unit, rec, figures, bad, empty, countMode, priceMode, size }: ResultProps) {
+function Result({ unit, rec, figures, bad, empty, countMode, priceMode, size, packPrice, title, dateLine }: ResultProps) {
   const year = useCountUp(figures ? figures.yearCents / 100 : 0)
+  // Long figures (a large count at a large price): shrink the type and stack the three tiles, so a number is never cut in the middle.
+  const bigLen = figures ? formatCents(figures.yearCents).length : 0
+  const wide = figures ? formatCents(figures.tenCents).length > 11 : false
   return (
     <section data-testid="cost-result" aria-label={t.resultTitle} className="flex flex-col gap-4">
-      <h2 className="text-lg font-semibold">{t.resultTitle}</h2>
-      {bad && figures ? (
+      <h2 className="text-lg font-semibold">{title}</h2>
+      {bad ? (
         <p data-testid="cost-fix" className="text-muted-foreground">
           {t.fixFirst}
         </p>
@@ -373,11 +469,15 @@ function Result({ unit, rec, figures, bad, empty, countMode, priceMode, size }: 
         <>
           <div className="rounded-lg border border-border bg-card p-4">
             <p className="text-sm text-muted-foreground">{t.year}</p>
-            <p data-testid="cost-year" data-value={(figures.yearCents / 100).toFixed(2)} aria-live="polite" className="break-words text-4xl font-semibold text-primary">
+            <p data-testid="cost-year" data-value={(figures.yearCents / 100).toFixed(2)} aria-hidden="true" className={`break-words font-semibold text-primary ${bigLen > 13 ? "text-2xl" : bigLen > 11 ? "text-3xl" : "text-4xl"}`}>
               {formatMoney(year)}
             </p>
+            {/* a screen reader hears the final amount only, not the count-up */}
+            <p className="sr-only" role="status" aria-live="polite" data-testid="cost-year-live">
+              {t.year}: {formatCents(figures.yearCents)}
+            </p>
           </div>
-          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          <div className={`grid gap-2 sm:grid-cols-3 sm:gap-3 ${wide ? "grid-cols-1" : "grid-cols-3"}`}>
             <Tile label={t.day} id="cost-day" value={figures.dayCents} />
             <Tile label={t.month} id="cost-month" value={figures.monthCents} />
             <Tile label={t.ten} id="cost-ten" value={figures.tenCents} />
@@ -385,7 +485,8 @@ function Result({ unit, rec, figures, bad, empty, countMode, priceMode, size }: 
           <p data-testid="cost-units" className="text-base">
             {t.unitsYear(formatCount(figures.unitsYear), figures.unitsYear === 1 ? unit.one : unit.many)}
           </p>
-          <Working unit={unit} rec={rec} figures={figures} countMode={countMode} priceMode={priceMode} size={size} />
+          {dateLine}
+          <Working unit={unit} rec={rec} figures={figures} countMode={countMode} priceMode={priceMode} size={size} packPrice={packPrice} />
         </>
       )}
     </section>
@@ -396,20 +497,25 @@ function Tile({ label, id, value }: { label: string; id: string; value: number }
   return (
     <div className="min-w-0 rounded-lg border border-border bg-card p-2 sm:p-3">
       <p className="text-sm text-muted-foreground">{label}</p>
-      <p data-testid={id} data-value={(value / 100).toFixed(2)} className="break-words text-base font-semibold sm:text-xl">
+      <p data-testid={id} data-value={(value / 100).toFixed(2)} className={`font-semibold ${formatCents(value).length > 13 ? "text-base sm:text-base" : "text-base sm:text-xl"}`}>
         {formatCents(value)}
       </p>
     </div>
   )
 }
 
-function Working({ unit, rec, figures, countMode, priceMode, size }: { unit: QuitUnit; rec: RecordUnit; figures: CostFigures; countMode: CountMode; priceMode: PriceMode; size: number }) {
+function Working({ unit, rec, figures, countMode, priceMode, size, packPrice }: { unit: QuitUnit; rec: RecordUnit; figures: CostFigures; countMode: CountMode; priceMode: PriceMode; size: number; packPrice: number | null }) {
   const perDay = rec.perDay as number
   const price = formatPrice(rec.priceUsd)
   const lines: string[] = []
-  if (rec.id === "cigarettes" && priceMode === "pack") lines.push(t.workPack(formatMoney(Math.round(rec.priceUsd * size * 100) / 100), size, price, unit.one))
+  if (rec.id === "cigarettes" && priceMode === "pack") lines.push(t.workPack(formatMoney(packPriceFor(rec.priceUsd, size, packPrice)), size, price, unit.one))
   const year = formatCents(figures.yearCents)
-  lines.push(countMode === "week" ? t.workYearWeek(formatCount(perDay * 7), price, year) : t.workYearDay(formatCount(perDay), price, year))
+  // the count shown must be the count used: a week count of 10 is 10 / 7 a day, so it is written as a week; a count that fits neither way says "about"
+  const dayClean = countIsClean(perDay)
+  const weekClean = countIsClean(perDay * 7)
+  const asWeek = countMode === "week" ? weekClean || !dayClean : !dayClean && weekClean
+  const yearText = dayClean || weekClean ? year : t.workAbout(year)
+  lines.push(asWeek ? t.workYearWeek(formatCount(perDay * 7), price, yearText) : t.workYearDay(formatCount(perDay), price, yearText))
   lines.push(t.workDay(year, formatCents(figures.dayCents)))
   lines.push(t.workMonth(formatCents(figures.yearCents), formatCents(figures.monthCents)))
   lines.push(t.workTen(formatCents(figures.yearCents), formatCents(figures.tenCents)))

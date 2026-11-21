@@ -1,8 +1,9 @@
 /** Reader text of "What it costs you". Unit words come from the data file; price lines for one unit come from the quit date tool. */
 export const costText = {
+  subtitle: "What you spend on it a day, a year and over 10 years.",
   title: "Your numbers",
   summary: (n: string, words: string, per: string, price: string) => `${n} ${words} ${per} at ${price} each`,
-  summaryPack: (n: string, words: string, per: string, pack: string, size: number) => `${n} ${words} ${per} at ${pack} a pack of ${size}`,
+  summaryPack: (n: string, words: string, per: string, pack: string, size: number) => `${n} ${words} ${per} at ${pack} a pack of\u00a0${size}`,
   change: "Change",
   done: "Done",
   shared: "Your quit date and Your record use these same numbers.",
@@ -21,7 +22,8 @@ export const costText = {
   packSizeLabel: "Cigarettes in a pack",
   onePriceLabel: (one: string) => `What does one ${one} cost? (USD)`,
   pouchPriceLabel: "What does a can cost? (USD)",
-  basisPack: "Starts at $10.40 a pack of 20 ($0.52 a cigarette): the US state average, $10.34 with tax, ÷ 20 and rounded. Not weighted by sales; states run from $7.95 to $14.85 (Tobacco Insider, posted 26 Aug 2026). Type what you pay.",
+  basisPack:
+    "Starts at $10.40 a pack of 20: the plain average of US state prices for a mainstream pack, $10.34, is $0.517 a cigarette, rounded to $0.52, × 20. Each state counts the same; state and federal tax are included, city taxes (for example New York City or Chicago) are not. Counted by packs sold, the average is $9.95. Packs run from $7.95 (North Carolina) to $14.85 (New York) (Tobacco Insider, posted 26 Aug 2026; the page does not date its prices). Type what you pay.",
   basisTyped: "Your own price.",
   badSize: "Type a whole number from 1 to 100",
   needPrice: "Type a price up to $1,000, like 7.50",
@@ -30,6 +32,7 @@ export const costText = {
   fixFirst: "Fix the number above to see the cost.",
 
   resultTitle: "Your cost",
+  resultTitlePast: "What it cost you",
   year: "A year",
   day: "A day",
   month: "A month",
@@ -40,15 +43,17 @@ export const costText = {
   workTitle: "The working",
   workPack: (pack: string, size: number, each: string, one: string) => `${pack} a pack ÷ ${size} = ${each} a ${one}.`,
   workYearDay: (n: string, price: string, year: string) => `${n} a day × ${price} × 365 days = ${year} a year.`,
+  /** A count that cannot be shown exactly in either form: the line says it is about. */
+  workAbout: (year: string) => `about ${year}`,
   workYearWeek: (n: string, price: string, year: string) => `${n} a week × ${price} × 365 ÷ 7 = ${year} a year.`,
   workDay: (year: string, day: string) => `${year} ÷ 365 = ${day} a day.`,
   workMonth: (year: string, month: string) => `${year} ÷ 12 = ${month} a month.`,
   workTen: (year: string, ten: string) => `${year} × 10 = ${ten} in 10 years.`,
   workNote: "A year is 365 days. No price rise is counted; if prices go up, the real cost is higher.",
 
-  dateFuture: (day: string, perDay: string, year: string) => `If you stop on ${day}, each day without it keeps ${perDay}: ${year} in a year.`,
+  dateFuture: (day: string, perDay: string, year: string) => `If you stop on ${day}, each day without it saves ${perDay}: ${year} in a year.`,
   dateFutureBare: (day: string) => `Your quit date is ${day}.`,
-  dateBreakFuture: (day: string, perDay: string) => `Your break starts ${day}. Each day of it keeps ${perDay}.`,
+  dateBreakFuture: (day: string, perDay: string) => `Your break starts ${day}. Each day of it saves ${perDay}.`,
   dateBreakFutureBare: (day: string) => `Your break starts ${day}.`,
   datePastPre: (day: string) => `You stopped on ${day}. The money you have kept since then is in `,
   dateBreakPastPre: (day: string) => `Your break started on ${day}. What it has kept you is in `,
