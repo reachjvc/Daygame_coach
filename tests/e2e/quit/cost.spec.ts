@@ -9,7 +9,6 @@ import { mkdirSync } from "node:fs"
 import type { Page } from "@playwright/test"
 import { test, expect, SIGNED_OUT } from "../fixtures/test"
 import { quitUrl } from "../helpers/quit"
-import { isLiveTool } from "../../../src/quit/menu"
 
 const URL = quitUrl("/quit/nicotine/cost")
 const SHOTS = process.env.COST_SHOTS_DIR ?? "test-results/cost-shots"

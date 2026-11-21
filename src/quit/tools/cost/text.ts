@@ -22,11 +22,6 @@ export const costText = {
   onePriceLabel: (one: string) => `What does one ${one} cost? (USD)`,
   pouchPriceLabel: "What does a can cost? (USD)",
   basisPack: "Starts at $10.40 a pack of 20 ($0.52 a cigarette): the US state average, $10.34 with tax, ÷ 20 and rounded. Not weighted by sales; states run from $7.95 to $14.85 (Tobacco Insider, posted 26 Aug 2026). Type what you pay.",
-  basisOne: {
-    cigarettes: "Starts at $0.52 a cigarette: the US state average pack of 20, $10.34 with tax, ÷ 20 and rounded. Not weighted by sales; states run from $7.95 to $14.85 (Tobacco Insider, posted 26 Aug 2026). Type what you pay.",
-    vape: "Starts at $14.07: the average price paid for one disposable vape in US convenience, grocery and other stores in the 4 weeks to 3 Sep 2022, weighted by sales. Vape shops and online sales are not counted (Diaz and others, Tobacco Control, 2025). Type what you pay.",
-    pouches: "Starts at $5.64: one big brand's suggested price for a can in the US, before sales tax. The same page also gives $5.69, and shops charge more or less (Tobacco Insider, posted 12 Sep 2025). Type what you pay.",
-  } as Record<string, string>,
   basisTyped: "Your own price.",
   badSize: "Type a whole number from 1 to 100",
   needPrice: "Type a price up to $1,000, like 7.50",
