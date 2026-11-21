@@ -7,6 +7,24 @@ that used to be here, are in `docs/product/content_creation_history.md`.
 **Status (owner, 2026-11-18): not decided.** About 40% of a final process.
 Everything Claude wrote here is a proposal until he says yes.
 
+**Next film to improve: "Outvoted" v2** (Claude, proposed 2026-11-21;
+Track 2). It carries out his notes of 2026-11-20 (faster; other kinds of
+animation, "at night" and "in the morning" the obvious spots; the blocks
+stay the main line; himself filmed; breathing gone) and of 2026-11-21 (no
+AI still paintings or slow zooms; variety from kinds of animation; GPU near
+full at night, proven with numbers; filming = him speaking the script on
+camera; the blocks' type of animation is right, the blocks are not the gold
+standard; short loops; GPU by day when free, the night always has work).
+[his words; history "The owner's words"] Plan:
+`Plans/outvoted-animation-round.md`. A night session builds only from this
+line; if it is out of date, the night does not start. [Claude, proposed]
+
+Tracks (proposed 2026-11-21): **Track 1** celebrity clip reels; **Track 2**
+our own films (Outvoted, the next reels); **Video 01**; **Finding the
+look** (finder, ten ways). Headings here and in the history file name
+theirs. Mistakes, one entry each, newest first:
+`docs/product/content_mistakes.md` (proposed).
+
 ## How this file is kept (proposed 2026-11-21, not decided)
 
 His words (2026-11-21, R3-6): "you tend to drift away from what i want, and
@@ -62,7 +80,7 @@ This replaces the earlier proposal that "each note is fixed and saved as a
 rule for later reels" (way 5, 2026-11-20): saving notes as general rules is
 how the drift happened.
 
-## Lessons: celebrity clip reels
+## Lessons: celebrity clip reels [Track 1]
 
 Worked, or worth more tries:
 - Full screen 9:16, following the speaker's face. The viral original plays
@@ -103,7 +121,7 @@ Did not work:
 Not judged yet: round 1's ten reels as reels to post; the kids episode
 (B1–B3) and theme cast lists.
 
-## Lessons: our own films
+## Lessons: our own films [Track 2, Video 01, Finding the look]
 
 Worked, or worth more tries:
 - Claude's animations are "quite nice"; an idea bank of reusable worlds.
@@ -131,8 +149,12 @@ Did not work:
 - The outperformer finder: probably the wrong direction; a channel uses one
   style on all its videos. Find the style he likes, and new work to copy or
   put our own spin on. [his words, 2026-11-21]
+- Claude's own check of its night output ("came out well"), with nothing to
+  compare against. [his words 2026-11-21 on the result; cause is Claude's
+  reading; history "Why it went wrong"]
 
-Not judged yet: the look finder page; three looks of the same ten seconds.
+Not judged yet: the look finder page; three looks of the same ten seconds;
+Outvoted v2 (`Plans/outvoted-animation-round.md`).
 
 ## Tools (facts)
 

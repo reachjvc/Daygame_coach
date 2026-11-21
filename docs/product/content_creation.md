@@ -41,11 +41,15 @@ say "I left notes".
   the voice with a better microphone another day. Plan:
   `Plans/reel-outvoted.md` (proposed). Private folder:
   `~/.cache/daygame-research/content/reel-outvoted/`.
+  Next: v2 by `Plans/outvoted-animation-round.md` (proposed): faster,
+  breaths gone, other kinds of animation at seven spots, his filmed part
+  storyboarded first.
 - **First night run (2026-11-20 to 21) failed.** It made 18 AI-painting
   films of Outvoted. He judged them not usable, and AI still paintings with
   a slow zoom are never to be made again. The next step is his Outvoted
   notes: blocks plus other animation at some spots, and himself filmed. See
-  "The first night run" in the history file.
+  "The first night run" in the history file. Mistakes are kept in
+  `docs/product/content_mistakes.md`.
 - **The process itself**: being worked out on video 01. About 40% there
   (owner, 2026-11-18). On 2026-11-20 he marked the ten ways page: 👍 on
   ways 2, 3, 5, 7 and 8, and he wants a finder for videos that outperform
@@ -72,7 +76,9 @@ say "I left notes".
   2026-11-21, W1 and W2) uses real people only (CNN anchor, BBC interview,
   a psychology coach, the 1999 paper on screen), no short inserts, the
   source name per picture, and no black edges; it waits for his notes on
-  its own page (listed in notes-seen.md).
+  its own page (listed in notes-seen.md). His page notes on round 4
+  (2026-11-21, W1 and chg-0 to chg-6) are in the history file, word for
+  word; the round 5 rebuild belongs to the celebrity track.
 - **Look finder (step 1 of the proposed process)**: built 2026-11-20. 18
   YouTube videos that beat their channel's usual views, in six looks, each
   playable with a 👍 and a note (page listed in notes-seen.md). Waits for
@@ -127,6 +133,9 @@ and other blocks with their own letters (A1, W1…) so he can refer to them.
 Keeping this file: add only a little at a time. Remove lines that are
 outdated, repeated or contradicted without asking, and list in the reply
 exactly what was added and removed, so the owner can undo it.
+(conflicts with his rule 2026-11-04: nothing is removed until he says so;
+proposed change: "fold or mark 'proposed to remove', never delete without
+his yes". He decides.)
 
 ## The long-term aim (owner, 2026-11-10)
 

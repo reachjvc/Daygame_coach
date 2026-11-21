@@ -7,9 +7,16 @@ Claude's summaries of what he said; those are marked "summary". Lessons
 drawn from this file live in `content_creation_process.md`, each pointing
 back here.
 
-## Round notes, verbatim
+Tracks (Claude, proposed 2026-11-21; index in `content_creation_process.md`):
+Track 1 = celebrity clip reels; Track 2 = our own films (Outvoted, the next
+reels); Video 01; Finding the look (finder, ten ways). Headings carry their
+track in brackets. Labels in brackets after a heading: [his words],
+[record], [research] or [Claude, proposed]. Mistakes, one entry each:
+`docs/product/content_mistakes.md`.
 
-### Celebrity reels, round 3 (page "Clip Reels Round 3", notes 2026-11-21)
+## Round notes, verbatim [his words]
+
+### Celebrity reels, round 3 (page "Clip Reels Round 3", notes 2026-11-21) [Track 1] [his words]
 
 - **R3-1** (on V2, at 1:24): "this is still quite bad. What i would prefer you try is to find clips of like TV anchors or whatever, saying the things you want to say. Also, the clips you mix in, inbetween the interview, they are so short and irrelevant. Youre currently just making the original video less watchable"
 - **R3-2** (on V2, at 1:31): "Also, the source is there constantly, but the different souces should just come up when theyre the one on screen, i.e. it isnt cbs all the time"
@@ -18,7 +25,7 @@ back here.
 - **R3-5** (on the record line "No version longer than the base"): "yeah, i never said that NO VERSION must never be longer"
 - **R3-6** (chat, 2026-11-21): "theres still much improvement to be done. You need to find a way to prune the process document in an ongoing fashion too, so only the real insights stay. The issue is that you tend to drift away from what i want, and then make fixed rules that actually serve to make future versions drift too"
 
-### Celebrity reels, after round 4 (chat, 2026-11-21)
+### Celebrity reels, after round 4 (chat, 2026-11-21) [Track 1] [his words]
 
 - **R4-1**: "Yes, i made insert something like him rocking out on stage, instead of the CBS interview, for part of the interview. That was one idea, one tool, i wanted you to test out. But what you need to understand, is that i want you to have atool box, and then make several versions from using that toolbox, and then we find something that works."
 - **R4-2**: "i didnt mean specifically that it had to be an anchor, just that the internet is vast, and if you did a larger job, you could cut all sorts of things up."
@@ -27,9 +34,18 @@ back here.
 - **R4-5**: "What we need now, is a new prompt, one that zooms out entirely, and somehow finds a way where you can ask me questions that are relevant, or come up with new ways of doing this. We're not anywhere near what i want to be able for us to produce i nterms of quality or our alignment of understanding, which is still very far apart."
 - **R4-6** (on the round 4 page, chat): "theres a w1 and a w2 on this page, is this all roudn 4? i dont understand the artifact fully. Also, you keep misunderstanding my feedback at the least slightly"
 
+### Celebrity reels, round 4 page notes (page KzAV8…, 2026-11-21 10:39-10:45 UTC) [Track 1] [his words]
+
+- **W1** (at 1:10 in W1, ours): "this is the closest we've gotten to something that is different from the original viral, and still useful. But the cuts are still weird, and it is a very long opener for a reel - and it is twice as long as the original"
+- **chg-0**: "you could still ask me to voiceover some parts, i think thats fair. It is just that the AI voice when we have alternatives is not very good (but it is fine for showcasing what COULD be said). Be careful to not make too many fixed rules from the things i say, or atleast understand clearly what i said"
+- **chg-1**: "Again, i never said 12 seconds. But theres a big difference between 1.5 sec and 12 seconds. YOu keep wanting to make too fixed rules that do not make sense in the long term"
+- **chg-3**: "also, make it into a corner in the bottom, not near the middle"
+- **chg-4**: "I more likely asked if this was how it is supposed to be. I dont really watch reels, so are reels supposed to be like that"
+- **chg-6**: "also, one of the cuts was bad, because he said ".." something at the end, so it was just cut wrong"
+
 ## Earlier sections, moved here unchanged on 2026-11-21
 
-## The owner's words
+## The owner's words [Video 01, Track 2] [his words, summary]
 
 2026-11-18:
 - Claude can make quite nice animations.
@@ -78,13 +94,54 @@ back here.
 - He still hears a good amount of his breathing. He wants it gone if that is
   possible, and expects to test different ways of doing it.
 
-## Idea bank
+2026-11-21, on the night run and this round (added 2026-11-21 by the
+Outvoted session; summary of his chat words, written down without changes
+in meaning; source: his request for `Plans/outvoted-animation-round.md`):
+- No paid AI tools.
+- He can film himself. Filming is more about putting his real person
+  speaking the script into the video, in various ways, than about B-roll of
+  himself doing things. Maybe waking up.
+- Right now we are still getting the core of what we want to do right.
+- The Outvoted film gets better through animation, following his notes. The
+  blocks stay the main story line. Spots like "at night" and "in the
+  morning" get a different kind of animation; an animated person waking up
+  is one idea, not the list. It goes faster. There is a storyboard step for
+  the filming choice. The breathing is gone. His examples are seeds, never
+  the full list.
+- Never again AI still paintings, or images with a slow zoom or pan. They
+  had wrong hands, wrong pictures and no real animation, and they are the
+  opposite of what he enjoys about AI. Variety comes from different kinds of
+  animation, not the same shots in other colours.
+- The GPU is used near full when work runs at night. It must be proven with
+  numbers, not claimed. Claude builds scenes in the evening, and the GPU
+  renders at night. There is always more queued work than the night can
+  finish.
+
+Later the same day, after reading the first version of that plan:
+- He does not know if Claude can determine whether anything is less
+  beautiful than the blocks. He does not want Claude to treat the blocks as
+  the gold standard: "that particular type of animation is the correct one".
+- He wants shorter iteration loops: he sees a small part of what Claude
+  proposes, without having to wait for hours.
+- As long as there is free GPU, animations may run in the daytime too; there
+  must always be something for the night.
+
+2026-11-21, on the outperformer finder (copied from `content_creation.md`,
+written there by another session, commit 6048851e):
+- The outperformer finder is probably the wrong direction: a channel uses
+  the same style on all its videos, so studying its outliers says little
+  about style. What we need to find instead: (1) the style he likes — the
+  blocks in the Outvoted film are the best style he has seen yet, and he
+  likes the more beautiful animations; (2) new work to copy or put our own
+  spin on.
+
+## Idea bank [Video 01, Track 2] [Claude, proposed]
 
 Private folder `~/.cache/daygame-research/content/bank/`: one reusable
 animation per visual world (calendar, quest log, blocks, moving words, …),
 each with a second-by-second description. Later videos pick from it.
 
-## What others do (researched 2026-11-18)
+## What others do (researched 2026-11-18) [Video 01] [research 2026-11-18]
 
 Animation studios:
 - Order: script, storyboard, then 2 to 4 style frames (finished stills of
@@ -113,7 +170,7 @@ Creators working with AI (2026 posts and 15 YouTube videos):
   [Flick](https://youtu.be/zakFNEOPq0M).
 - Fuller notes (private): `~/.cache/daygame-research/content/process-research/youtube.md`.
 
-## Tried on video 01
+## Tried on video 01 [Video 01, Track 2] [record]
 
 - **Question rounds on single items:** too slow (owner).
 - **A 3D render before he saw any frame:** 54 minutes of rendering, and a
@@ -143,7 +200,7 @@ Creators working with AI (2026 posts and 15 YouTube videos):
   spots is listed in notes-seen.md. Working files:
   `~/.cache/daygame-research/content/reel-outvoted/wordcheck/` and `pass2/`.
 
-## What others do about pace, pictures and breaths (researched 2026-11-20)
+## What others do about pace, pictures and breaths (researched 2026-11-20) [Track 2] [research 2026-11-20]
 
 Mostly blogs by companies that sell editing tools; none shows a controlled
 test. Full notes (private):
@@ -161,7 +218,7 @@ test. Full notes (private):
 - Not found: proof that reader panels predict viewers; an example of one
   animated world cutting to footage of its maker and back.
 
-## Ten ways to build, he picks one (2026-11-20, later)
+## Ten ways to build, he picks one (2026-11-20, later) [Finding the look] [record]
 
 The owner on the second pass: the visual side is still very hard for him to
 gauge, the page about which sentences to cut was almost impossible to
@@ -182,12 +239,13 @@ makers sell a tool):
 - Private notes: `process-research/2026-11-20-code-motion.md`,
   `-formats.md`, `-ai-generators.md` (same private folder as above).
 
-### His marks on the ten ways page (owner, 2026-11-20, evening)
+### His marks on the ten ways page (owner, 2026-11-20, evening) [Finding the look]
 
 - 👍 on five ways: 2 (copy one channel's house look), 3 (three finished
   looks of the same ten seconds), 5 (whole film, then timed notes that
   become rules), 7 (AI film clips for each line) and 8 (AI paintings with a
   slow camera). A 👍 on 7 or 8 is not a yes to spend money.
+  (way 8 dropped by his rule 2026-11-21, see the first night run)
 - The research summary: "very good and useful".
 - Way 1: he wants a tool that finds reels or YouTube videos that
   outperform. He looks at some of them and decides what he likes about each.
@@ -204,7 +262,7 @@ makers sell a tool):
   format, and one maker who says real footage is quicker than code for
   realistic pictures; nobody in it builds a reel either way.
 
-## Proposed next version (Claude, proposed 2026-11-20 after his marks, not decided)
+## Proposed next version (Claude, proposed 2026-11-20 after his marks, not decided) [Finding the look, Track 2]
 
 Once, to find the look:
 
@@ -226,26 +284,39 @@ Every reel:
    words and shapes, AI pictures or clips where a real picture is needed
    (paid tools wait for his yes), his own filmed clips where he wants to be
    in it. Claude plans the pictures itself; he gets no cut table.
+   (Claude, proposed 2026-11-21: AI **still pictures** are out by his rule
+   of 2026-11-21. Local AI **clips** with real motion stay possible: free
+   tools only, no people in them, and they must pass the check in C5 of
+   `Plans/outvoted-animation-round.md`.)
+   (Filming = him speaking the script on camera (his words 2026-11-21).)
 7. **He watches the finished film once** and writes notes with a time.
    Each note is fixed and saved as a rule for later reels (way 5).
 8. **Nights.** Several different whole films of the same voice are built
    while he sleeps, as many as the limits allow (way 6). Changed after the
    first night went wrong: see "The first night run" below.
+   (replaced 2026-11-21: one film improved, variety per spot by kind of
+   animation; see Plans/outvoted-animation-round.md. Claude, proposed.)
 9. **After posting.** The retention graph is laid over the sentences and
    feeds the next sentence check.
 
 Open questions:
 - Does a reader panel find the same dead lines he hears?
 - Do filmed clips of him sit well inside an animated look? Test on one spot.
+  (Planned in v3 of Outvoted, proposed 2026-11-21.)
 - What does "we use the AI" on way 10 rule in: AI pictures and clips (ways
   7 and 8), or something else?
 - What limits the night films: the PC, or Claude's weekly allowance?
   Outvoted took about 2.4 million tokens for one film. Not measured yet.
+  (Measured 2026-11-21 by Claude, see `Plans/outvoted-animation-round.md`,
+  "Checked today": the blocks film renders on his RTX 4060 through D3D12
+  in WSL, same picture as the CPU. With the card shared with other jobs
+  (64%, 7.6–7.9 GB), 128 samples took 42.8 s on the CPU and 35.6 s on the
+  GPU: about 0.16 s and 0.10 s a sample. Quiet-card speed not measured yet.)
 - Prices for the picture and clip tools. Found so far: $2 to $6 for a
   15-second clip and about $20 a reel after retries (one creator), about
   $40 for 44 seconds (a seller). No price found for pictures.
 
-## The first night run (2026-11-20 to 21) and his verdict
+## The first night run (2026-11-20 to 21) and his verdict [Track 2] [record]
 
 What he asked for (2026-11-20, 20:06): keep his GPU rendering reels at full
 capacity until 06:00, with Claude choosing the work from the content chats.
@@ -255,7 +326,7 @@ What Claude made: 18 whole "Outvoted" films. Every scene was an AI still
 painting (Stable Diffusion XL on his PC) with a slow camera zoom or pan. That
 was 6 painted looks × 3 versions of the same 32 shots.
 
-### His verdict (owner, 2026-11-21) — his rule: never make this kind again
+### His verdict (owner, 2026-11-21) — his rule: never make this kind again [Track 2]
 
 - Not usable at all. It is the same video in a few looks, with almost no
   creativity. The variance is far too low.
@@ -270,7 +341,7 @@ was 6 painted looks × 3 versions of the same 32 shots.
   words"). The night did not apply any of those notes to the Outvoted film.
 - He does not trust that the GPU was near full. He wants a way to be sure.
 
-### Why it went wrong (Claude's own reading)
+### Why it went wrong (Claude's own reading) [Track 2]
 
 1. **The wrong brief won.** The doc held his Outvoted film notes (keep the
    blocks, add other animation at "at night" and "in the morning", film
@@ -291,7 +362,7 @@ was 6 painted looks × 3 versions of the same 32 shots.
    capture batch shared the card all night. For the first 45 minutes and
    from 01:19 to 01:39 the reel work was nearly stopped.
 
-### Proposed change (Claude, proposed 2026-11-21, not decided)
+### Proposed change (Claude, proposed 2026-11-21, not decided) [Track 2]
 
 From Claude's own reading, not researched:
 
@@ -314,7 +385,9 @@ From Claude's own reading, not researched:
   more than one night of work. Tool:
   `~/.cache/daygame-research/tools/gpu_log.sh` (start and summary).
 
-## Celebrity clip reels (owner, 2026-11-20)
+(Planned in detail in `Plans/outvoted-animation-round.md`.)
+
+## Celebrity clip reels (owner, 2026-11-20) [Track 1]
 
 This is a separate kind of reel. We take short celebrity interview moments
 about quitting (TV shows, podcasts) that went viral on clip channels. We
@@ -371,7 +444,7 @@ What the platforms say (checked 2026-11-20):
 - Copyright is a separate question. The show owners' matching systems
   ignore credit lines and edits, and posting each reel stays his call.
 
-### His verdict on round 2 (owner, 2026-11-21)
+### His verdict on round 2 (owner, 2026-11-21) [Track 1]
 
 - Quite disappointed in the quality. What he asked for was to improve on
   the existing video (the base reel), not eight different things.
