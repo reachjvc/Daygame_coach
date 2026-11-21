@@ -185,9 +185,13 @@ test.describe("today's lesson, signed out, phone", () => {
     await open(page, { quitDate: day(-4), runStart: day(-4) })
     await page.getByTestId("tab-all").click()
     await page.getByTestId("day-row--3").click()
+    let before: string | null = null
     for (let i = 0; i < 17; i++) {
+      // The tap returns before the next lesson is drawn: wait for the day to change, or `d` is the one just left.
+      if (before !== null) await expect(page.getByTestId("lesson")).not.toHaveAttribute("data-day", before)
       await expect(page.getByTestId("lesson-counted")).toBeVisible()
       const d = await page.getByTestId("lesson").getAttribute("data-day")
+      before = d
       if (d === "4") await expect(page.getByTestId("lesson")).not.toContainText("veterans")
       if (d === "11") await expect(page.getByTestId("lesson-body")).toContainText("3,609")
       if (i < 16) await page.getByTestId("next-lesson").click()
