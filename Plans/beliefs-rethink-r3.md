@@ -141,7 +141,7 @@ Round 2's ten "hollow" checks, plus three new ones from your r3 note: a first-ti
 really happens must match the spec's account and must not get lost on the main path; too much guessing moves the
 tool to "seen on video"; the skip button and step strip must work from the first screen to the end without typing.
 
-### Phase 6: the belief list and your look (Sonnet; Haiku checks)
+### Phase 6: the belief list and your look (Sonnet; Haiku checks) — done 2026-11-22: 4 copies passed (r6, r12, r18, r20), video-only r7 r8 r10 r11 r13 r14 r15 r16 r17 r21 r22 r23, not ready r2b r4b r3 r9 r19; belief list 494 families
 - Belief list: every belief, every answer (rebuttal, reframe, dispute, turnaround), every quiz ending, result and
   email, word for word, tagged by life area and source, from all 25 tools plus public myth pages for gambling,
   alcohol and dating. The AI groups same-meaning beliefs into families and never drops or rewords one; a check
