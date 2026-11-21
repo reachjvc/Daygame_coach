@@ -50,7 +50,12 @@ say "I left notes".
   (owner, 2026-11-18). On 2026-11-20 he marked the ten ways page: 👍 on
   ways 2, 3, 5, 7 and 8, and he wants a finder for videos that outperform
   so he can say what he likes. His marks and the proposed next version are
-  in the process file.
+  in the process file. On 2026-11-21 he called the outperformer finder
+  probably the wrong direction: a channel uses the same style on all its
+  videos, so studying its outliers says little about style. What he says
+  we need to find instead: (1) the style he likes — the blocks in the
+  Outvoted film are the best style he has seen yet, and he likes the more
+  beautiful animations; (2) new work to copy or put our own spin on.
 - **Celebrity clip reels** (owner, 2026-11-20): re-cut viral celebrity
   quit clips and make them ours. Round 1 (10 reels, full screen, viral
   original next to each) is on its page, listed in notes-seen.md. Round 2
