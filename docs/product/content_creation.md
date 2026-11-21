@@ -79,6 +79,12 @@ say "I left notes".
   its own page (listed in notes-seen.md). His page notes on round 4
   (2026-11-21, W1 and chg-0 to chg-6) are in the history file, word for
   word; the round 5 rebuild belongs to the celebrity track.
+  After round 4 he asked to zoom out ("We're not anywhere near what i
+  want", R4-5). The "Clip Reels Reset" page (2026-11-21, listed in
+  notes-seen.md) shows Claude's reading of his notes, eight questions,
+  research on what makers of this kind of reel do, and a proposed toolbox
+  with several versions per round. Plan: `Plans/clip-reels-toolbox.md`
+  (proposed). Nothing is built until he answers on that page.
 - **Look finder (step 1 of the proposed process)**: built 2026-11-20. 18
   YouTube videos that beat their channel's usual views, in six looks, each
   playable with a 👍 and a note (page listed in notes-seen.md). Waits for
