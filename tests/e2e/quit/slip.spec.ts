@@ -9,7 +9,7 @@
 import { randomUUID } from "node:crypto"
 import type { Page } from "@playwright/test"
 import { test, expect, SIGNED_OUT } from "../fixtures/test"
-import { quitUrl } from "../helpers/quit"
+import { pageErrors, quitUrl } from "../helpers/quit"
 import nicotineJson from "../../../src/quit/data/nicotine.json"
 import tooltextJson from "../../../src/quit/data/tooltext.json"
 import liveToolsJson from "../../../src/quit/data/liveTools.json"
@@ -156,9 +156,7 @@ test.describe("slipped, signed out @phone", () => {
   test.use({ storageState: SIGNED_OUT })
 
   test("1 a run 20 days old: Yesterday, In the car, Just one: days card, the lie, the driving cards, the slip in the Black Box", async ({ page }) => {
-    const errors: string[] = []
-    page.on("console", (m) => m.type() === "error" && errors.push(m.text()))
-    page.on("pageerror", (e) => errors.push(e.message))
+    const errors = pageErrors(page)
     await open(page, RUN20())
     await expect(step(page)).toHaveAttribute("data-step", "1")
     await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuemax", "3")
@@ -612,9 +610,7 @@ test.describe("slipped, signed out @phone", () => {
   })
 
   test("11 no console error, no sideways scroll, every tap target 44 px, the menu row opens the tool", async ({ page }) => {
-    const errors: string[] = []
-    page.on("console", (m) => m.type() === "error" && errors.push(m.text()))
-    page.on("pageerror", (e) => errors.push(e.message))
+    const errors = pageErrors(page)
     const small = () =>
       page.evaluate(() =>
         [...document.querySelectorAll<HTMLElement>("main button, main a, main input, main summary")]

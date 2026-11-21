@@ -8,6 +8,7 @@
  * passed locally and failed in CI. Every spec that wants a quit page wraps its
  * address in `quitUrl`, so the page opens the same in both.
  */
+import type { Page } from "@playwright/test"
 import { isLive } from "../../../src/quit/data"
 
 /** `url` with `preview=1` added, query and hash kept; a url that has it already is returned as is. */
@@ -29,3 +30,20 @@ export const NICOTINE_LIVE = isLive("nicotine")
  * E2E_PRODUCTION_BUILD=1 when PW_BASE_URL points at `next start`).
  */
 export const NICOTINE_HIDDEN_WITHOUT_PREVIEW = !NICOTINE_LIVE && (!!process.env.CI || process.env.E2E_PRODUCTION_BUILD === "1")
+
+/**
+ * WebKit reports a link prefetch that a navigation or reload cancels as an
+ * error, "Fetch API cannot load …?_rsc=… due to access control checks" (a
+ * console error or an uncaught one, by version; nightly E2E 44800384257,
+ * 44898862680, 44913282918, phone lane). The test's own `page.goto` / reload
+ * cancels them: it is not the page's fault.
+ */
+export const isCancelledPrefetch = (text: string) => /[?&]_rsc=[\s\S]*due to access control checks/.test(text)
+
+/** Everything the page says as an error, console or uncaught, minus WebKit's cancelled prefetches. Read `.errors` when checking. */
+export function pageErrors(page: Page): string[] {
+  const errors: string[] = []
+  page.on("console", (m) => m.type() === "error" && !isCancelledPrefetch(m.text()) && errors.push(m.text()))
+  page.on("pageerror", (e) => !isCancelledPrefetch(e.message) && errors.push(e.message))
+  return errors
+}

@@ -8,7 +8,7 @@
 import { randomUUID } from "node:crypto"
 import type { Page } from "@playwright/test"
 import { test, expect, SIGNED_OUT } from "../fixtures/test"
-import { quitUrl } from "../helpers/quit"
+import { pageErrors, quitUrl } from "../helpers/quit"
 
 const URL = quitUrl("/quit/nicotine/symptoms")
 const NOW = new Date("2026-11-19T10:00:00")
@@ -203,15 +203,7 @@ test.describe("what you'll feel, and when @phone", () => {
   })
 
   test("9 no console error, no sideways scroll, tap targets, the menu row opens it", async ({ page }) => {
-    const errors: string[] = []
-    // WebKit reports a prefetch that a navigation cancels as a console error, "Fetch API
-    // cannot load …?_rsc=… due to access control checks" (nightly E2E 44800384257 and
-    // 44898862680, phone 2/2). Here `open` reloads the page, and the reload cancels the
-    // prefetches of its links to /quit and /quit/nicotine. That is the test's own
-    // navigation, not the page; every other console error still counts.
-    const cancelledPrefetch = /[?&]_rsc=.*due to access control checks/
-    page.on("console", (m) => m.type() === "error" && !cancelledPrefetch.test(m.text()) && errors.push(m.text()))
-    page.on("pageerror", (e) => errors.push(e.message))
+    const errors = pageErrors(page)
     await open(page, { run: -4 })
     await noSideways(page)
     await openFolds(page)
