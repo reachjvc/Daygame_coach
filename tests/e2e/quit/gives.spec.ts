@@ -645,5 +645,80 @@ for (const view of [
       }
       await shot(page, "3-result-rated2")
     })
+
+    test("R3 a double tap on Remove removes exactly one item: on a need screen and in Also on your list", async ({ page }) => {
+      await open(page)
+      await seed(page, { gives: { done: 2, picked: ["relief"], ownNeed: null, own: { relief: [{ id: "o1", text: "Aaa", addedOn: TODAY }, { id: "o2", text: "Bbb", addedOn: TODAY }, { id: "o3", text: "Ccc", addedOn: TODAY }], sleep: [{ id: "o4", text: "Tea", addedOn: TODAY }, { id: "o5", text: "Mug", addedOn: TODAY }] }, tried: {}, rated: {} } })
+      await page.goto(quitUrl("/quit/nicotine/gives?s=2"))
+      await expect(page.getByTestId("own-swap")).toHaveCount(3)
+      await page.getByTestId("own-remove").first().dblclick()
+      await expect(page.getByTestId("own-swap")).toHaveCount(2)
+      await page.clock.runFor(500)
+      await page.getByTestId("gives-next").click()
+      await expect(page.getByTestId("result")).toBeVisible()
+      await expect(page.getByTestId("result-also").getByTestId("listed")).toHaveCount(2)
+      await page.getByTestId("listed-remove").first().dblclick()
+      await expect(page.getByTestId("result-also").getByTestId("listed")).toHaveCount(1)
+    })
+
+    test("R3 a quick second, different rating wins; the same rating twice stays set", async ({ page }) => {
+      await open(page)
+      await pick(page, "relief")
+      await tap(page, "gives-continue")
+      await page.getByTestId("toggle-swap").first().click()
+      await page.clock.runFor(300)
+      await tap(page, "gives-next")
+      await page.getByTestId("rate-25").click()
+      await page.getByTestId("rate-80").click()
+      await expect(page.getByTestId("rate-80")).toHaveAttribute("aria-checked", "true")
+      expect((await stored(page)).gives.rated).toEqual({ [Object.keys((await stored(page)).gives.tried)[0]]: 80 })
+    })
+
+    test("R3 from the list, Try another one leads to a need screen whose main button is Back to my list", async ({ page }) => {
+      await open(page)
+      await walk(page, ["relief", "sleep"])
+      await expect(page.getByTestId("rate-hint").first()).toHaveText("Try it in the next few days, then rate it here.")
+      await page.getByTestId("rate-0").first().click()
+      await page.clock.runFor(300)
+      await expect(page.getByTestId("rate-hint")).toHaveCount(1)
+      await tap(page, "try-another")
+      await expect(page.getByTestId("gives-next")).toHaveText("Back to my list")
+      await expect(page.getByTestId("swap-rated")).toHaveText("You rated it: None")
+      await expect(page.getByTestId("swap").first()).toHaveCSS("border-top-color", /./)
+      await shot(page, "r3-back-to-list")
+      await tap(page, "gives-next")
+      await expect(page.getByTestId("result")).toBeVisible()
+      await expect(page.getByTestId("rate-0").first()).toHaveAttribute("aria-checked", "true")
+    })
+
+    test("R3 needs picked from the 12 lies test show one grey line; none from a link or without a test", async ({ page }) => {
+      await open(page)
+      await seed(page, { beliefs: { ratings: { b3: 5, b9: 4 }, facts: {} } })
+      await page.goto(PAGE)
+      await expect(page.getByTestId("pick-from-test")).toHaveText("Picked from your 12 lies answers. Change them if they're wrong.")
+      await page.getByTestId("need-relief").click()
+      await expect(page.getByTestId("pick-from-test")).toBeVisible()
+      await shot(page, "r3-pick-from-test")
+      await page.goto(quitUrl("/quit/nicotine/gives#need=focus"))
+      await page.reload()
+      await expect(page.getByTestId("need-focus")).toHaveAttribute("aria-checked", "true")
+      await expect(page.getByTestId("pick-from-test")).toHaveCount(0)
+    })
+
+    test("R3 the result has no sources fold; Clear in Start again is red", async ({ page }) => {
+      await open(page)
+      await walk(page, ["relief"])
+      await expect(page.getByText("Where these numbers come from")).toHaveCount(0)
+      await page.getByTestId("start-again").click()
+      await expect(page.getByTestId("start-again-clear")).toHaveCSS("color", await page.evaluate(() => {
+        const e = document.createElement("span")
+        e.className = "text-destructive"
+        document.body.appendChild(e)
+        const c = getComputedStyle(e).color
+        e.remove()
+        return c
+      }))
+      await shot(page, "r3-start-again")
+    })
   })
 }

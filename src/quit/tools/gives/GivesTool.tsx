@@ -116,13 +116,24 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
   }
 
   // A second tap on the same add, remove or rating button within 250 ms is ignored, so a double tap does not switch it on and straight off.
+  // Remove buttons share one key and a longer window: the list shifts up after the first tap, so the second tap of a double tap lands on the next item.
   const lastTap = useRef<{ key: string; at: number }>({ key: "", at: 0 })
-  const once = (key: string, fn: () => void) => {
+  const once = (key: string, fn: () => void, ms = 250) => {
     const now = Date.now()
-    if (lastTap.current.key === key && now - lastTap.current.at < 250) return
+    if (lastTap.current.key === key && now - lastTap.current.at < ms) return
     lastTap.current = { key, at: now }
     fn()
   }
+
+  // Set when he reached a need screen from his list ("Try another one", "Pick swaps"); its main button then returns to the list.
+  const [fromList, setFromList] = useState(false)
+  // Needs picked from the 12 lies test (and not from a link): one grey line says so on the pick screen.
+  const [fromTest, setFromTest] = useState(false)
+  const testPicked = state !== null && state.picked === null
+  useEffect(() => {
+    if (linkNeed) setFromTest(false)
+    else if (testPicked && pre.length > 0 && topBeliefs(ratings, beliefs).length > 0) setFromTest(true)
+  }, [linkNeed, testPicked, pre, ratings, beliefs])
 
   if (!state) return null
   const back = screen > 1 ? goBack : null
@@ -141,6 +152,7 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
             started()
             update((s) => ({ ...s, picked: next }))
           }}
+          fromTest={fromTest}
           onOwnNeed={(text) => update((s) => ({ ...s, ownNeed: text.slice(0, MAX_TEXT) }))}
           onContinue={() =>
             move(1, () => {
@@ -198,6 +210,7 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
                     key={s.id}
                     swap={s}
                     onList={state.tried[s.id] !== undefined}
+                    rating={state.rated[s.id]}
                     onToggle={() =>
                       once(`toggle-${s.id}`, () => {
                       started()
@@ -213,18 +226,23 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
             need={id}
             list={own}
             onAdd={(text) => update((s) => addOwn(s, id, text, today, Date.now()))}
-            onRemove={(sid) => update((s) => removeOwn(s, id, sid))}
+            onRemove={(sid) => once("remove", () => update((s) => removeOwn(s, id, sid)), 400)}
           />
           <PrimaryButton
             testId="gives-next"
             onClick={() =>
               move(screen, () => {
+                if (fromList) {
+                  setFromList(false)
+                  go(total + 1)
+                  return
+                }
                 update((s) => ({ ...s, done: Math.max(s.done, screen) }))
                 go(screen + 1)
               })
             }
           >
-            {last ? t.gives.finish : t.gives.nextNeed}
+            {fromList ? t.gives.backToList : last ? t.gives.finish : t.gives.nextNeed}
           </PrimaryButton>
         </OneQuestion>
         <SourcesFold refs={uniqueRefs(swaps.flatMap((s) => realRefs(s.refs)))} />
@@ -241,10 +259,20 @@ function Inner({ addiction, needs, beliefs }: { addiction: string; needs: QuitNe
       needName={needName}
       today={today}
       carry={carry}
-      onRate={(sid, value) => once(`rate-${sid}`, () => update((s) => ({ ...s, rated: rate(s.rated, sid, value) })))}
-      onRemove={(it) => once(`remove-${it.id}`, () => update((s) => (it.kind === "own" ? removeOwn(s, it.need, it.id) : removeTried(s, it.id))))}
-      onGo={(id) => move(screen, () => go(picked.indexOf(id) + 2))}
-      onChange={() => move(screen, () => go(1))}
+      onRate={(sid, value) => once(`rate-${sid}-${value}`, () => update((s) => ({ ...s, rated: rate(s.rated, sid, value) })))}
+      onRemove={(it) => once("remove", () => update((s) => (it.kind === "own" ? removeOwn(s, it.need, it.id) : removeTried(s, it.id))), 400)}
+      onGo={(id) =>
+        move(screen, () => {
+          setFromList(true)
+          go(picked.indexOf(id) + 2)
+        })
+      }
+      onChange={() =>
+        move(screen, () => {
+          setFromList(false)
+          go(1)
+        })
+      }
       onStartAgain={() => {
         clear()
         reset()
@@ -261,6 +289,7 @@ function PickScreen(props: {
   ownNeed: string | null
   total: number
   onPick: (next: string[]) => void
+  fromTest: boolean
   onOwnNeed: (text: string) => void
   onContinue: () => void
 }) {
@@ -304,6 +333,7 @@ function PickScreen(props: {
           )
         })}
       </div>
+      {props.fromTest && <p data-testid="pick-from-test" className="text-sm text-muted-foreground">{t.gives.fromTest}</p>}
       {full && <p data-testid="pick-max" className="text-sm text-muted-foreground">{t.gives.pickMax}</p>}
       {ownPicked && (
         <label className="flex flex-col gap-1 text-sm">
@@ -332,9 +362,10 @@ function PickScreen(props: {
 
 /* ---------- screen 2 ---------- */
 
-function SwapCard({ swap, onList, onToggle }: { swap: QuitSwap; onList: boolean; onToggle: () => void }) {
+function SwapCard({ swap, onList, rating, onToggle }: { swap: QuitSwap; onList: boolean; rating: number | undefined; onToggle: () => void }) {
+  const sel = ratingIndex(rating)
   return (
-    <li data-testid="swap" data-swap={swap.id} className="rounded-lg border border-border bg-card p-3">
+    <li data-testid="swap" data-swap={swap.id} className={`rounded-lg border p-3 ${onList ? "border-primary bg-primary/10" : "border-border bg-card"}`}>
       <p className="text-base">{swap.text}</p>
       <div className="mt-1">
         <EvidenceChip evidence={swap.evidence} />
@@ -349,6 +380,11 @@ function SwapCard({ swap, onList, onToggle }: { swap: QuitSwap; onList: boolean;
       >
         {onList ? t.gives.onList : t.gives.add}
       </button>
+      {onList && sel !== null && (
+        <p data-testid="swap-rated" className="mt-1 text-sm text-muted-foreground">
+          {fill(t.gives.ratedAs, { rating: RATINGS[sel].label })}
+        </p>
+      )}
     </li>
   )
 }
@@ -450,7 +486,6 @@ function ResultScreen(props: {
   const rank = new Map(order.flat().map((id, i) => [id, i]))
   const groups = live.map((g) => ({ ...g, items: [...g.items].sort((a, b) => (rank.get(a.id) ?? 1e6) - (rank.get(b.id) ?? 1e6)) }))
   const total = groups.reduce((n, g) => n + g.items.length, 0)
-  const allRefs = uniqueRefs(picked.flatMap((id) => (needs.find((n) => n.id === id)?.swaps ?? []).filter((s) => state.tried[s.id]).flatMap((s) => realRefs(s.refs))))
 
   const download = () => {
     const blob = new Blob([ratingIcs(today, new Date(), address)], { type: "text/calendar;charset=utf-8" })
@@ -471,6 +506,7 @@ function ResultScreen(props: {
       <li key={it.id} data-testid="listed" data-swap={it.id} className="rounded-lg border border-border bg-card p-3">
         <p className="break-words text-base">{it.text}</p>
         {it.since < today && <p className="text-sm text-muted-foreground">{fill(t.gives.since, { day: fmt(it.since) })}</p>}
+        {sel === null && <p data-testid="rate-hint" className="mt-2 text-sm text-muted-foreground">{t.gives.rateHint}</p>}
         <div role="radiogroup" aria-label={t.gives.rateQuestion} className="mt-2 grid grid-cols-5 gap-1">
           {RATINGS.map((r, i) => (
             <button
@@ -586,7 +622,7 @@ function ResultScreen(props: {
           <div data-testid="start-again-ask" className="rounded-md border border-border bg-card p-3 text-sm">
             <p>{t.gives.startAgainAsk}</p>
             <div className="mt-2 flex gap-2">
-              <button type="button" data-testid="start-again-clear" onClick={props.onStartAgain} className="inline-flex min-h-11 items-center rounded-md border border-border px-4">
+              <button type="button" data-testid="start-again-clear" onClick={props.onStartAgain} className="inline-flex min-h-11 items-center rounded-md border border-destructive px-4 text-destructive">
                 {t.gives.clear}
               </button>
               <button type="button" data-testid="start-again-keep" onClick={() => setAsking(false)} className="inline-flex min-h-11 items-center rounded-md border border-primary px-4 text-primary">
@@ -601,7 +637,6 @@ function ResultScreen(props: {
         )}
       </div>
       <p className="text-sm text-muted-foreground">{t.gives.kept}</p>
-      <SourcesFold refs={allRefs} />
     </div>
   )
 }

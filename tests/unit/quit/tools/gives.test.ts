@@ -305,3 +305,42 @@ describe("data and validator", () => {
     expect(validateAddiction(d, { live: false })).toEqual([])
   })
 })
+
+describe("review round 3: data", () => {
+  const nic = getAddiction("nicotine")!
+  const swaps = (nic.needs as { id: string; swaps: { id: string; text: string; evidence: string; weak?: string; n?: string; refs: { cite: string; url: string; quote?: string }[] }[] }[]).flatMap((n) => n.swaps)
+  const swap = (id: string) => swaps.find((s) => s.id === id)!
+  it("names Theodoulou as first author of PubMed 37335995 everywhere", () => {
+    const all = JSON.stringify(nic)
+    expect(all).not.toContain("Lindson N et al (2023)")
+    expect(all.match(/Theodoulou A et al \(2023\)/g)?.length).toBe(5)
+  })
+  it("the deposit swap gives the result for people willing to put up money", () => {
+    expect(swap("reward-1").weak).toContain("about 13 more in 100")
+    expect(swap("reward-1").refs.some((r) => r.quote?.includes("13.2 percentage points"))).toBe(true)
+  })
+  it("says nicotine gum for the aid and sugar-free gum for the habit", () => {
+    expect(swap("substance-1").text).toBe("Patch plus nicotine gum or lozenge, used together")
+    expect(swap("substance-3").text).toBe("Keep sugar-free gum or mints for the mouth habit")
+    for (const s of swaps) expect(s.text).not.toMatch(/(^|[^-\w ] |\s)gum\b(?<!nicotine gum)(?<!sugar-free gum)/i)
+  })
+  it("the enjoyable-things swaps name the later trials and no longer say 3.6 times", () => {
+    for (const id of ["reward-2", "boredom-1"]) {
+      expect(swap(id).weak).not.toMatch(/3\.6|pilot/)
+      expect(swap(id).weak).toContain("not a significant difference")
+      expect(swap(id).refs.map((r) => r.url)).toEqual(expect.arrayContaining(["https://pubmed.ncbi.nlm.nih.gov/36739753/", "https://pubmed.ncbi.nlm.nih.gov/40071390/", "https://pubmed.ncbi.nlm.nih.gov/30958831/"]))
+    }
+  })
+  it("varenicline shows the side-effect basis and the 2025 vaping trial", () => {
+    expect(swap("substance-2").n).toContain("26 trials, 14,356 people")
+    expect(swap("substance-2").refs.some((r) => r.url.endsWith("/40266580/") && r.quote?.includes("28% vs 7%"))).toBe(true)
+  })
+  it("slow breaths cite the lab study and are marked weak", () => {
+    const b = swap("relief-2")
+    expect(b.evidence).toBe("weak")
+    expect(b.refs[0].url).toBe("https://pubmed.ncbi.nlm.nih.gov/22993051/")
+  })
+  it("the 127 in 100 line has an example", () => {
+    expect(swap("substance-1").weak).toContain("if 20 in 100 stay off with one form, about 25 in 100")
+  })
+})

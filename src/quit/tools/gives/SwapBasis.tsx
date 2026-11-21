@@ -10,6 +10,14 @@ export function SwapBasis({ swap }: { swap: QuitSwap }) {
   const [open, setOpen] = useState(false)
   if (swap.evidence === "none") return null
   const refs: QuitRef[] = realRefs(swap.refs)
+  // One cite and one link per paper, with each of its quotes under it.
+  const groups: { cite: string; url?: string; quotes: string[] }[] = []
+  for (const r of refs) {
+    const g = groups.find((x) => x.cite === r.cite && x.url === r.url)
+    if (g) {
+      if (r.quote) g.quotes.push(r.quote)
+    } else groups.push({ cite: r.cite, url: r.url, quotes: r.quote ? [r.quote] : [] })
+  }
   const rows: [string, string | undefined][] = [
     [t.common.basis.who, swap.counted],
     [t.common.basis.n, swap.n],
@@ -31,12 +39,14 @@ export function SwapBasis({ swap }: { swap: QuitSwap }) {
             ))}
           </dl>
           <ul className="mt-2 flex flex-col gap-3">
-            {refs.map((r, i) => (
-              <li key={`${r.url}-${i}`}>
-                <p>{r.cite}</p>
-                {r.quote && <p className="mt-1 italic text-muted-foreground">{`“${r.quote}”`}</p>}
-                {r.url && (
-                  <a href={r.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-primary underline">
+            {groups.map((g) => (
+              <li key={`${g.url}-${g.cite}`}>
+                <p>{g.cite}</p>
+                {g.quotes.map((q) => (
+                  <p key={q} className="mt-1 italic text-muted-foreground">{`“${q}”`}</p>
+                ))}
+                {g.url && (
+                  <a href={g.url} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-primary underline">
                     {t.common.openSource}
                   </a>
                 )}

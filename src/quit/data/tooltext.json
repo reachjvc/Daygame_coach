@@ -166,6 +166,10 @@
     "clear": "Clear",
     "keep": "Keep",
     "kept": "Your list is kept on this device.",
+    "backToList": "Back to my list",
+    "fromTest": "Picked from your 12 lies answers. Change them if they're wrong.",
+    "rateHint": "Try it in the next few days, then rate it here.",
+    "ratedAs": "You rated it: {rating}",
     "basisOpen": "Based on",
     "basisClose": "Hide",
     "basisQuotes": "What the study said",
@@ -394,6 +398,6 @@
     "lieTakeLink": "the 12 lies test",
     "lieTakePost": " to find the lie that got you.",
     "lieName": "Name the thought that got you, and write its answer next to it.",
-    "swapsNone": "Pick one thing to do instead next time: a walk, a call, gum."
+    "swapsNone": "Pick one thing to do instead next time: a walk, a call, sugar-free gum."
   }
 }

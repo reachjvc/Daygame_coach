@@ -1107,7 +1107,7 @@
       "need": "connection",
       "limiting": "Smoke or vape breaks are where I talk to people.",
       "counterpart": "I keep the break and the people. They can stay without the nicotine.",
-      "whenThought": "Bring a coffee or gum to the break and ask the first person you see about their day.",
+      "whenThought": "Bring a coffee or sugar-free gum to the break and ask the first person you see about their day.",
       "test": "Text one person from your break group this week and suggest a coffee somewhere else. Notice whether the talking needs nicotine.",
       "proof": "In a long US study of 12,067 people, a person’s own chances of smoking fell by 36% when a friend quit.",
       "severity": "users",
@@ -1337,14 +1337,14 @@
   "facts": [
     {
       "id": "f1",
-      "statement": "A patch alone works as well as a patch plus gum or lozenge.",
+      "statement": "A patch alone works as well as a patch plus nicotine gum or lozenge.",
       "answer": false,
-      "explain": "Combining a patch with a fast-acting form (gum, lozenge, spray) gave higher long-term quit rates than one form alone, in 16 trials.",
+      "explain": "Combining a patch with a fast-acting form (nicotine gum, lozenge, spray) gave higher long-term quit rates than one form alone, in 16 trials.",
       "severity": "treatment",
       "counted": "smokers in quit trials, not checked for addiction",
       "refs": [
         {
-          "cite": "Lindson N et al (2023). Different doses, durations and modes of delivery of nicotine replacement therapy for smoking cessation. Cochrane Database of Systematic Reviews.",
+          "cite": "Theodoulou A et al (2023). Different doses, durations and modes of delivery of nicotine replacement therapy for smoking cessation. Cochrane Database of Systematic Reviews.",
           "url": "https://pubmed.ncbi.nlm.nih.gov/37335995/",
           "pmid": "37335995",
           "quote": "combination NRT (fast-acting form plus patch) results in higher long-term quit rates than single form",
@@ -1352,7 +1352,7 @@
           "fetchedOn": "2026-11-18"
         },
         {
-          "cite": "Lindson N et al (2023). Different doses, durations and modes of delivery of nicotine replacement therapy for smoking cessation. Cochrane Database of Systematic Reviews.",
+          "cite": "Theodoulou A et al (2023). Different doses, durations and modes of delivery of nicotine replacement therapy for smoking cessation. Cochrane Database of Systematic Reviews.",
           "url": "https://pubmed.ncbi.nlm.nih.gov/37335995/",
           "pmid": "37335995",
           "fetched": true,
@@ -1488,8 +1488,41 @@
         {
           "id": "relief-2",
           "text": "Ten slow breaths before you decide anything",
-          "evidence": "none",
-          "refs": []
+          "evidence": "weak",
+          "refs": [
+            {
+              "cite": "Shahab L, Sarkar BK, West R (2013). The acute effects of yogic breathing exercises on craving and withdrawal symptoms in abstaining smokers. Psychopharmacology 225(4):875-82.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/22993051/",
+              "pmid": "22993051",
+              "quote": "Smokers (N = 96) were randomly allocated to a yogic breathing exercise (YBG) or video control (VCG) group.",
+              "fetched": true,
+              "fetchedOn": "2026-11-21"
+            },
+            {
+              "cite": "Shahab L, Sarkar BK, West R (2013). The acute effects of yogic breathing exercises on craving and withdrawal symptoms in abstaining smokers. Psychopharmacology 225(4):875-82.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/22993051/",
+              "pmid": "22993051",
+              "quote": "all craving measures were reduced in YBG compared with VCG",
+              "fetched": true,
+              "fetchedOn": "2026-11-21"
+            },
+            {
+              "cite": "Shahab L, Sarkar BK, West R (2013). The acute effects of yogic breathing exercises on craving and withdrawal symptoms in abstaining smokers. Psychopharmacology 225(4):875-82.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/22993051/",
+              "pmid": "22993051",
+              "quote": "Adherence to the breathing exercise regimen in the following 24 h was low, and at 24 h follow-up, there was no evidence of reduced cravings in YBG compared with VCG.",
+              "fetched": true,
+              "fetchedOn": "2026-11-21"
+            }
+          ],
+          "counted": "smokers who had not smoked for 12 hours, tested in a lab; not checked on staying off",
+          "n": "96 smokers",
+          "weak": "Lab only, and 10 minutes of yogic breathing, not ten breaths. Cravings were lower right afterwards than after watching a breathing video. 24 hours later there was no difference, and few kept doing it. Not tested on staying off.",
+          "check": {
+            "by": "gives review round 3 (sonnet, abstract fetched)",
+            "on": "2026-11-21",
+            "verdict": "ok"
+          }
         },
         {
           "id": "relief-3",
@@ -1510,7 +1543,7 @@
           "evidence": "moderate",
           "counted": "US company staff who smoked, and their family and friends; off cigarettes 6 months, with money on the line or usual help",
           "n": "2,538 people",
-          "weak": "Off cigarettes through 6 months, counting everyone offered each plan: about 6 in 100 with usual help; about 10 in 100 offered the deposit plan (put up 150 dollars, win it back plus up to 650 dollars more); about 16 in 100 offered rewards only. Only about 14 in 100 agreed to put up their own money. The study held the money; nobody tested a friend holding it. Smokers only.",
+          "weak": "Off cigarettes through 6 months, counting everyone offered each plan: about 6 in 100 with usual help; about 10 in 100 offered the deposit plan (put up 150 dollars, win it back plus up to 650 dollars more); about 16 in 100 offered rewards only. Only about 14 in 100 agreed to put up their own money. Among the estimated 14 in 100 who would accept either kind of plan, deposits beat rewards by about 13 more in 100 off cigarettes at 6 months (range 3 to 23; worked out in a second analysis). The study held the money; nobody tested a friend holding it. Smokers only.",
           "refs": [
             {
               "cite": "Halpern SD et al (2015). Randomized trial of four financial-incentive programs for smoking cessation. New England Journal of Medicine 372(22):2108-17.",
@@ -1537,6 +1570,14 @@
               "fetchedOn": "2026-11-19"
             },
             {
+              "cite": "Halpern SD et al (2015). Randomized trial of four financial-incentive programs for smoking cessation. New England Journal of Medicine 372(22):2108-17.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/25970009/",
+              "pmid": "25970009",
+              "quote": "13.2 percentage points (95% confidence interval, 3.1 to 22.8) higher in the deposit-based programs than in the reward-based programs among the estimated 13.7% of the participants who would accept",
+              "fetched": true,
+              "fetchedOn": "2026-11-21"
+            },
+            {
               "cite": "Notley C et al (2025). Incentives for smoking cessation. Cochrane Database of Systematic Reviews.",
               "url": "https://pubmed.ncbi.nlm.nih.gov/39799985/",
               "pmid": "39799985",
@@ -1546,8 +1587,8 @@
             }
           ],
           "check": {
-            "by": "gives brief (opus)",
-            "on": "2026-11-19",
+            "by": "gives review round 3 (sonnet, abstract fetched)",
+            "on": "2026-11-21",
             "verdict": "ok"
           }
         },
@@ -1556,8 +1597,8 @@
           "text": "Plan one thing you enjoy for your hardest hour",
           "evidence": "weak",
           "counted": "US smokers with mild low mood who asked for help to stop; all had group sessions and nicotine replacement, half also planned enjoyable activities",
-          "n": "68 smokers",
-          "weak": "One small pilot trial, in people with low mood only. The planning was taught over 8 group sessions, not done alone. The odds of being off cigarettes were about 3.6 times higher, with a wide range (1.2 to 10.5).",
+          "n": "68 smokers in the first trial; 288, 124 and 275 in the later ones",
+          "weak": "Mixed results. A first small trial (planning taught over 8 group sessions, not done alone) found people who planned enjoyable things were more often off cigarettes at the check-ups; how much more is very unsure. Two later trials found no clear difference: 288 smokers on nicotine patches, off at 26 weeks 18 in 100 against 23 in 100; 124 US veterans with PTSD, 15.9% against 11.5%, not a significant difference. A Spanish trial of 275 smokers found a benefit at the end of treatment and at 3 months that was not clear at 6 and 12 months.",
           "refs": [
             {
               "cite": "MacPherson L et al (2010). Randomized controlled trial of behavioral activation smoking cessation treatment for smokers with elevated depressive symptoms. Journal of Consulting and Clinical Psychology 78(1):55-61.",
@@ -1582,17 +1623,65 @@
               "quote": "BATS and ST were matched for contact time and included 8 sessions of group-based treatment.",
               "fetched": true,
               "fetchedOn": "2026-11-19"
+            },
+            {
+              "cite": "Audrain-McGovern J et al (2023). Behavioral activation for smoking cessation and the prevention of smoking cessation-related weight gain: A randomized trial. Drug and Alcohol Dependence 244:109792.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/36739753/",
+              "pmid": "36739753",
+              "quote": "BAS+ and SC did not differ in smoking abstinence rates at the 26-week follow-up (OR=0.80, 95%CI 0.50-1.27, p = 0.34; 18% versus 23%).",
+              "fetched": true,
+              "fetchedOn": "2026-11-21"
+            },
+            {
+              "cite": "Audrain-McGovern J et al (2023). Behavioral activation for smoking cessation and the prevention of smoking cessation-related weight gain: A randomized trial. Drug and Alcohol Dependence 244:109792.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/36739753/",
+              "pmid": "36739753",
+              "quote": "Adult smokers (n = 288; 119 females, 169 males) received eight weeks of transdermal nicotine",
+              "fetched": true,
+              "fetchedOn": "2026-11-21"
+            },
+            {
+              "cite": "Kaye JT et al (2025). Behavioral Activation for Smoking Cessation in Veterans with Posttraumatic Stress Disorder: A Randomized Clinical Trial. Nicotine and Tobacco Research 27(9):1524-33.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/40071390/",
+              "pmid": "40071390",
+              "quote": "There was no significant main effect of BA (15.9%, 10/63) vs. control adjuvant counseling (11.5%, 7/61) on biochemically confirmed abstinence at 26 weeks",
+              "fetched": true,
+              "fetchedOn": "2026-11-21"
+            },
+            {
+              "cite": "Kaye JT et al (2025). Behavioral Activation for Smoking Cessation in Veterans with Posttraumatic Stress Disorder: A Randomized Clinical Trial. Nicotine and Tobacco Research 27(9):1524-33.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/40071390/",
+              "pmid": "40071390",
+              "quote": "Of 124 participants randomized (mean [SD] age 49 years [12.6], 109 male [88%])",
+              "fetched": true,
+              "fetchedOn": "2026-11-21"
+            },
+            {
+              "cite": "Martínez-Vispo C et al (2019). Cognitive-behavioral treatment with behavioral activation for smoking cessation: Randomized controlled trial. PLoS One 14(4):e0214252.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/30958831/",
+              "pmid": "30958831",
+              "quote": "At 6-, and 12-months follow-ups, ORs for the SCBSCT-BA condition, although greater, did not reach statistical significance.",
+              "fetched": true,
+              "fetchedOn": "2026-11-21"
+            },
+            {
+              "cite": "Martínez-Vispo C et al (2019). Cognitive-behavioral treatment with behavioral activation for smoking cessation: Randomized controlled trial. PLoS One 14(4):e0214252.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/30958831/",
+              "pmid": "30958831",
+              "quote": "The sample was comprised of 275 adults smokers (61.4% females, mean age = 45.36, SD = 10.96).",
+              "fetched": true,
+              "fetchedOn": "2026-11-21"
             }
           ],
           "check": {
-            "by": "gives brief (opus)",
-            "on": "2026-11-19",
+            "by": "gives review round 3 (sonnet, abstract fetched)",
+            "on": "2026-11-21",
             "verdict": "ok"
           }
         },
         {
           "id": "reward-3",
-          "text": "Gum or a mint right after meals",
+          "text": "Sugar-free gum or a mint right after meals",
           "evidence": "none",
           "refs": []
         }
@@ -1608,8 +1697,8 @@
           "text": "Schedule three things for your empty hour",
           "evidence": "weak",
           "counted": "US smokers with mild low mood who asked for help to stop; all had group sessions and nicotine replacement, half also planned enjoyable activities",
-          "n": "68 smokers",
-          "weak": "One small pilot trial, in people with low mood only. The planning was taught over 8 group sessions, not done alone. The odds of being off cigarettes were about 3.6 times higher, with a wide range (1.2 to 10.5).",
+          "n": "68 smokers in the first trial; 288, 124 and 275 in the later ones",
+          "weak": "Mixed results. A first small trial (planning taught over 8 group sessions, not done alone) found people who planned enjoyable things were more often off cigarettes at the check-ups; how much more is very unsure. Two later trials found no clear difference: 288 smokers on nicotine patches, off at 26 weeks 18 in 100 against 23 in 100; 124 US veterans with PTSD, 15.9% against 11.5%, not a significant difference. A Spanish trial of 275 smokers found a benefit at the end of treatment and at 3 months that was not clear at 6 and 12 months.",
           "refs": [
             {
               "cite": "MacPherson L et al (2010). Randomized controlled trial of behavioral activation smoking cessation treatment for smokers with elevated depressive symptoms. Journal of Consulting and Clinical Psychology 78(1):55-61.",
@@ -1634,11 +1723,59 @@
               "quote": "BATS and ST were matched for contact time and included 8 sessions of group-based treatment.",
               "fetched": true,
               "fetchedOn": "2026-11-19"
+            },
+            {
+              "cite": "Audrain-McGovern J et al (2023). Behavioral activation for smoking cessation and the prevention of smoking cessation-related weight gain: A randomized trial. Drug and Alcohol Dependence 244:109792.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/36739753/",
+              "pmid": "36739753",
+              "quote": "BAS+ and SC did not differ in smoking abstinence rates at the 26-week follow-up (OR=0.80, 95%CI 0.50-1.27, p = 0.34; 18% versus 23%).",
+              "fetched": true,
+              "fetchedOn": "2026-11-21"
+            },
+            {
+              "cite": "Audrain-McGovern J et al (2023). Behavioral activation for smoking cessation and the prevention of smoking cessation-related weight gain: A randomized trial. Drug and Alcohol Dependence 244:109792.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/36739753/",
+              "pmid": "36739753",
+              "quote": "Adult smokers (n = 288; 119 females, 169 males) received eight weeks of transdermal nicotine",
+              "fetched": true,
+              "fetchedOn": "2026-11-21"
+            },
+            {
+              "cite": "Kaye JT et al (2025). Behavioral Activation for Smoking Cessation in Veterans with Posttraumatic Stress Disorder: A Randomized Clinical Trial. Nicotine and Tobacco Research 27(9):1524-33.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/40071390/",
+              "pmid": "40071390",
+              "quote": "There was no significant main effect of BA (15.9%, 10/63) vs. control adjuvant counseling (11.5%, 7/61) on biochemically confirmed abstinence at 26 weeks",
+              "fetched": true,
+              "fetchedOn": "2026-11-21"
+            },
+            {
+              "cite": "Kaye JT et al (2025). Behavioral Activation for Smoking Cessation in Veterans with Posttraumatic Stress Disorder: A Randomized Clinical Trial. Nicotine and Tobacco Research 27(9):1524-33.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/40071390/",
+              "pmid": "40071390",
+              "quote": "Of 124 participants randomized (mean [SD] age 49 years [12.6], 109 male [88%])",
+              "fetched": true,
+              "fetchedOn": "2026-11-21"
+            },
+            {
+              "cite": "Martínez-Vispo C et al (2019). Cognitive-behavioral treatment with behavioral activation for smoking cessation: Randomized controlled trial. PLoS One 14(4):e0214252.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/30958831/",
+              "pmid": "30958831",
+              "quote": "At 6-, and 12-months follow-ups, ORs for the SCBSCT-BA condition, although greater, did not reach statistical significance.",
+              "fetched": true,
+              "fetchedOn": "2026-11-21"
+            },
+            {
+              "cite": "Martínez-Vispo C et al (2019). Cognitive-behavioral treatment with behavioral activation for smoking cessation: Randomized controlled trial. PLoS One 14(4):e0214252.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/30958831/",
+              "pmid": "30958831",
+              "quote": "The sample was comprised of 275 adults smokers (61.4% females, mean age = 45.36, SD = 10.96).",
+              "fetched": true,
+              "fetchedOn": "2026-11-21"
             }
           ],
           "check": {
-            "by": "gives brief (opus)",
-            "on": "2026-11-19",
+            "by": "gives review round 3 (sonnet, abstract fetched)",
+            "on": "2026-11-21",
             "verdict": "ok"
           }
         },
@@ -1683,7 +1820,7 @@
         },
         {
           "id": "boredom-3",
-          "text": "Keep toothpicks, seeds or gum for your mouth and hands",
+          "text": "Keep toothpicks, seeds or sugar-free gum for mouth and hands",
           "evidence": "none",
           "refs": []
         }
@@ -1741,7 +1878,7 @@
         },
         {
           "id": "connection-3",
-          "text": "Bring water or gum to the break",
+          "text": "Bring water or sugar-free gum to the break",
           "evidence": "none",
           "refs": []
         }
@@ -1937,14 +2074,14 @@
       "swaps": [
         {
           "id": "substance-1",
-          "text": "Patch plus gum or lozenge, used together",
+          "text": "Patch plus nicotine gum or lozenge, used together",
           "evidence": "strong",
           "counted": "smokers who wanted to stop, in trials of patch plus a fast form against one form alone; off cigarettes 6 months or more",
           "n": "16 trials, 12,169 people",
-          "weak": "For every 100 who stayed off with one form, about 127 stayed off with both. Tested in smokers, not in people who vape or use pouches.",
+          "weak": "For every 100 who stayed off with one form, about 127 stayed off with both. For example, if 20 in 100 stay off with one form, about 25 in 100 stay off with both (20 is only an example). Tested in smokers, not in people who vape or use pouches.",
           "refs": [
             {
-              "cite": "Lindson N et al (2023). Different doses, durations and modes of delivery of nicotine replacement therapy for smoking cessation. Cochrane Database of Systematic Reviews.",
+              "cite": "Theodoulou A et al (2023). Different doses, durations and modes of delivery of nicotine replacement therapy for smoking cessation. Cochrane Database of Systematic Reviews.",
               "url": "https://pubmed.ncbi.nlm.nih.gov/37335995/",
               "pmid": "37335995",
               "quote": "combination NRT (fast-acting form plus patch) results in higher long-term quit rates than single form",
@@ -1952,7 +2089,7 @@
               "fetchedOn": "2026-11-19"
             },
             {
-              "cite": "Lindson N et al (2023). Different doses, durations and modes of delivery of nicotine replacement therapy for smoking cessation. Cochrane Database of Systematic Reviews.",
+              "cite": "Theodoulou A et al (2023). Different doses, durations and modes of delivery of nicotine replacement therapy for smoking cessation. Cochrane Database of Systematic Reviews.",
               "url": "https://pubmed.ncbi.nlm.nih.gov/37335995/",
               "pmid": "37335995",
               "quote": "(risk ratio (RR) 1.27, 95% confidence interval (CI) 1.17 to 1.37; I2 = 12%; 16 studies, 12,169 participants)",
@@ -1971,8 +2108,8 @@
           "text": "Ask a doctor about varenicline, a quit pill",
           "evidence": "strong",
           "counted": "smokers who wanted to stop, in trials of varenicline against a dummy pill; off cigarettes 6 months or more",
-          "n": "41 trials, 17,395 people",
-          "weak": "About 2.3 times as many stayed off as on the dummy pill. Serious side effects were reported a little more often (about 1.2 times as many). Prescription only, and tested in smokers.",
+          "n": "41 trials, 17,395 people for staying off; 26 trials, 14,356 people for side effects",
+          "weak": "About 2.3 times as many stayed off as on the dummy pill. Serious side effects were reported a little more often (about 1.2 times as many; 26 trials, 14,356 people). Prescription only. Tested mostly in smokers; one 2025 trial of 261 people aged 16 to 25 who vape, in one US state, also found it helped: continuously off vapes from week 9 to week 24, 28 in 100 on varenicline against 7 in 100 on a dummy pill.",
           "refs": [
             {
               "cite": "Livingstone-Banks J et al (2023). Nicotine receptor partial agonists for smoking cessation. Cochrane Database of Systematic Reviews 5:CD006103.",
@@ -1986,20 +2123,36 @@
               "cite": "Livingstone-Banks J et al (2023). Nicotine receptor partial agonists for smoking cessation. Cochrane Database of Systematic Reviews 5:CD006103.",
               "url": "https://pubmed.ncbi.nlm.nih.gov/37142273/",
               "pmid": "37142273",
-              "quote": "moderate-certainty evidence that people taking varenicline are more likely to report SAEs than those not taking it (RR 1.23, 95% CI 1.01 to 1.48",
+              "quote": "people taking varenicline are more likely to report SAEs than those not taking it (RR 1.23, 95% CI 1.01 to 1.48; I2 = 0%; 26 studies, 14,356 participants)",
               "fetched": true,
               "fetchedOn": "2026-11-19"
+            },
+            {
+              "cite": "Evins AE et al (2025). Varenicline for Youth Nicotine Vaping Cessation: A Randomized Clinical Trial. JAMA 333(21):1876-86.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/40266580/",
+              "pmid": "40266580",
+              "quote": "Of 261 randomized participants (mean age, 21.4 years; 53% female), 254 completed the trial (97.3%).",
+              "fetched": true,
+              "fetchedOn": "2026-11-21"
+            },
+            {
+              "cite": "Evins AE et al (2025). Varenicline for Youth Nicotine Vaping Cessation: A Randomized Clinical Trial. JAMA 333(21):1876-86.",
+              "url": "https://pubmed.ncbi.nlm.nih.gov/40266580/",
+              "pmid": "40266580",
+              "quote": "28% vs 7% during weeks 9 through 24 (aOR, 6.0 [95% CI, 2.1-16.9]; P < .001)",
+              "fetched": true,
+              "fetchedOn": "2026-11-21"
             }
           ],
           "check": {
-            "by": "gives brief (opus)",
-            "on": "2026-11-19",
+            "by": "gives review round 3 (sonnet, abstract fetched)",
+            "on": "2026-11-21",
             "verdict": "ok"
           }
         },
         {
           "id": "substance-3",
-          "text": "Keep gum or mints for the mouth habit",
+          "text": "Keep sugar-free gum or mints for the mouth habit",
           "evidence": "none",
           "refs": []
         }
@@ -2082,7 +2235,7 @@
     },
     {
       "id": "nrt",
-      "label": "Patches, gum or lozenges"
+      "label": "Patches, nicotine gum or lozenges"
     },
     {
       "id": "count",
@@ -2098,7 +2251,7 @@
     },
     {
       "id": "water",
-      "label": "Water, gum or a snack"
+      "label": "Water, sugar-free gum or a snack"
     }
   ],
   "riskyMoments": [
@@ -2156,7 +2309,7 @@
       "momentId": "coffee",
       "cards": [
         "Drink it somewhere else: another room, standing up, or away from your usual spot.",
-        "Have gum or a mint with it.",
+        "Have sugar-free gum or a mint with it.",
         "When the cup is empty, get up and start the next thing."
       ]
     },
@@ -2189,7 +2342,7 @@
       "cards": [
         "Pop bubbles or play a short puzzle game for a few minutes.",
         "Do one small job you've put off: a dish, an email, a call.",
-        "Give your hands something: gum, a toothpick, a pen."
+        "Give your hands something: sugar-free gum, a toothpick, a pen."
       ]
     },
     {
@@ -2197,7 +2350,7 @@
       "cards": [
         "Move away from them, or walk the other way for a few minutes.",
         "Say it once, plainly: \"I've stopped.\"",
-        "Hold a drink or chew gum, so your hands and mouth have something."
+        "Hold a drink or chew sugar-free gum, so your hands and mouth have something."
       ]
     },
     {
@@ -2220,7 +2373,7 @@
       "momentId": "driving",
       "cards": [
         "Before you drive off, put on a song you know by heart, then sing it.",
-        "Have gum or a mint; keep some in the car.",
+        "Have sugar-free gum or a mint; keep some in the car.",
         "Open the window and breathe slowly until the next stop."
       ]
     }
@@ -2236,7 +2389,7 @@
     },
     {
       "id": "gum",
-      "text": "Chew gum or suck a mint"
+      "text": "Chew sugar-free gum or suck a mint"
     },
     {
       "id": "breathe",
@@ -2310,7 +2463,7 @@
     },
     {
       "id": "stock",
-      "text": "Buy patches, gum or lozenges before day 1 if you use them",
+      "text": "Buy patches, nicotine gum or lozenges before day 1 if you use them",
       "removes": "the gap between the urge and the help"
     }
   ],
@@ -2629,11 +2782,11 @@
     },
     {
       "id": "combo-nrt",
-      "text": "Patch plus gum or lozenge beats one form alone. Use both, from day 1.",
+      "text": "Patch plus nicotine gum or lozenge beats one form alone. Use both, from day 1.",
       "link": "https://pubmed.ncbi.nlm.nih.gov/37335995/",
       "refs": [
         {
-          "cite": "Lindson N et al (2023). Different doses, durations and modes of delivery of nicotine replacement therapy for smoking cessation. Cochrane Database of Systematic Reviews.",
+          "cite": "Theodoulou A et al (2023). Different doses, durations and modes of delivery of nicotine replacement therapy for smoking cessation. Cochrane Database of Systematic Reviews.",
           "url": "https://pubmed.ncbi.nlm.nih.gov/37335995/",
           "pmid": "37335995",
           "quote": "combination NRT (fast-acting form plus patch) results in higher long-term quit rates than single form",
@@ -3285,7 +3438,7 @@
       "day": -1,
       "beliefId": "b4",
       "title": "The night before",
-      "body": "Tonight is setup. Throw out every pack, vape and pouch can, plus the lighters and ashtrays. Check the car, your jackets and your bags for spares. If you use patches, gum or lozenges, put them within reach. Tomorrow there is no “just one”. Among daily smokers on a nicotine patch who smoked at all in week 2, 83 in 100 were smoking six months later. The first two weeks are the ones to guard.",
+      "body": "Tonight is setup. Throw out every pack, vape and pouch can, plus the lighters and ashtrays. Check the car, your jackets and your bags for spares. If you use patches, nicotine gum or lozenges, put them within reach. Tomorrow there is no “just one”. Among daily smokers on a nicotine patch who smoked at all in week 2, 83 in 100 were smoking six months later. The first two weeks are the ones to guard.",
       "counted": "Two small patch trials, 88 and 112 people smoking 15 or more a day. The 83 and 97 count only those on a real patch who smoked in week 2.",
       "exercise": "Do the clear-out now: packs, vapes, lighters, spares. Text one person the time you plan to start tomorrow.",
       "refs": [
@@ -3416,7 +3569,7 @@
       "day": 6,
       "beliefId": "b8",
       "title": "Day 6: the break",
-      "body": "Keep the break and the people. Skip the nicotine. Bring a coffee or gum, step a few metres away from the smoke, and talk about the same things. In a large long-term study of 12,067 people, when a friend quit, a person’s own chances of smoking fell by 36%.",
+      "body": "Keep the break and the people. Skip the nicotine. Bring a coffee or sugar-free gum, step a few metres away from the smoke, and talk about the same things. In a large long-term study of 12,067 people, when a friend quit, a person’s own chances of smoking fell by 36%.",
       "counted": "12,067 people followed from 1971 to 2003. The 36% could be anywhere from 12% to 55%. A link seen in the data, not a trial.",
       "exercise": "Tell one person from the break group today that you stopped. Ask for a coffee somewhere that is not the smoking spot.",
       "refs": [
@@ -3638,7 +3791,7 @@
         "Take each line from step 1 and find something that gives you about 80% of it.",
         "Breaks: step outside anyway, without it. Walk, drink water.",
         "Coffee: change the place or the time, and keep the change past the first month.",
-        "Hands and mouth: gum, a toothpick, seeds.",
+        "Hands and mouth: sugar-free gum, a toothpick, seeds.",
         "Vape or pouch at the desk: put mints, sugar-free gum or a cold drink in the same spot.",
         "Stress: ten slow breaths or a two-minute walk before you decide anything."
       ]
@@ -3701,7 +3854,7 @@
       "do": [
         "Help is a tool, not a must. Use it to make the date stick, not to put it off.",
         "Ask a doctor about varenicline, a prescription quit pill.",
-        "Or use a patch plus gum or lozenge, not just one.",
+        "Or use a patch plus nicotine gum or lozenge, not just one.",
         "Switching cigarettes for a vape? Then the vape is what you're quitting: set its date now and run steps 1–4 on it.",
         "Quitting a vape? Ask a doctor whether varenicline fits: two small trials suggest it may help vapers stop.",
         "Put money on it: give a friend a sum to hand back at month 3."
