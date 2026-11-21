@@ -68,9 +68,11 @@ say "I left notes".
   `Plans/celeb-clip-reels.md` (proposed). The method and platform rules
   are in the history file, section "Celebrity clip reels".
   On 2026-11-21 he judged round 2 poor and round 3 "not very good
-  attempts" (his notes R3-1 to R3-6 in the history file). Round 4 replaces
-  the AI narrator with real people on camera, longer inserts, the source
-  name per picture, and no black edges (proposed).
+  attempts" (his notes R3-1 to R3-6 in the history file). Round 4 (built
+  2026-11-21, W1 and W2) uses real people only (CNN anchor, BBC interview,
+  a psychology coach, the 1999 paper on screen), no short inserts, the
+  source name per picture, and no black edges; it waits for his notes on
+  its own page (listed in notes-seen.md).
 - **Look finder (step 1 of the proposed process)**: built 2026-11-20. 18
   YouTube videos that beat their channel's usual views, in six looks, each
   playable with a 👍 and a note (page listed in notes-seen.md). Waits for

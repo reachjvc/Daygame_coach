@@ -137,6 +137,8 @@ Not judged yet: the look finder page; three looks of the same ten seconds.
 ## Tools (facts)
 
 Private folder `~/.cache/daygame-research/celeb-reels/code/`:
+- `render4.py` (round 4) = `render3.py` plus a source name per picture,
+  still pictures (the paper) and the black-edge check after every render.
 - `render3.py` builds a reel from an edit list (`edl3/`). It refuses to
   render if a cut lands in speech (`cutsafe.py`, measured on the sound), and
   after rendering it checks every word near a cut was heard.
