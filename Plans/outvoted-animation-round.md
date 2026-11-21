@@ -47,8 +47,16 @@ his footage could go in. He picks ways and films when he wants. Then v3 puts him
   - Pace (measured 2026-11-20): 117 s long, 30 s of it pauses.
   - His verdict on the finder (2026-11-21, recorded by another session in
     `content_creation.md`): the blocks in Outvoted are the best style he has seen yet, and he
-    likes the more beautiful animations. So every new option must look at least as beautiful as
-    the blocks. The gate checks this (C5, G2).
+    likes the more beautiful animations.
+  - His words, later 2026-11-21: Claude may not be able to judge whether something is less
+    beautiful than the blocks, and the blocks are not the gold standard; "that particular type
+    of animation is the correct one". He wants **shorter loops**: he sees a small part of what
+    Claude proposes without waiting hours. The GPU may run animations in the daytime whenever it
+    is free, as long as there is always something left for the night.
+  - Claude's reading of "that type" (proposed, he can correct it on the first loop page): real
+    3D animation like the blocks film. Solid objects, physics, light that moves, a camera that
+    moves like a film camera, one coherent world per scene. Not flat screens that change, not
+    stills that zoom. Other scenes, objects and worlds are welcome, in that type.
 
 ## Checked today, and from memory
 
@@ -295,13 +303,15 @@ Variety means a different **kind**, not other colours. Rules:
 - No two neighbouring spots use the same family.
 - Besides the blocks, the film uses at least three families.
 - AI still pictures are never used (his rule).
+- Every option is the type of animation he named (see "What was read"): real 3D, physical,
+  moving light and camera. No flat 2D screens.
 
 | Family | What it is | Made with | Runs on |
 |---|---|---|---|
 | K1 Same world, new objects | New wooden objects on the same table: a phone, an alarm clock, a calendar block, small props | the three.js engine | GPU (D3D12) or CPU |
-| K2 Drawn figure | A simple line-drawn man (round head, mitten hands, so no fingers to get wrong), rigged and animated by code, in its own small room | SVG or canvas code, frames through Chromium | CPU |
-| K3 Screen and text | A game quest window, a phone note, a vote counter, a calendar page; moving UI and type | HTML/CSS/canvas code | CPU |
-| K4 Real motion from a local AI video model | Short clips **with no people**: rain on a dark window with city lights, low sun moving across a bedroom wall, smoke curling in a lamp beam. Real motion, no zoom-on-a-still | Wan 2.2 5B (or the 14B distilled version) in its own venv, free download | GPU |
+| K2 Wooden figure | A wooden artist's mannequin (no fingers, no face to get wrong), rigged and animated in 3D in its own small 3D room (bed, lamp, window), same render engine and light model as the blocks | the three.js engine | GPU or CPU |
+| K3 Things with words, as 3D objects | A paper calendar whose pages tear, a phone whose screen lights up, a wooden vote board with flipping numbers; words live on real objects in the 3D world, never as flat screens | the three.js engine | GPU or CPU |
+| K4 Real motion from a local AI video model (one test spot only, until he has seen it in a loop) | Short clips **with no people**: rain on a dark window with city lights, low sun moving across a bedroom wall, smoke curling in a lamp beam. Real motion, no zoom-on-a-still | Wan 2.2 5B (or the 14B distilled version) in its own venv, free download | GPU |
 | K5 Light drawing | Light trails, the moon and sun drawing arcs, words written in light | three.js | GPU |
 | K6 Him, filmed (v3 only) | His footage speaking the script, put in by one of the ways F1–F8 below | ffmpeg plus matting (Robust Video Matting or SAM 2, local) | GPU |
 
@@ -314,14 +324,14 @@ picking rule is in Phase 5.
 
 | Spot | Line | Now (v1) | Options built for v2 | v3 (after he films) |
 |---|---|---|---|---|
-| S1 night | 2 "Late at night I would lie in bed … tomorrow I quit" (7 s) | slow push on the block | **S1a K1**: a phone lies by the amber block; it lights up 02:47 and "tomorrow I quit" types on "decide"; its blue glow lights the block. **S1b K2**: the drawn man in bed, eyes open in the dark; above him the wasted day plays back as tiny icons, fast; "TOMORROW I QUIT" writes itself on the ceiling. **S1c K3**: a game quest window, "NEW QUEST: QUIT WEED · Accept", and a counter "accepted 1,214 times" ticking up. **S1d K4**: rain on a dark window, city lights, 3 s, then back to the table | F-way he picks for "Late at night" |
-| S2 morning | 5 "And every morning, within an hour of waking up, I was back" (3.3 s) | light sweeps, crash | **S2a K1**: a wooden alarm clock on the table rings 07:00, the hands sweep to 07:52 in one second, then the v1 crash comes in on "back". **S2b K2**: the drawn man sits up in sunlight; his mitten hand reaches for the nightstand drawer; cut to the crash on "back". **S2c K3**: the calendar page "DAY 1 ✓" gets a red cross at 07:52. **S2d K4**: low sun moving across a bedroom wall, 2 s | — |
+| S1 night | 2 "Late at night I would lie in bed … tomorrow I quit" (7 s) | slow push on the block | **S1a K1**: a phone lies by the amber block; it lights up 02:47 and "tomorrow I quit" types on "decide"; its blue glow lights the block. **S1b K2**: the wooden figure lies in a small 3D bed by lamplight, head turned up; the wasted day passes as small wooden props sliding by on the nightstand; "TOMORROW I QUIT" burns into the headboard. **S1c K3**: a paper scroll unrolls on the table, "QUEST: QUIT WEED · accepted", and a wooden tally counter clicks up to 1,214. **S1d K4**: rain on a dark window, city lights, 3 s, then back to the table | F-way he picks for "Late at night" |
+| S2 morning | 5 "And every morning, within an hour of waking up, I was back" (3.3 s) | light sweeps, crash | **S2a K1**: a wooden alarm clock on the table rings 07:00, the hands sweep to 07:52 in one second, then the v1 crash comes in on "back". **S2b K2**: the wooden figure sits up in a sunlit 3D bed; its mitten hand reaches for the nightstand drawer; cut to the crash on "back". **S2c K3**: a paper desk calendar on the table, "DAY 1"; a red pencil strikes it through at 07:52 and the page tears off. **S2d K4**: low sun moving across a bedroom wall, 2 s | — |
 | S3 | 6 "For a long time I thought that just made me a weak person" | crash, block on its side | keep v1 (blocks) | his face, close, to camera (F1 or F3) |
-| S4 two guys | 8–9 "That guy, deciding late at night … Or quit nicotine" | wide night frame | **S4a K2**: the drawn man at night (blue) points at the tower, signing it like a contract; then back to the blocks. **S4b K5**: the moon draws the night guy's plan in light lines over the tower. **S4c** keep v1 | night-graded him (F5) |
-| S5 the morning guy | 16 "But the guy who woke up the next morning had to carry all of that" (4 s) | light sweeps, camera down the tower | **S5a K2**: the drawn man in bed in morning light with the whole night tower standing on his chest; he can't sit up; back to the tower swaying. **S5b K1**: a small wooden bed on the table, the tower standing on it. **S5c** keep v1 | morning-graded him (F5) |
-| S6 outvoted | 19 "I was not weak, but I was downvoting a plan that nobody could really live" (5.5 s) | NOT WEAK / THE PLAN WAS IMPOSSIBLE burned into the table | **S6a K3**: a vote card "PLAN: become someone else by tomorrow", NIGHT GUY ▲ 1, MORNING GUY ▼, the score falling −1, −2 … −365 on "downvoting". **S6b K1**: a big wooden down-arrow drops onto the wreck on "downvoting", then the burned words. **S6c** keep v1 | — |
-| S7 list | 24 "I could play games all day, eat junk food … no running and no women" (7 s) | glide over lying blocks | **S7a K1**: on each word a wooden object drops on the table: controller, pizza box, closed laptop, blank book, running shoes, phone with an unanswered chat; one second each, then the glide. **S7b K2**: the drawn man on the couch, six one-second poses on the words. **S7c** v1 glide at double speed | — |
-| S8 days | 26–27 "And eventually … within just a few days" (7 s) | light wheels DAY 1–4 | **S8a K3**: calendar days tick DAY 1 … DAY 4, each tick quicker. **S8b K3**: quest log "QUIT WEED · day 4 · streak 4", the bar filling. **S8c K5**: v1 time-lapse with the sun and moon drawing their arcs as light trails | — |
+| S4 two guys | 8–9 "That guy, deciding late at night … Or quit nicotine" | wide night frame | **S4a K2**: the wooden figure at night (moonlight) sets the tower's blocks with a flourish, like signing a contract; then back to the blocks. **S4b K5**: the moon draws the night guy's plan in light lines over the tower. **S4c** keep v1 | night-graded him (F5) |
+| S5 the morning guy | 16 "But the guy who woke up the next morning had to carry all of that" (4 s) | light sweeps, camera down the tower | **S5a K2**: the wooden figure in a 3D bed in morning light with the whole night tower standing on its chest; it can't sit up; back to the tower swaying. **S5b K1**: a small wooden bed on the table, the tower standing on it. **S5c** keep v1 | morning-graded him (F5) |
+| S6 outvoted | 19 "I was not weak, but I was downvoting a plan that nobody could really live" (5.5 s) | NOT WEAK / THE PLAN WAS IMPOSSIBLE burned into the table | **S6a K3**: a wooden vote board on the wreck, "PLAN: become someone else by tomorrow", flip numbers falling −1, −2 … −365 on "downvoting". **S6b K1**: a big wooden down-arrow drops onto the wreck on "downvoting", then the burned words. **S6c** keep v1 | — |
+| S7 list | 24 "I could play games all day, eat junk food … no running and no women" (7 s) | glide over lying blocks | **S7a K1**: on each word a wooden object drops on the table: controller, pizza box, closed laptop, blank book, running shoes, phone with an unanswered chat; one second each, then the glide. **S7b K2**: the wooden figure on a small 3D couch, six one-second poses on the words. **S7c** v1 glide at double speed | — |
+| S8 days | 26–27 "And eventually … within just a few days" (7 s) | light wheels DAY 1–4 | **S8a K3**: the paper desk calendar from S2c, pages flipping DAY 1 … DAY 4, each flip quicker. **S8b K3**: the paper scroll from S1c, a wax seal stamped "DAY 4". **S8c K5**: v1 time-lapse with the sun and moon drawing their arcs as light trails | — |
 | S9 ask | 28–30 "So stop trying … Comment QUIT" (15 s) | pale block, QUIT cubes | keep v1 (blocks) | him to camera for the instruction (F1), back to the cubes for QUIT |
 
 That is 22 options to build, 6 of them "keep v1". 16 are new scenes.
@@ -332,11 +342,10 @@ That is 22 options to build, 6 of them "keep v1". 16 are new scenes.
 - Captions stay in the 77–83.5% band. `capband` must report 0 offenders.
 - Sound: the scene's own soft effects (phone buzz, clock ring, rain) mixed 14 dB under the voice.
 - Colour: night spots cool (moon), morning spots warm (sun), like the table light.
-- K2 drawn man:
-  - one design, made once, used in every K2 option: line-drawn on dark paper, the amber colour
-    for him;
-  - mitten hands; the face is two dots and a line;
-  - frames rendered at 1080x1920.
+- K2 wooden figure:
+  - one figure, made once, used in every K2 option: pale wood like the blocks, ball joints;
+  - mitten hands, no face carved;
+  - its room is built from the same wood and light as the table.
 - K4 AI clips:
   - image-to-video from a code-rendered first frame, or text-to-video;
   - the prompt says no people;
@@ -378,15 +387,16 @@ a number:
 
 It answers per option, in a fixed form:
 - fits the line (yes/no + why);
-- craft and beauty at least v1's blocks (yes/no + the weakest frame number), because he called
-  the blocks the best style he has seen yet;
+- the right type of animation: real 3D, physical, moving light and camera, coherent (yes/no +
+  the weakest frame number). The reviewer does **not** judge beauty; he does, on the loop page;
 - hands and faces (count fingers where shown; any drift);
 - is it a real animation, not a zoom;
 - different from the neighbouring spots' family;
 - pass/fail;
 - a score of 1–5.
 
-A fail is cut, not fixed at night. The reviewer never sees the builder's own judgment.
+A fail is cut before it reaches him. The reviewer never sees the builder's own judgment.
+G1 and G2 run on every loop before the loop page is updated; they take minutes, not hours.
 
 ### C6. His filmed part: the storyboard step
 
@@ -401,7 +411,7 @@ the full list:
 | F4 | Cut out (matted) and standing at the table's edge, lit by the moon or the sun, block-sized or full-sized |
 | F5 | Two of him: the night guy (cool, lamp-lit) and the morning guy (warm, window), split screen for "that guy" and "the guy who woke up" |
 | F6 | His face on the amber block's front face, as a moving picture burned into the wood |
-| F7 | His real footage drawn over as lines by code (real motion, no AI), so he lives in the K2 drawing |
+| F7 | His real motion drives the wooden figure (pose taken from his footage by a local pose model), so he lives in the 3D world |
 | F8 | Silhouette of him against the window, speaking; face dark |
 | F9 | His own idea: him waking up (a short shot, not speaking) |
 
@@ -415,18 +425,26 @@ the full list:
 - This also gives a new voice take. It replaces the current voice only if it measures cleaner
   (noise floor, breath count).
 
-### C7. Evening build, night render
+### C7. Short loops by day, the GPU day and night
 
-**Evening (Phases 2–3):**
-- Claude builds the voice, the retimed blocks and the 16 new options.
-- Draft renders at 360x640, and G1 and G2 on the drafts.
-- Failing options are dropped.
-- The night queue is written.
+**Short loops (his words 2026-11-21: see a small part without waiting hours):**
+- One loop = one spot. Claude builds 2–3 options for it, each 3–8 s (the length of its line),
+  rendered in the finished look, short enough to render in minutes on the GPU.
+- G1 and G2 run. Then the loop page (C8) gets the new loop on top. Target: under 2 hours from
+  the start of a loop to his page, and the first loop on the page the same day Phase 3 starts.
+- Claude does not wait for his 👍 to start the next loop. His 👍 and notes on a loop are read
+  before each new loop and change the next ones.
+- Order of loops: S1 night, S2 morning, S5 the morning guy, S4 two guys, S6 outvoted, S7 list,
+  S8 days.
 
-**Night (Phase 4), as the queue's priority order:**
+**The GPU in the daytime:** whenever the card is free (no League match, other jobs not using
+it), loop renders and full-size renders of options he 👍'd run at once. `load.sh` and
+`gpu_guard.py` stay attached.
+
+**Night (Phase 4), as the queue's priority order** (there is always something for the night):
 1. Full-size frames of the v2 film: the retimed blocks parts, on the GPU through D3D12 (CPU
    workers run the K2 and K3 parts at the same time).
-2. Full-size frames of every surviving option.
+2. Full-size frames of the options he 👍'd, then of every other option that passed the gate.
 3. K4 AI clips: 8 seeds or more per option, more seeds while the night lasts.
 4. The blocks parts again at 64 samples instead of 16. Better motion blur and depth of field;
    used if G1 and G2 pass them.
@@ -456,10 +474,13 @@ text at the top of the night status file. It says:
 **Load:** `tools/load.sh` before and during; `gpu_guard.py` attached (League running = 1 worker,
 no GPU).
 
-### C8. What he sees: one short page
+### C8. What he sees: one short page, updated after each loop
 
-"Outvoted v2", built from the v1 film page (`film/page/index.html`). Items, each with a 👍 and a
-note box that saves while he types (green Saved badge, his earlier notes listed, newest first):
+"Outvoted v2", built from the v1 film page (`film/page/index.html`). The newest loop is at the
+top: its line, 2–3 option clips side by side, a 👍 and a note box for each. Older loops fold
+below. When every spot is chosen, the whole film goes on top. Every item has a 👍 and a note box
+that saves while he types (green Saved badge, his earlier notes listed, newest first). Once the
+film is assembled the page holds:
 
 1. **The film**: v2, full screen player (AV1 + H.264 assets), with v1 smaller beside it.
    - One line: "117 s → N s, every word kept" (or "5 lines cut" if Q2 is yes).
@@ -560,26 +581,24 @@ plan.
 - `clipReport` is empty;
 - the length is recorded.
 
-### Phase 3: evening build of the options (Sonnet builds, Opus gate)
+### Phase 3: short loops, one spot at a time (Sonnet builds, Opus gate)
 
-1. Build the K2 drawn man once (`film/figure/`).
-2. Build S1a–S8c as in C4: one file per option under `film/spots/<id>/`, each rendering frames
-   for its line from the cue table.
-3. Build K4 prompts for S1d and S2d, and make 2 test seeds each.
-4. Draft every option at 360x640.
-5. Run G1 on each. Then run one G2 Opus subagent per spot (9 subagents at most), with only the
-   inputs listed in C5.
-6. Write `film/spots/verdicts.json`. Drop the fails.
-7. Write the night queue (`film/night/queue.txt`) in the C7 order, with more work than one
-   night.
+Per loop, in the C7 order:
+1. Read his 👍 and notes on the loop page. Carry them into this loop.
+2. Build 2–3 options for the spot (C4, in the type of C3): one file per option under
+   `film/spots/<id>/`, timed from the cue table. The K2 figure is built once, in the first loop
+   that needs it.
+3. Render each option in the finished look (GPU when free).
+4. Run G1, then one fresh G2 Opus subagent for the spot. Drop the fails.
+5. Put the loop on the page (C8) and post the link in chat.
+6. Add the full-size renders of the passing options to the queue.
 
-**Done when:**
-- each spot has at least one passing new option, or a written reason why only v1 is left;
-- the queue's estimated hours exceed the night's hours (estimate from Phase 0 speeds).
+**Done when:** every spot has a loop on the page; each loop took under 2 hours; the queue holds
+more than one night of work.
 
 ### Phase 4: the night (Sonnet starts it; the watcher is a script)
 
-1. Send the night brief (C7).
+1. Send the night brief (C7). (Daytime renders run the same queue runner; the night just keeps it full.)
 2. `gpu_log.sh start`. Start the queue runner (`setsid nohup`, resumable, log per job), with
    `gpu_guard.py` attached.
 3. A watcher script: GPU under 80% for 5 minutes, or a job stuck for 15 minutes, wakes the
@@ -588,12 +607,13 @@ plan.
 
 **Done when:** 06:00, or the queue is empty (it should not be).
 
-### Phase 5: morning gate, assembly, page (Opus picks, Sonnet assembles)
+### Phase 5: assembly (Opus picks, Sonnet assembles)
 
 1. Run `gpu_log.sh summary`, plus the reels' share from the render logs.
 2. Run G1 and G2 on the full-size options.
 3. **Pick per spot** by fixed rule:
-   - the highest G2 score;
+   - the option he 👍'd; if he 👍'd several, the one with his latest note in favour;
+   - with no 👍 from him: the highest G2 score;
    - on a tie, the family not used by a neighbouring spot;
    - on a tie again, the new option over "keep v1";
    - check the C3 rules (no neighbouring repeats; at least 3 families). If broken, take the
