@@ -8,6 +8,75 @@ process. The steps below are Claude's proposal, tested on video 01 and
 changed as we learn. Before changing the process, research what people do
 now (rule in `CLAUDE.md`).
 
+## What we tried, what worked, what did not
+
+Two tracks. Each line says where it comes from: **[his words]** (said or
+written by him, date given), **[measured]** (a number Claude measured) or
+**[Claude's reading]** (Claude's own view, may be wrong). Only [his words]
+decide whether something worked. He may check this list closely; correct
+it here first. Details and dates are in the sections further down.
+
+### Track 1: Celebrity clip reels
+
+Worked, or worth more tries:
+- Full screen 9:16 that follows the speaker's face, with the viral original
+  playing next to ours on the page. [his words, 2026-11-20]
+- Narration plus other pictures or other interviews, combined: "some
+  inkling that they could be quite successful". A5 (narrator): "some
+  narration could work". A7 (concert pictures under his answer): "some
+  potential, but it is cut very weird now". [his words, 2026-11-21]
+
+Did not work:
+- Blurred bands above and below the picture: they read as black bars.
+  [his words, 2026-11-20]
+- Cuts that chop words off. "Unwatchable." [his words, 2026-11-21] Cause:
+  the cuts were placed from the transcript's word times, which end before
+  the sound does. Round 2 had 12 to 17 cuts inside speech in every Billy
+  version. [measured, `celeb-reels/code/cutsafe.py`]
+- No version longer than the base. "Taken too far." [his words, 2026-11-21]
+- A plain dark card with words ("he did XYZ"): boring. [his words,
+  2026-11-21]
+- Versions that lost the story and became "something weird". [his words,
+  2026-11-21] Which ones: probably A3 (the "I was dead" joke), A6 (heroin
+  story first) and A8 (how he got off heroin). [Claude's reading]
+- Eight different experiments when he wanted the one reel improved.
+  [his words, 2026-11-21]
+- A big source tag. It goes small, in a corner. [his words, 2026-11-21]
+
+Not judged yet:
+- Round 1's ten reels, as reels to post.
+- The kids episode (B1 to B3) and the theme cast lists.
+- Round 3 (three better Billy versions, 2026-11-21).
+
+### Track 2: Other reels (our own films)
+
+Worked, or worth more tries:
+- Claude's animations are "quite nice". The idea bank of reusable worlds.
+  [his words, 2026-11-18]
+- The falling block tower (video 01) and the drawn street scene.
+  [his words, 2026-11-19]
+- The "Outvoted" blocks film: "definitely on the right path"; the blocks
+  tell a whole story. [his words, 2026-11-20]
+- The research summary on the ten ways page: "very good and useful".
+  [his words, 2026-11-20]
+
+Did not work:
+- Question rounds on single items: too slow. Rough sketches and single
+  options: too hard to decide from. [his words, 2026-11-18]
+- Four moving options for one scene: too few and not specific enough, but
+  they gave good ideas. [his words, 2026-11-18]
+- A moving storyboard of near-stills: "a bunch of very simple animations".
+  [his words, 2026-11-19]
+- The "Outvoted" film: too slow, too much blocks only, breathing still
+  audible. [his words, 2026-11-20]
+- The second-pass page with tables of sentences to cut: "almost impossible
+  to understand". [his words, 2026-11-20]
+- AI still paintings with a slow zoom (the first night run): never again.
+  [his words, 2026-11-21]
+
+Not judged yet:
+- The look finder page, and the three looks of the same ten seconds.
+
 ## The owner's words
 
 2026-11-18:
