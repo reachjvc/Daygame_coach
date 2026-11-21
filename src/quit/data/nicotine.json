@@ -640,7 +640,7 @@
       "test": "Write down the longest you have gone without it since you started, and what was going on in that stretch.",
       "proof": "Male British doctors who stopped smoking as late as 60 still gained about 3 years of life, on average.",
       "severity": "users",
-      "counted": "34,439 male British doctors, smokers and non-smokers, not checked for addiction",
+      "counted": "male British doctors, smokers and non-smokers, not checked for addiction",
       "refs": [
         {
           "cite": "Doll R, Peto R, Boreham J, Sutherland I (2004). Mortality in relation to smoking: 50 years' observations on male British doctors. BMJ 328(7455):1519.",

@@ -33,7 +33,7 @@ Status: **not started → building → checking → waiting for you → done (da
 | 2 | Craving now? | lab `sos/best` | wave-1's voice step and "other side" answer; the craving log of `diary/best` | waiting for you |
 | 3 | Your record (progress, money kept) | lab `progress/best` | the live counter feel of copies d and e | waiting for you |
 | 4 | Slipped? Restart today | wave-1 `slip` | slips go into the shared record; clean runs never reset | waiting for you |
-| 5 | The 12 lies test | wave-1 `beliefs` | from `beliefs/best`: a reply per belief, "can you stop?", earlier results | building |
+| 5 | The 12 lies test | wave-1 `beliefs` | from `beliefs/best`: a reply per belief, "can you stop?", earlier results | waiting for you |
 | 6 | What you'll feel, and when | lab `timeline/best` | wave-1 `symptoms` (what helps per symptom) | waiting for you |
 | 7 | If-then plan | lab `ifthen/best` | — | waiting for you |
 | 8 | Daily check-in | lab `checkin/best` | slip question from `diary/best` | waiting for you |
