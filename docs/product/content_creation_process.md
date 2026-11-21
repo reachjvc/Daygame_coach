@@ -371,6 +371,17 @@ What the platforms say (checked 2026-11-20):
   did not, with one track for celebrity reels and one for other reels. He
   may check them closely so Claude is not misled by its own writing.
 
+His answers for the retry (owner, 2026-11-21):
+- 2 or 3 better versions of the Billy Idol reel, each keeping its story.
+  Longer is allowed.
+- The story is "why never again never worked" (or something like that).
+  His wild life serves that story. Find punchy wording.
+- Pay particular attention to what any text tells the viewer, on a card
+  or on top of a clip.
+- The source tag goes small in a corner. It does not need to be prominent.
+- Narration: the AI placeholder voice is fine; he re-records what he keeps.
+- Text sits over moving pictures of him, not on a black card.
+
 Tools (private): `~/.cache/daygame-research/celeb-reels/code/`.
 - `render.py` makes one-source reels: captions, a face-tracked 9:16 crop,
   the hook and the source tag.
