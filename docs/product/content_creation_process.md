@@ -25,8 +25,9 @@ shots also on his daily page. Waits for his grain pick and the filming.
 [record]
 
 Tracks (proposed 2026-11-21): **Track 1** celebrity clip reels; **Track 2**
-our own films (Outvoted, the next reels); **Video 01**; **Finding the
-look** (finder, ten ways). Headings here and in the history file name
+our own films (Outvoted, the next reels); **Track 3** text reels (his
+words 2026-11-22: shorter, easier, mostly text; lessons not written yet);
+**Video 01**; **Finding the look** (finder, ten ways). Headings here and in the history file name
 theirs. Mistakes, one entry each, newest first:
 `docs/product/content_mistakes.md` (proposed).
 

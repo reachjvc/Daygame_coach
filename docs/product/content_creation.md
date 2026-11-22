@@ -23,6 +23,12 @@ its track.
   about now is our quality.
 - **Track 2, our own films** (Outvoted, the next reels): the rest of
   what we post, together with Video 01.
+- **Track 3, text reels** (owner, 2026-11-22): a third track of shorter,
+  easier-to-make reels that are mostly text. He has seen a few on the
+  accounts Claude linked to him earlier. The first two tracks stay as they
+  are: Track 1 (celebrity reels) is entertainment that draws people in;
+  Track 2 (the nightly reels, deeper animation, high quality) tells his own
+  story and core ideas.
 - **Video 01** and **Finding the look** (finder, ten ways) as in
   `content_creation_process.md`.
 
@@ -35,11 +41,21 @@ Celebrity reels, focus (owner, 2026-11-22): put the Tom Hardy reel (D) aside
 and get one finished piece of content out first.
 
 Only the 10-20% share, the under-50% copy limit, varying the sources,
-filming himself and the one-finished-piece focus are his words; the track names and the rest of this split are Claude's,
-proposed.
+filming himself, the one-finished-piece focus and the Track 3 description
+(shorter, easier, mostly text; entertainment and drawing people in for
+Track 1; deeper animation, own story and core ideas for Track 2) are his
+words; the track names and the rest of this split are Claude's, proposed.
 
 ## Going on now (keep this list current)
 
+- **Track 3, text reels (started 2026-11-22)**: only this document is
+  updated so far. Nothing is made. Open, Claude's proposal: first find which
+  of the accounts he was linked to he means (he saw "a few"), then study
+  what those text reels look like (length, how the text moves, hooks,
+  endings, how often they post) and say which parts are checked and which
+  are from memory; only then a first draft round. Which accounts, how long,
+  what the text says, whether it carries a voice or music, and whether it
+  ends on the site are his to decide; nothing here is decided.
 - **Video 01, "The one thing"**: an Instagram Reel of about 2 minutes, with a
   YouTube version. The private working file is
   `~/.cache/daygame-research/content/video-01-one-thing.md`.
