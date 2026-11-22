@@ -25,6 +25,17 @@ Rules for this file:
 10kdaysclub.com, so all branding should reflect this broader market now. This means, the landing page should not
 say AI daygame coaching." The rebrand is planned in `Plans/rebrand-10kdaysclub.md`.
 
+## What 10K Days Club means (2026-11-22)
+
+The owner's words, 2026-11-22, in a note on the welcome email draft ("you should save this somewhere"):
+
+- "the philosophy about 10k club is not primarily 27 years. It is far too long."
+- "10K Days Club … is about mastery. Some say mastery takes 10.000 hours, 10.000 iterations. The 10k days club is
+  about moving towards our long-term objectives. About becoming the man, the woman, the person that we desire to be."
+- "The 10k Days Club combines long-term thinking with short-term operationability. Ask yourself: in 3 years, 10
+  years, 30 years, what do you want to have accomplished? what is that big goal of yours, that once you achieve you
+  want to scream out "I did it!"?"
+
 ## The umbrella and the look (2026-11-19)
 
 The owner's words, 2026-11-19:
