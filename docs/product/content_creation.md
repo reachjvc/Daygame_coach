@@ -58,23 +58,30 @@ words; the track names and the rest of this split are Claude's, proposed.
 ## Going on now (keep this list current)
 
 - **Track 4, direct selling (started 2026-11-22)**: only this document is
-  updated so far. Nothing is made. Open, Claude's proposal, for him to
-  decide: (a) the sell-to-not-sell share, tracked from the first post on;
-  (b) what "my coaching" is and what it costs, since a graphic needs a real
-  offer behind it; (c) "100% success" cannot be shown and a promise of
-  money back is a spending and refund commitment, so it is his call whether
-  to promise it and under which terms (a checkable guarantee with plain
-  terms is the alternative); (d) a comparison graphic shows who/how many/
-  what measured: the QuitSure figures are their own claim, not checked by
-  us. Which of these he decides, and when, is his.
-- **Track 3, text reels (started 2026-11-22)**: only this document is
-  updated so far. Nothing is made. Open, Claude's proposal: first find which
-  of the accounts he was linked to he means (he saw "a few"), then study
-  what those text reels look like (length, how the text moves, hooks,
-  endings, how often they post) and say which parts are checked and which
-  are from memory; only then a first draft round. Which accounts, how long,
-  what the text says, whether it carries a voice or music, and whether it
-  ends on the site are his to decide; nothing here is decided.
+  updated so far. Nothing is made. His answers (owner, 2026-11-22): he will
+  give an offer; we can show something live, "quit your addiction 100%
+  easily, or get your money back"; the competitors do not show their basis,
+  so why would we have to. He asked how much of the time should be spent
+  selling according to Alex Hormozi and according to others; the research
+  (his own quoted words, links, checked vs not) is in
+  `~/.cache/daygame-research/content/sell-ratio.md`, still being written.
+  Open, Claude's proposal: the sell-to-not-sell share stays unset until he
+  picks it, tracked from the first post on; what "my coaching" is and what
+  it costs is his offer to give. Claude's flag, unchecked, from memory: an
+  unqualified "100% success" claim can draw advertising or consumer-law
+  trouble whatever competitors do; "results or your money back" with plain
+  terms says nearly the same. His call.
+- **Track 3 examples (owner, 2026-11-22)**: the Instagram page soberrhumor
+  has many posts that are just words. A reel that appeared in his feed
+  (instagram.com/reels/DfDpxAVhHXK/, Claude has not seen it): he could say
+  exactly the same things with a different visual. Claude cannot read
+  Instagram, so it needs the words or a recording of it from him.
+- **Instagram reel tools (2026-11-22)**: free tools tested, report in
+  `~/.cache/daygame-research/quit-reels/free-tools/report.md`. Only vidIQ's
+  free audit gives views per reel (15 newest reels, last 30 days, through a
+  page endpoint it does not document); the rest are blocked or show totals.
+  The official Instagram API route waits for his yes on which account to
+  connect.
 - **Video 01, "The one thing"**: an Instagram Reel of about 2 minutes, with a
   YouTube version. The private working file is
   `~/.cache/daygame-research/content/video-01-one-thing.md`.
