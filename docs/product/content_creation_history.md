@@ -118,6 +118,13 @@ Ids are the page's items: A (crash to kids, Billy Idol), B (rock stars' compilat
 - **R6-D** (at 0:57 in D · 72 s, 13:01 UTC): "I would still use clips a little longer, and i dunno why, but the source, you keep putting it in near the middle of the acreen, instead of fully at the bottom, and captions are often directly in thwir faces, which i dont like"
 - **R6-page** (the round as a whole, 13:03 UTC): "Much mich much better work again. Now, the thing we have to work most on for these are the final touches, 2) making sure we dont get stale by using the same poeple in reels that are released close together, 3) finding a better ending, 4) sometimes habing a stronger hook. This round though was much better, and if we could get to this point from no input from me, then that would be great. 5) i also need to have some way to determine how much these are like other viral clips, i.e. how much of the video is simply copied directly from competitors. We want to steal like an artist, not just steal"
 
+### Celebrity reels, reel B ending lines (chat, 2026-11-22 evening) [Track 1] [his words]
+
+After Claude's first suggestions ("Every one of them had a reason bigger than the drug. Find yours." etc.) he said: "I hate the AI soundingness of this." Claude gave 25 plainer lines; his answer, word for word:
+
+- **R6-end-1**: "here are some of my ideas, then: (1) we never wish we wouldve stayed addicted longer. Quitting is only a decision away. x.. i also like your 4; i sense that we could simply have that as like a fading away end screen, rather than my saying it. We should test a few version of that immediately, as an addon to what youre doing here. 11 is not bad, but i would probably say more, turn it into using one of my tools. x.. "whats the thing you want to be there for, that addiction would stop you from"? - again, some refinement on that, but thats the core of what i might say."
+- Claude's 4 was: "Funny how nobody ever says they regret quitting." Claude's 11 was: "Honestly, the hardest part is deciding. The rest you figure out."
+
 ### Outvoted v2 loop page, his notes (page KbTowH…, 2026-11-21 18:31–18:41 UTC) [his words, verbatim]
 
 No 👍 were used; his preferences are in these notes.
