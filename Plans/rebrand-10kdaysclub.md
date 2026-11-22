@@ -732,6 +732,13 @@ Phone check on the local stack: Home (gold Training/Time Log/Audit, violet Black
 
 ### Phase 8 — The new address (Sonnet; needs O2, then O3, then O6)
 
+**Status 2026-11-22:** domain bought at Cloudflare (not Vercel); `10kdaysclub.com` attached to the Vercel project and
+serving. Supabase `site_url` → `https://10kdaysclub.com`; `uri_allow_list` now lists `10kdaysclub.com/**`,
+`www.10kdaysclub.com/**` and keeps every old entry (fixed the reset-password link landing on the old address).
+`www.10kdaysclub.com` added in Vercel with a 308 to the bare domain; it waits for his Cloudflare DNS record
+(`CNAME www → b9e7f0d6e61f754c.vercel-dns-017.com`, DNS only). Still open: step 2 (move page), 3, rest of 5
+(env, Vault clock URL, push fallback), 6, 7.
+
 Unchanged from the 2026-11-18 version. In order:
 
 1. **Supabase accepts both addresses** (additive only): `uri_allow_list` adds `https://10kdaysclub.vercel.app/**`
