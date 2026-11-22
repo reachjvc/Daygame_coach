@@ -76,6 +76,13 @@ words; the track names and the rest of this split are Claude's, proposed.
   (instagram.com/reels/DfDpxAVhHXK/, Claude has not seen it): he could say
   exactly the same things with a different visual. Claude cannot read
   Instagram, so it needs the words or a recording of it from him.
+- **Text posts are often still pictures (owner, 2026-11-22)**: on
+  Instagram a text post is often a still image, not a reel, so Track 3
+  covers image posts and carousels as well as reels. One frame is not a good
+  way to judge a reel, and YouTube cannot serve what he wants here; the
+  YouTube text-reels page is a first sketch only. He wants the official
+  Instagram API connected to the 10K Days Club account, and vidIQ's free
+  audit (reels only) as a stopgap.
 - **Instagram reel tools (2026-11-22)**: free tools tested, report in
   `~/.cache/daygame-research/quit-reels/free-tools/report.md`. Only vidIQ's
   free audit gives views per reel (15 newest reels, last 30 days, through a
