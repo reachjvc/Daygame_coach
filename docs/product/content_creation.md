@@ -11,6 +11,25 @@ read the notes and likes on every page listed in
 there), act on the new ones, and record them as read. He should never have to
 say "I left notes".
 
+## Tracks (owner, 2026-11-22)
+
+What we make runs on separate tracks; every piece of content work names
+its track.
+
+- **Track 1, celebrity clip reels**: about 10-20% of the clips we post
+  (his words). Re-cut celebrity quit clips made ours. Up to 50% of a reel
+  being the same footage and order as one competitor's reel is fine with
+  him; over time we vary the accounts we semi-copy from. What he cares
+  about now is our quality.
+- **Track 2, our own films** (Outvoted, the next reels): the rest of
+  what we post, together with Video 01.
+- **Video 01** and **Finding the look** (finder, ten ways) as in
+  `content_creation_process.md`.
+
+Only the 10-20% share, the under-50% copy limit and varying the sources are
+his words; the track names and the rest of this split are Claude's,
+proposed.
+
 ## Going on now (keep this list current)
 
 - **Video 01, "The one thing"**: an Instagram Reel of about 2 minutes, with a
@@ -98,6 +117,11 @@ say "I left notes".
   story and opening; 22 openings and 21 story angles to pick from; eight
   measured reference reels and how strong reels look (0 of 30 use black
   bars).
+  Round 6 (2026-11-22, A-D) was "much much better" (A 7/10, B usable;
+  notes R6-* in the history file). Round 7 (same day) fixes those notes
+  and adds a copy score, a who-appears list and a release order. He
+  doubts it is good enough from Claude's own description, so the next
+  step is a thorough quality review by Claude before he looks again.
 - **Look finder (step 1 of the proposed process)**: built 2026-11-20. 18
   YouTube videos that beat their channel's usual views, in six looks, each
   playable with a 👍 and a note (page listed in notes-seen.md). Waits for
