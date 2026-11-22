@@ -26,8 +26,16 @@ its track.
 - **Video 01** and **Finding the look** (finder, ten ways) as in
   `content_creation_process.md`.
 
-Only the 10-20% share, the under-50% copy limit and varying the sources are
-his words; the track names and the rest of this split are Claude's,
+He can film himself in various ways (owner, 2026-11-22): a closing line
+to camera, his voice over a picture, a reaction, a whole part on camera.
+Any reel, celebrity reels included, can end on him. Ask him to film the line
+rather than ending on a weak quote or silent text.
+
+Celebrity reels, focus (owner, 2026-11-22): put the Tom Hardy reel (D) aside
+and get one finished piece of content out first.
+
+Only the 10-20% share, the under-50% copy limit, varying the sources,
+filming himself and the one-finished-piece focus are his words; the track names and the rest of this split are Claude's,
 proposed.
 
 ## Going on now (keep this list current)
