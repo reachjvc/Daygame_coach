@@ -121,7 +121,7 @@ Candidate items (each needs the 20:00 👍 except the ones that only continue hi
 
 | ID | What | Attempted, result | Blocks | Recommendation |
 |---|---|---|---|---|
-| B1 | A timer-woken session only works while the Claude session stays open | Checked: `ScheduleWakeup` exists in this session; no overnight run has used it yet. Test tonight at 20:30 with a 60 s wake | Phase 4 | Test it before he leaves; if it fails, machine jobs only and say so on the page |
+| B1 | A timer-woken session only works while the Claude session stays open | Checked: `ScheduleWakeup` exists in this session; no overnight run has used it yet. Test tonight at 20:30 with a 60 s wake | Phase 4 | Test it before he leaves; if it fails, machine jobs only and say so on the page. **Tested 2026-11-22 08:05: the 60 s timer wake reached this session and status.sh ran (log line 08:05 in night-log.md).** |
 | B2 | He may not look by 20:00 | Rule above (approved-only night) | none | as written |
 | B3 | Disk and RAM are shared with other sessions (13 to 14 GB free at times; the gate also budgets RAM) | `runner.sh` already stops at 15 GB free; renders go through `gpu_gate` | night | keep both; status.sh reports free GB |
 
