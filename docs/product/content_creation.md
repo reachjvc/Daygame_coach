@@ -29,6 +29,14 @@ its track.
   are: Track 1 (celebrity reels) is entertainment that draws people in;
   Track 2 (the nightly reels, deeper animation, high quality) tells his own
   story and core ideas.
+- **Track 4, direct selling** (owner, 2026-11-22): reels that sell his
+  services directly. His example: the QuitSure graphic "Quit Smoking
+  Success Rates" (bar list: QuitSure 95%, nicotine replacement 6%, national
+  quitline 5%, cold turkey 4%, doctor's advice 2%), remade with "my
+  coaching" in place of QuitSure and a line like "100% success, or your
+  money back, guaranteed". Some percentage of the time he wants to sell. We
+  keep an understanding of how much to sell and how much not to; he has set
+  no number yet.
 - **Video 01** and **Finding the look** (finder, ten ways) as in
   `content_creation_process.md`.
 
@@ -41,13 +49,24 @@ Celebrity reels, focus (owner, 2026-11-22): put the Tom Hardy reel (D) aside
 and get one finished piece of content out first.
 
 Only the 10-20% share, the under-50% copy limit, varying the sources,
-filming himself, the one-finished-piece focus and the Track 3 description
+filming himself, the one-finished-piece focus, the Track 4 description
+(direct selling, some percentage of the time) and the Track 3 description
 (shorter, easier, mostly text; entertainment and drawing people in for
 Track 1; deeper animation, own story and core ideas for Track 2) are his
 words; the track names and the rest of this split are Claude's, proposed.
 
 ## Going on now (keep this list current)
 
+- **Track 4, direct selling (started 2026-11-22)**: only this document is
+  updated so far. Nothing is made. Open, Claude's proposal, for him to
+  decide: (a) the sell-to-not-sell share, tracked from the first post on;
+  (b) what "my coaching" is and what it costs, since a graphic needs a real
+  offer behind it; (c) "100% success" cannot be shown and a promise of
+  money back is a spending and refund commitment, so it is his call whether
+  to promise it and under which terms (a checkable guarantee with plain
+  terms is the alternative); (d) a comparison graphic shows who/how many/
+  what measured: the QuitSure figures are their own claim, not checked by
+  us. Which of these he decides, and when, is his.
 - **Track 3, text reels (started 2026-11-22)**: only this document is
   updated so far. Nothing is made. Open, Claude's proposal: first find which
   of the accounts he was linked to he means (he saw "a few"), then study
