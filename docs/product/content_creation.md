@@ -73,6 +73,15 @@ words; the track names and the rest of this split are Claude's, proposed.
   unqualified "100% success" claim can draw advertising or consumer-law
   trouble whatever competitors do; "results or your money back" with plain
   terms says nearly the same. His call.
+- **Same Night, reel R7 springboard (Track 2, built 2026-11-22 evening, Claude's
+  proposal)**: his draft R7 "Why beliefs decide how quitting feels" turned
+  into three animation spots in the 3D look: A the same night lit red and
+  blue (stacked, or one bed cut down the middle), B a habit that learned to
+  talk (a heap of controllers and joints that scorches I NEED IT into the
+  table, or the words made of about 100 tiny ones), C the two-sided page
+  (pencil, blue pencil; bigger-writing variant). Page "Same Night" is listed
+  in notes-seen.md and waits for his notes and 👍. No voice yet, so timing is a
+  placeholder table. Private folder: `~/.cache/daygame-research/content/reel-beliefs/`.
 - **Track 3 examples (owner, 2026-11-22)**: the Instagram page soberrhumor
   has many posts that are just words. A reel that appeared in his feed
   (instagram.com/reels/DfDpxAVhHXK/, Claude has not seen it): he could say
