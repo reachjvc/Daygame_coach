@@ -127,6 +127,24 @@ No 👍 were used; his preferences are in these notes.
 - S1c (scroll + counter), 18:41 UTC: "very good"
 - "How I read that type of animation", 18:41 UTC: "This is so much better. Now it seems youve gotten at least a majority of what i want in this process right. What i want to be careful of, is that i dotn want us to now say that we always use wooden blocks or something like that in our content creation. That is not really the strategy. But this thign of short clips, multiple variants, larger creativity. Something in here you did very well in understanding what i wanted, compared to previous rounds. Clap yourself on the shoulder my friend! (and then make sure we take some learning away from it!!)"
 
+### Outvoted night check page, his notes (page 78ScUA…, 2026-11-22 07:20-07:32 UTC) [his words, verbatim]
+
+Item ids: q1 = first 17 s, q2 = 17-38 s, q3 = 38-50 s, q4 = 50-78 s of the v2 cut; v1 = the 20 Nov film, v2b = v2 pace with blocks only, v2 = v2 as he saw it, calm = three picks only. He tapped 👍 on n1-n7 (the night list) and on q3-v2.
+
+- q1-v2b: "I like" / "i like the blocks falling, but i dont like the block going dunk dunk dunk, with lights quickly" / "i mean near the end at about 70-80% of the video, that part feels kind of useless"
+- q1-v2: "the part after 65-70% of the video is too fast paced, but we still need new scenes. I liked the nights count"
+- q1-calm: "still not calm. Also, instead of" / "instead of seeing "night" in text, which is somewhat nonsensical, i would prefer seeing the "quest" thing being accepted, or it showing that it is night or whatever in some othjer way. Wht i dont like is the block bouncing"
+- loop 1 as a whole: "It is somewhat difficult to tell you exactly what i mean, when they are videos like this. Perhaps we can develop a tool where i can more easily judge exactly wht parts of the video i like or dont like. In an ideal world, i could rate each second out of 10, while being in full screen (or semi full screen), and i would just click ratings and it would stay at 10 while i had clicked ten, and when i saw something i did not like, i would change the rating and it would begin printing new ratings, you might not get what i mean"
+- q2-v1: "we need some better way of determining what is what, these names are insane to me, and the film i liked first, what does that mean? is it round 1 when you made something the first time that i liked, or from a more recent round? this is still in its totality too fast paced"
+- q2-v2b: "i still dont like the fast paced part in the begining, but i like the blocks being stacked above, and them slowly falling down" / "the pace here is probably better after the first few seconds, than v1"
+- q2-v2: "i cannot tell that this is faster than v2b"
+- q2-calm: "it is the beginning here that is not calm in the way i like. I think the boxes falling down can be faster or slower, that is not so important"
+- q3-v2 (also 👍): "i would have liked for this to just stay with the blocks on bed, him struggling and then it all falling for the duration of this clip"
+- q4-v1: "the "night" thing that comes up is not important"
+- q4-v2: "i like the 365 days coming up, and i really like the small symbols of games etc"
+
+His chat, 2026-11-22 (after looking at that round): "our process is still not great. I am spending a lot of time looking at each of these things, and it is unclear to me what is what. I am not sure how we can get to a place where i can find the things i enjoy most, and lock it in. I think, during the next few hours, what i want is for us to get the first 30 seconds or so of the video down to 90% done. I want you to make only 3 versions that i look at, and i want you to take all of the things ive been saying, and build those versions. It is fine if you make them in a lesser quality first, and we simply see if the animations are broadly correct, i.e. is this the pace, the amount of flicker, the things i want, or do i want to change them. Then i can say, now we're at what i want, and then you can improve the quality."
+
 ## Earlier sections, moved here unchanged on 2026-11-21
 
 ## The owner's words [Video 01, Track 2] [his words, summary]

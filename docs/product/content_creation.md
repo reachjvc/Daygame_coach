@@ -44,6 +44,14 @@ say "I left notes".
   Next: v2 by `Plans/outvoted-animation-round.md` (proposed): faster,
   breaths gone, other kinds of animation at seven spots, his filmed part
   storyboarded first.
+- **First 30 seconds of Outvoted, three drafts (2026-11-22)**: he asked for
+  only 3 versions of the first ~30 s, in lower quality first, built from all
+  his notes, to find the pace, flicker and content he wants before any
+  quality work. Built the same day (A Quiet, B Quest, C Busy; 540x960, a
+  rate-each-second tool on the page). Page "First 30 Seconds" is listed in
+  notes-seen.md. Waits for his ratings and notes. Source:
+  `content/reel-outvoted/film/d30/` (private). His night-check notes are in
+  the history file.
 - **First night run (2026-11-20 to 21) failed.** It made 18 AI-painting
   films of Outvoted. He judged them not usable, and AI still paintings with
   a slow zoom are never to be made again. The next step is his Outvoted
