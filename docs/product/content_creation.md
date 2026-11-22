@@ -49,7 +49,7 @@ Celebrity reels, focus (owner, 2026-11-22): put the Tom Hardy reel (D) aside
 and get one finished piece of content out first.
 
 Only the 10-20% share, the under-50% copy limit, varying the sources,
-filming himself, the one-finished-piece focus, the Track 4 description
+filming himself, the one-finished-piece focus, the Track 4 selling share (2-10% at most, the rest gives and points to his free tools), the Track 4 description
 (direct selling, some percentage of the time) and the Track 3 description
 (shorter, easier, mostly text; entertainment and drawing people in for
 Track 1; deeper animation, own story and core ideas for Track 2) are his
@@ -65,8 +65,10 @@ words; the track names and the rest of this split are Claude's, proposed.
   selling according to Alex Hormozi and according to others; the research
   (his own quoted words, links, checked vs not) is in
   `~/.cache/daygame-research/content/sell-ratio.md`, still being written.
-  Open, Claude's proposal: the sell-to-not-sell share stays unset until he
-  picks it, tracked from the first post on; what "my coaching" is and what
+  His decision on the share (owner, 2026-11-22): Alex Hormozi's numbers
+  are good; selling should be 2-10% at most. He can keep giving regardless
+  and just give people his free tools. Open, Claude's proposal: track the
+  real share from the first post on; what "my coaching" is and what
   it costs is his offer to give. Claude's flag, unchecked, from memory: an
   unqualified "100% success" claim can draw advertising or consumer-law
   trouble whatever competitors do; "results or your money back" with plain
