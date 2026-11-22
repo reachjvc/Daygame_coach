@@ -74,6 +74,40 @@ Ids are the page's items (U = my reading, Q = question, R = research, P = way of
 
 👍 given on: U1, U3, U5, Q1, Q5, Q8, R1, R2, R3, R4, R5, R6, R7, R9, P2, P3, P4, P5, P6, T1, T2, T3, T5, T7, T8, T9, T10, T11, T13. A 👍 on a question meant "yes, go with your recommendation" (Q1 test bench, Q5 reference reels first, Q8 Trial Reels later).
 
+### Celebrity reels, round 5 page notes (page QPuCEk…, 2026-11-22 06:51–07:13 UTC) [Track 1] [his words]
+
+Ids are the page's items (V = version, O = opening, S = story angle, ref = measured reference reel). Every note word for word, typos kept. No "how close" 1–10 taps were given.
+
+- **R5-V1** (version V1, the vow is the trigger, at 0:00 in V1 · ours, 49 s, 06:51 UTC): "Okay, so this works in the way that the different clips go well together, and for the most part the clips are the right lenght. However, it is not clear to the viewer what to expect from this clip, since you removed the top line you could see about it (why billy idol XYZ). That information thign should persist, and it should also be in the spot that the healthy gamer logo is at, so their logo is not there. Also, when he says "knock on wood", then you cut him off, and thats a weird cut off"
+- **R5-V2** (version V2, wake-up calls on snooze, at 1:00 in V2 · ours, 60 s, 06:54 UTC): "here again, no easy way to immediately tell for the viewer what this will give them. I think your cutting has become much better, but it also ends without really having told a point, it feels unfinished. And also, you cannot really use dax shepard here (though i love his interview too), like this with no information. There has to be some line "celebrities on what it took to quit drugs" or something like that, that then gets fulfilled in the video"
+- **R5-V3** (version V3, every rock star says it, at 0:49 in V3 · ours, 49 s, 06:55 UTC): "again, it feels unfinished, and needs a start hook, but youre doing much better at finding relevant things to put in"
+- **R5-V4** (version V4, then and now, at 1:06 in V4 · ours, 67 s, 06:57 UTC): "still a weird start with the two interviews side by side, where we dont use the one of him older, and no real ending"
+- **R5-V5** (version V5, the crash made it worse, at 0:32 in Viral original, 06:59 UTC): "the quick little timeline thing while he is rocking out, is not working, can just go straight to the news anchor telling about his crash. Also, it feels still like the ending is not quite there, but this one could work (with a more clear ending, like, did he then quit at the hospital, or not? we dont have his whole thing of saying never again does not really work for him)"
+- **R5-V6** (version V6, not perfect, still here, at 0:46 in V6 · ours, 47 s, 07:01 UTC): "i can see this working, but i would probably cut the two people you bring in (the exxperts) and just say the thing myself, on camera"
+- **R5-O1** (opening O1, his 'never doing anything again' line cold, 07:01 UTC): "this or O4"
+- **R5-O11** (opening O11, his film's title with my caption, 07:03 UTC): "your self-made captions here are not good "thats the title of his own documentary" or whatever, could be shorter and sharper, and this goes for all of your captions. "
+- **R5-O13** (opening O13, 'I read that I was dead', 07:03 UTC): "too many options here that dont really make sense. This does not make sense in the context of anything we want to say"
+- **R5-S4** (story S4, tell a rebel 'never', 07:04 UTC): "this could be particularly strong"
+- **R5-S7** (story S7, the hospital did what willpower couldn't, 07:04 UTC): "but did he quit it there ?"
+- **R5-S9** (story S9, one slip and you give up, 07:05 UTC): "does not really fit here too much"
+- **R5-S11** (story S11, every rock star says it, 07:05 UTC): "i could see a quick compilation of them saying it work + then his story from the news anchor, or something like that. A quick compilation of celebrities saying the same thing is i feel like a "tool" that we can often use"
+- **R5-S14** (story S14, what you get on the other side, 07:06 UTC): "could be like "from having drugs named after him, to gratitude for dropping them""
+- **R5-ref-rTZ-qk5q5UM** (reference reel, Clean & Sober, 3.8M views, at 0:40 in Clean & Sober · 3.8M views, 07:08 UTC): "this is good, because it isnt too fast paced, and it tells a real story. We can still use more of a different style of compilations and so on, but we need to get to the same hook and climax and resolution type of thing as they get here"
+- **R5-ref-rTZ-qk5q5UM** (reference reel, Clean & Sober, 3.8M views, at 0:40 in Clean & Sober · 3.8M views, 07:09 UTC): "And notice how they change the film to make it more dynamic. You also did that in one of the clips above, once, where you filmed billy idol from behind, instead of in front of him, thats something we can do to make it more dynamic and make it different from the other channels"
+- **R5-ref-ETCzwMdXYKg** (reference reel, Clean & Sober, 1.3M views, at 0:55 in Clean & Sober · 1.3M views, 07:10 UTC): "this i think would be easy to copy 1:1 but where we show some of his cinema clips instead of part of the interview, i.e. we just replace part of it"
+- **R5-ref-1ZJUx2-xmrE** (reference reel, Music & Art Enthusiast, 9.0M views (pictures framing the interview), at 0:29 in Music & Art Enthusiast · 9.0M views, 07:11 UTC): "i think this style looks cool of the pictures framing the interview, we could do that in various ways, especially good when it is kept short"
+- **R5-ref-ZnXf7owV9P8** (reference reel, Show Plus Films, 3.5M views (tribute), at 0:08 in Show Plus Films · 3.5M views, 07:13 UTC): "yeah interesting. I think we could do an even better tribute to her, maybe show a bit of the highlights from the show while breaking up this text, then showing the last pictures over some sad music"
+- **R5-ref-CBvyYgoUuxM** (reference reel, Celeb Observer, 7.0M views (beautiful woman before/after drugs), at 0:13 in Celeb Observer · 7.0M views, 07:14 UTC): "yeah, think we can do this too, find a bunch of beautiful women, instead of just her, then show them after drugs. This is a really good idea"
+- **R5-ref-JZvJVQ-qH5g** (reference reel, Anora, 2.6M views, at 0:21 in Anora · 2.6M views, 07:14 UTC): "yes, still also like this. I think having very beautiful women is good, she is damn beautiful"
+- **R5-ref-Pq23tijmF3s** (reference reel, 20 Years Ago, at 0:55 in 20 Years Ago · 0.0M views, 07:15 UTC): "not a great video i dont think"
+- **R5-ref-UBLVeCZOCLY** (reference reel, StarView, 5.5M views (zooming in and out), at 0:24 in StarView · 5.5M views, 07:16 UTC): "not too useful for us, also not a huge fan or the erratic zooming in and out, over story telling (i would rather story tell)"
+- **R5-rd-RS-U4** (my reading of RS-U4 (framed layout), 07:17 UTC): "i guess they are framed, so we just do as they do"
+- **R5-dadd-5** (my reading added: framed layout 'seems more like a mistake' (RS-U4), 07:17 UTC): "i was probably wrong"
+- **R5-ddel-1** (my reading removed: 'Scope: the Billy reel; probably all clip reels', 07:18 UTC): "i dunno what this means. We can use all sorts of tools for all sorts of types of reels. This is about providing information on quitting, not about celebrities, billy idol or specific tools"
+- **R5-page** (the round as a whole, at 0:02 in StarView · 5.5M views, 07:19 UTC): "I spent like 30-40 min on judging this round, which is too much. We must arrive at a thing where i spend less time evalluating, especially evaluating things that are not output in terms of video is not that useful"
+
+👍 given on: opening O7 (running count of wake-up calls), stories S1, S2, S3, S5, S6, S11, S12, S13, S18, S19, the added-reading lines dadd-1 to dadd-4, q-narrator (the narrator may describe the screen when it adds something), rd-RS-U2.
+
 ### Outvoted v2 loop page, his notes (page KbTowH…, 2026-11-21 18:31–18:41 UTC) [his words, verbatim]
 
 No 👍 were used; his preferences are in these notes.
