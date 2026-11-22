@@ -8,7 +8,8 @@ import { accountOf, buildStepsOf, dailyScreensOf, nextUp, screenToFill, stepSumm
 import { fullPlan } from "../../support/fullLifePlan"
 
 const NOW = "2026-08-17T09:00:00.000Z"
-const TODAY = ns.todayISO()
+// A fixed Thursday: with the real date the weekly review is due Sunday to Tuesday and takes Next up.
+const TODAY = "2026-08-20"
 const V1 = sequenceById("v1")
 
 describe("the plan home over the real steps", () => {
