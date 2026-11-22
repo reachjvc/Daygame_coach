@@ -108,6 +108,16 @@ Ids are the page's items (V = version, O = opening, S = story angle, ref = measu
 
 👍 given on: opening O7 (running count of wake-up calls), stories S1, S2, S3, S5, S6, S11, S12, S13, S18, S19, the added-reading lines dadd-1 to dadd-4, q-narrator (the narrator may describe the screen when it adds something), rd-RS-U2.
 
+### Celebrity reels, round 6 page notes (page 3pdW9j…, 2026-11-22 12:56–13:03 UTC) [Track 1] [his words]
+
+Ids are the page's items: A (crash to kids, Billy Idol), B (rock stars' compilation, "what finally made them quit"), C ("never again", fixed), D (Tom Hardy 1:1 copy with film cutaways). Every note word for word, typos kept. No 👍 were used.
+
+- **R6-A** (at 1:02 in A · 63 s, 12:56 UTC): "Still one weird cut at the 24/7, and some of the captions are straight on his face. However this i could see being a real reel that works, but i would still only give it 7/10 in total, which is an acceptable score"
+- **R6-B** (at 1:03 in B · 63 s, 12:58 UTC): "Still one weird cut before bradley cooper where the first thing we see is her face, and not him. But this is much closer and still usable. I would probably end it with me speaking, or something like "quitting is a decision, that only you can make, for only reasons you decide" or something like that"
+- **R6-C** (at 0:43 in C · 43 s, 12:59 UTC): "Maybe a bit of a week ending, but much better again"
+- **R6-D** (at 0:57 in D · 72 s, 13:01 UTC): "I would still use clips a little longer, and i dunno why, but the source, you keep putting it in near the middle of the acreen, instead of fully at the bottom, and captions are often directly in thwir faces, which i dont like"
+- **R6-page** (the round as a whole, 13:03 UTC): "Much mich much better work again. Now, the thing we have to work most on for these are the final touches, 2) making sure we dont get stale by using the same poeple in reels that are released close together, 3) finding a better ending, 4) sometimes habing a stronger hook. This round though was much better, and if we could get to this point from no input from me, then that would be great. 5) i also need to have some way to determine how much these are like other viral clips, i.e. how much of the video is simply copied directly from competitors. We want to steal like an artist, not just steal"
+
 ### Outvoted v2 loop page, his notes (page KbTowH…, 2026-11-21 18:31–18:41 UTC) [his words, verbatim]
 
 No 👍 were used; his preferences are in these notes.
