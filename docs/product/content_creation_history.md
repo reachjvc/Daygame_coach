@@ -74,7 +74,7 @@ Ids are the page's items (U = my reading, Q = question, R = research, P = way of
 
 👍 given on: U1, U3, U5, Q1, Q5, Q8, R1, R2, R3, R4, R5, R6, R7, R9, P2, P3, P4, P5, P6, T1, T2, T3, T5, T7, T8, T9, T10, T11, T13. A 👍 on a question meant "yes, go with your recommendation" (Q1 test bench, Q5 reference reels first, Q8 Trial Reels later).
 
-### Celebrity reels, round 5 page notes (page QPuCEk…, 2026-11-22 06:51–07:13 UTC) [Track 1] [his words]
+### Celebrity reels, round 5 page notes (page QPuCEk…, 2026-11-22 06:51–07:19 UTC) [Track 1] [his words]
 
 Ids are the page's items (V = version, O = opening, S = story angle, ref = measured reference reel). Every note word for word, typos kept. No "how close" 1–10 taps were given.
 
