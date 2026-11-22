@@ -36,7 +36,7 @@ The new way has four parts:
   his 👍 by 20:00 it does not run; the night uses its approved items.
 - **If he does not look by 20:00:** the night runs only items already approved on an earlier
   night, plus checks and tests. No new direction. The morning page says "not looked at".
-- **A ✗ or a note against an item:** that item stops; I read the note at the next wake.
+- **A note that says STOP on an item:** that item stops; I read the notes at every wake.
 - A reminder row "Night check, 5 min, by 20:00" goes on his daily page (db `days/<date>`).
 
 ## What counts as "work for the whole night"
@@ -49,13 +49,15 @@ Two kinds, both on the list with an hour estimate from past logs:
   check. At each wake I take the first unchecked one.
 
 Stock gate: machine hours plus my-job hours from 21:00 to 06:00 must reach 9 h; machine jobs alone
-must cover at least 5 h, so the card is busy even while I am between wakes. A "reserve" section
+must cover at least 3 h, so the card is busy even while I am between wakes. The machine has
+less real work than the night has hours: I will not invent renders to fill the card. If the
+stock is short after the 20:00 check, the morning page says so, with the numbers. A "reserve" section
 (approved earlier, safe to run: full-quality re-renders of approved spots, checks of finished
 pieces) fills any gap.
 
 ## Phases
 
-### Phase 1 (today, 22 Nov): tools
+### Phase 1 (today, 22 Nov): tools. DONE 08:00 (stock.py, status.sh, wake.md exist and ran on the real night folder)
 - `~/.cache/daygame-research/tools/night/stock.py`: reads queue.txt, est.txt, claude-tasks.md and
   prints hours of stock to 06:00; exit 1 under the gate.
 - `~/.cache/daygame-research/tools/night/status.sh`: runner alive (restart if not), GPU average of
@@ -65,10 +67,10 @@ pieces) fills any gap.
 - Acceptance: run both on tonight's real queue; stock.py fails on the empty queue and passes
   after Phase 2 stocks it.
 
-### Phase 2 (today): tonight's list and the page
+### Phase 2 (today): tonight's list and the page. DONE: page https://claude.ai/artifact/78ScUAMcVr2SZxe7upotZX, 20 clips (5 sequences x v1 / v2 blocks / v2 / calm), night list n1-n7, daily-page rows 22-28 Nov
 - Tonight's list comes from his notes of 22 Nov 06:26–06:33 (below).
 - The Night check page (artifact, same URL every day, db `likes` / `notes` / `list`), built to the
-  review-board rules: 👍 and ✗ per item, notes that auto-save with the green Saved badge, previous
+  review-board rules: a 👍 per item, notes that auto-save with the green Saved badge, previous
   notes listed. Checked on a phone-width window before publish.
 - Acceptance: the page opens, a 👍 and a note save and come back after reload.
 
@@ -128,7 +130,7 @@ Candidate items (each needs the 20:00 👍 except the ones that only continue hi
 | Question | Recommendation | Alternative | Cost if wrong |
 |---|---|---|---|
 | Is 20:00 the hard time, or the latest? | The latest; page ready 19:30 | page ready 18:00 | none |
-| Should tonight's page have a "stop the whole night" button? | Yes, one ✗ at the top | none | a night wasted |
+| Should tonight's page have a "stop the whole night" control? | Yes: a note on the top card that says STOP | none | a night wasted |
 | Do my jobs run through the night (token cost), or machine jobs only? | Both, as he said "work through the night" | machine only | tokens vs idle hours |
 | Sequences: how many? | 5 to 6, cut at story breaks I pick and show first | by his word list | one round |
 
