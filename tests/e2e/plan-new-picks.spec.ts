@@ -1,7 +1,9 @@
 import { test, expect as baseExpect } from "./fixtures/test"
 import { ROUTES } from "@/src/shared/routes"
 import { fullPlan } from "@/tests/support/fullLifePlan"
-import { emptyNsPlan } from "@/src/goals/northStarService"
+import { emptyNsPlan, todayISO } from "@/src/goals/northStarService"
+import { DEFAULT_REVIEW_DAY, dueWeekPeriod } from "@/src/goals/dueNowService"
+import { writeReview } from "@/src/goals/reviewService"
 import { PROGRESS_COPY, TODO_COPY } from "@/src/goals/data/northStar"
 import { AREA_REVIEW_COPY, REVIEW_PERIOD_COPY, TAB_LABELS } from "@/src/goals/data/northStar"
 import { fingerprint, seedAndCopy } from "./helpers/planNewCopy"
@@ -154,7 +156,9 @@ test.describe("the split screens", () => {
 test.describe("the plan home (Q4, Q4b, Q5)", () => {
   test("shows the season band, Next up, a status and summary for every step, no locks, Plan my week, earlier notes", async ({ page, account }) => {
     test.setTimeout(900_000)
-    const plan = { ...emptyNsPlan(), northStar: "A life I chose, with a house by the water.", answers: { star_why: "Because I said so.", identity_total: "A man who keeps his word." }, season: { id: "s1", startedOn: "2026-11-01", endsOn: "2099-12-31", sentence: "Run the half marathon." }, rungs: { place: "A small house near the water." } }
+    const base = { ...emptyNsPlan(), northStar: "A life I chose, with a house by the water.", answers: { star_why: "Because I said so.", identity_total: "A man who keeps his word." }, season: { id: "s1", startedOn: "2026-11-01", endsOn: "2099-12-31", sentence: "Run the half marathon." }, rungs: { place: "A small house near the water." } }
+    // This week's review is written, so a due review (Sunday to Tuesday) does not take Next up from the north star.
+    const plan = writeReview(base, dueWeekPeriod(todayISO(), DEFAULT_REVIEW_DAY), { lessons: "Kept going." }, todayISO())
     await seedAndCopy(page, account.id, plan, { everyDayStep: false })
     const ownerBefore = await fingerprint(account.id)
     const errors: string[] = []
