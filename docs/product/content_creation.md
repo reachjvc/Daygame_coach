@@ -82,6 +82,8 @@ words; the track names and the rest of this split are Claude's, proposed.
   (pencil, blue pencil; bigger-writing variant). Page "Same Night" is listed
   in notes-seen.md and waits for his notes and 👍. No voice yet, so timing is a
   placeholder table. Private folder: `~/.cache/daygame-research/content/reel-beliefs/`.
+- **Three Trees (2026-11-24, Claude's proposal)**: his tree picture (2026-11-23): each reel has one trunk (the whole reel), branches (beats) and fruit (variants); variants must stay connected to the trunk, and full-length reels of the variants in sequence are also made. He wants Reel B (Track 1), Outvoted and Same Night (Track 2) worked on at the same time. Page "Three Trees" (trunk in words per reel, 15 top-text lines for Reel B, five endings) is listed in notes-seen.md and waits for his notes. Nothing is built from it yet.
+- **Track 3 is blocked (owner, 2026-11-23)**: he cannot add his phone number to the Meta account, so the Instagram API route is closed for now. Claude's text-reel list (one frame of YouTube video) is not usable; what he needs is different. His only note on it: the 2016 nostalgia meme reel is "useless for our purpose". Parked.
 - **Track 3 examples (owner, 2026-11-22)**: the Instagram page soberrhumor
   has many posts that are just words. A reel that appeared in his feed
   (instagram.com/reels/DfDpxAVhHXK/, Claude has not seen it): he could say

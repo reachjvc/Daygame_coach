@@ -162,6 +162,44 @@ Item ids: q1 = first 17 s, q2 = 17-38 s, q3 = 38-50 s, q4 = 50-78 s of the v2 cu
 
 His chat, 2026-11-22 (after looking at that round): "our process is still not great. I am spending a lot of time looking at each of these things, and it is unclear to me what is what. I am not sure how we can get to a place where i can find the things i enjoy most, and lock it in. I think, during the next few hours, what i want is for us to get the first 30 seconds or so of the video down to 90% done. I want you to make only 3 versions that i look at, and i want you to take all of the things ive been saying, and build those versions. It is fine if you make them in a lesser quality first, and we simply see if the animations are broadly correct, i.e. is this the pace, the amount of flicker, the things i want, or do i want to change them. Then i can say, now we're at what i want, and then you can improve the quality."
 
+### Notes of 2026-11-22/23 on Tracks 1 and 2 (pages Same Night, Clip Reel B, Outvoted Morning, First 30 Seconds) [his words, verbatim]
+
+**Same Night** (page MWRDKH…, 2026-11-23 06:16-06:18 UTC; 👍 on C1 and C2):
+- A1: "theres a bunch of problems in the animation itself, and what i wanted was for you to first figure out what you wanted the story the to be about"
+- B1: "these also look kind of bad, but i can see the idea behind it"
+- C1: "this is quite good, both versions fine, not sure which one is better"
+- general: "I guess the C versions i could definitely use someplace, but this was not really a lot of work youve done"
+
+**Clip Reel B** (page WpcLie…, 2026-11-23 06:33-06:38 UTC):
+- B (0:49, slot for his line): "the note on top, those we need to have as very important. I would name all 5 people by name, and say "quit drinking or drugs" or something like that. But we should work on that line. I am not sure we actually deliver on the promise of showing why they quit, so the reel feels a little off"
+- E1_full (0:11): "also, keep their name on screen for a little longer. and the source is still not at the extreme bottom like i had asked. As for the ending, we need something with more PANG, could still be those words, or a few more words (like those words on top, and then something to end the initial promise like "quitting is a decision ONLY you can make, for reasons only you can decide")"
+- E3 (0:14): "this is closer to what i want, but i would probably add 2 seconds to it, perhaps some music or something (not sure what options we have, and i would put the text more at the top when it fades out, or perhaps we could show a picture of all 5 of them. What seems most important to me, now, is getting the initial top text right + the ending, so these are what we should have various iterations of. There are a lot of possibilities to how we get the ending right, both in terms of the words, and the exact execution, so i would like for you to either be quite creative with some variance in the execution, or research more"
+- E4 (0:14): "my line should come WITH the text overlay, if theyre both there"
+- page: "We're definitely getting closer to something that works, but i also need to keep in mind the process of it all"
+
+**Outvoted Morning** (page 78ScUA…, 2026-11-23 06:21-06:31 UTC):
+- Calm (0:45, 0:52): "okay, this is quite good. The strings attached to the blocks, do not make sense when they go down and connect, because then theres only one string, so there is a few fixes to this. Theres also a stupid zoom in and out at about 45% [next time, let me see the seconds clearly while i am watching]. Again, i dont mean to never zoom in and out, but it has to make sense" / "again the same zoom in to the quit at about 50% when the tower has fallen [i can specify exactly what i mean],  it just adds nothing. I would also be careful to not have too much writing on the page. It is fine with the "the plan was impossible", but i would remove the "i was not weak"\n\nalso, ive said that i really liked the version with the gaming control etc., popping up when we get to the one thing solution, so we should definitely use that (can then have the quest log too after, but this is a mistake by you, to softly remove something ive said works, very dangerous)"
+- Quest (1:31): "this is pretty strong. "
+- Waking (1:37): "I like the bed scene, but it needs to be upgraded in terms of how the physics and what it looks like (hands going out of the blankets here etc)"
+- p1b (Shadow man): "this could work, if all the blocks had different things on them, like no games, work all day etc etc etc"
+- p2a (Scales): "not a bad idea, but a bit rough execution, in terms of they just jump around quickly like your wooden blocks did initially, which is the part i dont really enjoy"
+- p2b (Pillars at dawn): "also looks fine, but i would like to have words on all the pillars"
+- p3a (Tremor): "pretty good. This one we should finish off, and again, words on all the blocks"
+- p3b (Candles): "could also work, but then dont blow out the one candle at all. I would also prefer to have words on the candles "
+- page: "we're getting closer to a final product, but our process is not entirely streamlined yet, as it takes quite a long time for us to get where we want to go "
+
+**First 30 Seconds** (page 1rhAcj…, 2026-11-22 13:04-13:07 UTC; no ratings used):
+- A: "This is misunderstood entirely. I didnt mean stop having almost any new animations, i meant let things breathe"
+- B: "Much better, but i dont think the story telli g here fits entirely. The thing is that i was trying to quit everything and become entirely different immediately. And that is not clear within the first few seconds"
+- C: "Too busy. We dont nedd a hundred things or 1 thing, we need a few things that work well and keep it interesting"
+- page: "You mostly did not have the right perspective in this round. Sometimes it seems like we make some progress in the form of a leap forward, but not really this time. "
+
+**Text Reels Top List** (Track 3, page CMYxzm…, 2026-11-23 08:16 UTC): note on the reel by nickiscancelled (a 2016 nostalgia meme): "Not at all, this is useless for our purpose". No 👍.
+
+**Chat, 2026-11-23/24:**
+- "the text reel is blocked, because i cant add my phone number to the meta account. But i have 2 nightly reels and the celebrity reel. Those are the ones i was refering to. Your text reel work is not usable, because your method was looking at 1 second of youtube video, and what we need is entirely different"
+- After Claude's questions: "i have the ratings, which is fine, i just did not use the rating itself, but i did give notes on it. It is fine that you split something into whatever lenght you want to make it, but i think theres like 2 different ways forward. You can split each small thing into several variants, but at the same time also have a few of the full video of the variants all used in sequence. The issue is if you just make a bunch of small variants, but they stop working together. Like imagine a tree with its trunk and now branches. That kind of work is fine, where i can look at each little fruit, each branch and the whole tree. What does not work is if we begin developing fruits or branches that are not connected to the tree. Do you see my analogy? thats why we need some sort of overall connection to persist. I think we just work on all 3 simultaneously. I am not as sure on "same night", seems like i dont remember this one as well. 4) it should definitely be more interesting that "people", you need to just give me like 15 suggestions, and we need to have some good rules for how you approach this, in terms of the hook must be great, and "celebrities" or "how billy idol and 4 other superstars quit drugs" is better than the nondescript "people". But thats just a few ideas. 5) yes we want both tested, we just need for each iteration to get closer to the end goal, and for the process overall to take fewer and fewer iterations, my tools are not really finished, so lets not point it to anything right now, but i should try to finish them today because potentially it really should point to it.6) i dunno, what is normally done? i would think we add music on the video itself. 7) i did not film yet, and i have had some trouble setting up a new mic. But ill try to do it today."
+
 ## Earlier sections, moved here unchanged on 2026-11-21
 
 ## The owner's words [Video 01, Track 2] [his words, summary]
