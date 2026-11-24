@@ -1,257 +1,383 @@
 # Database backups: nightly, off-site, restore-tested
 
-Status: **proposed** (written 2026-11-21). The owner said "yes to backups" on
-2026-11-21. Everything below (where, how often, which tools) is Claude's
-proposal until he says otherwise. Not built yet.
+Status: **proposed**, round 3, rewritten 2026-11-24 (Opus 5.5) after the
+2026-11-22 check (findings C1, H1-H5, M1-M15, L1-L4; its page had no notes or
+likes from the owner). Not built. Nothing here is decided until the owner says
+so in his own words, and the plan stays open until he does.
 
-Checked 2026-11-22 by a Part A session (fresh sources, read-only live probes,
-a dump and restore round trip on throwaway local stacks). Its findings are
-folded in below and listed in "Part A findings". He said "go ahead" to
-writing them in; the plan itself stays proposed.
-
-Second review 2026-11-22 (Opus, after he asked for a critical look): changes
-R1-R8 folded in, listed in "Second review changes". Also proposed.
-
-This plan is written so a second agent can (a) check it before anything is
-built (Part A prompt at the end) and (b) attack the finished setup to prove it
-works (Part B prompt at the end).
+The owner's answers so far: delete nothing, keep every copy; a failure must
+reach him on his phone or somewhere he really sees; two-factor sign-in is on
+for his GitHub account.
 
 ## In plain words
 
-Today, if Supabase lost or deleted the live database, almost everything would
-be gone. Only the life plan has a nightly copy, and it only runs when this PC
-is on. There is one full copy from 2026-11-18 and one from this morning, both
-taken by hand.
+- **What it protects:** every account and every table of the live database. Each night GitHub (not this PC) takes a full copy, proves it by loading it into a test database and comparing every row, locks it with a key only you can open, and stores it. This PC then keeps its own copy and puts one on OneDrive. Nothing is ever deleted.
+- **What it costs:** $0. About a fifth of GitHub's free monthly minutes and about a tenth of Supabase's free monthly transfer. One free alarm account (healthchecks.io) is proposed.
+- **What can still go wrong:** up to about a day of changes can be lost, because the copy is once a day. During the nightly job GitHub's machine holds the data unlocked. A program running on this PC as you could delete the copies here and on GitHub; an alarm fires, and only a USB copy is out of reach. If you lose both the passphrase and the key file, no copy opens. Uploaded files (none yet), the four vault secrets and the login settings are not in the copy; after a restore they are set again by hand.
+- **What you do yourself (about 30 minutes):** say yes or no to stopping the old automatic deletion (before 19 December); make the new key with one script and save its passphrase in your password manager; run one script that makes the backup login; look at two settings pages (GitHub billing, OneDrive plan); confirm the test alarm reached your phone; open one test copy with your passphrase.
 
-After this plan:
+## Owner decisions (all proposed; he decides)
 
-1. Every night GitHub (not this PC) takes a **full copy of the live database**
-   (all tables, all accounts), locks it with the backup key, and stores it in
-   a new **private** GitHub repository. GitHub never holds the key to open it.
-   Before locking it, the same GitHub job **loads the copy into a throwaway
-   database** and checks that every row of every table came back identical.
-   A backup that has never been loaded back is a hope, not a backup.
-2. Every night this PC fetches that copy, keeps it in `~/dg-backups` and in
-   OneDrive, **opens it**, and checks that every file inside is the exact
-   file the GitHub job tested. No database runs on the PC for this.
-3. If either step fails or stops happening, it reaches **him**, not only
-   Claude: an email (issue assigned to him) and a reminder in his Google
-   Calendar (see Phase 4). Note: the "Nightly checks" job on main has been
-   red since 2026-10-31, and the session-start line has said so in every
-   session for three weeks. A line only Claude reads is not an alarm.
-4. Nothing is ever deleted automatically. Old copies are kept until he picks
-   a rule for removing them (Q2).
+| # | Question | Recommendation (proposed) | If he says no |
+|---|---|---|---|
+| D1 | **First, before 19 Dec 03:00:** remove the deletion block in `scripts/backup/plan-backup.sh` (lines 80-94; it keeps 30 dailies + monthly firsts and deletes the rest, first deletion due 19 Dec). | Yes. Removing it deletes nothing. | Copies older than 30 days start disappearing on 19 Dec. |
+| D2 | Alarm channels: (a) GitHub email for issues assigned to him (he checks once that "Participating" notifications go to email); (b) GitHub Mobile push for assignments (optional); (c) a free healthchecks.io account he makes himself, for the case "the job never ran at all". | Yes to (a) and (c); (b) if he uses the GitHub app. | Without (c): if GitHub stops running the job entirely (blocked minutes, outage, a dropped schedule), nobody is told. |
+| D3 | The 4 vault secrets (push key pair, reminder clock URL and secret) are not in any copy. After a restore: make new ones, or keep copies of the values in his password manager? | Make new ones. Cost: every device must allow notifications again. | He copies the 4 values from the Supabase dashboard into his password manager himself; Claude never sees them. |
+| D4 | The old master key's passphrase sits in a plain file on this PC and in an old Claude chat log. Old copies stay locked to the old key. | He copies the old passphrase into his password manager himself (his own window). Whether to delete the plain file afterwards is his call; recommended yes, after one old copy opens with it (`gpg --decrypt <old copy> > /dev/null && echo OPENS`, in his own window). | The old copies stay readable by anything on this PC, and unreadable if the PC dies. |
+| D5 | Plain full copies on this PC (`~/dg-backups/live-2026-11-21/`, plain life-plan files): lock them to the new key. Deleting the plain originals is his call. | Lock them (deletes nothing). Delete the plain originals after his test-copy drill passes. | Any program running as him can read every user's data in those files. |
+| D6 | One disaster drill: restore one copy into a new, free Supabase project (new EU org, no card), sign in to a local app pointed at it. Uses the last free project slot. | Yes, once, after the attack (Phase 9) passes. He signs in himself. | The real restore path stays proven only on a local copy. |
+| D7 | The backup login is the one live write. `.claude/rules/database.md` says live writes happen only through a migration or the app. | His own script makes it (Phase 4), not a migration: a migration would publish the statement in the public repo and copy it into every backup. | The plan cannot start. |
+| D8 | Keep `public.embeddings_test` (302 MB test table) out of nightly copies; no Supabase Pro now. | Yes to both (as in rounds 1-2). The 2026-11-18 copy holds that table. | Pro: $25/month; its backups die with the project. |
 
-Costs nothing: no new paid plan, no card. The one thing it cannot do: bring
-back changes made between the last night's copy and the failure (up to ~24
-hours). Supabase Pro's daily backups would not change that either; point-in-time
-recovery is a paid add-on and not proposed at this stage.
+What only he can do (not decisions): the billing look (M12: github.com/settings/billing shows no card, or an Actions budget of $0 that stops usage); the OneDrive look (M13: which plan, signed in, syncing); making the key (Phase 2); the login script (Phase 4); confirming the test alarm arrived (Phase 7); the test-copy drill (Phase 8); a USB copy of the key file (recommended).
 
-## What exists today (measured 2026-11-21)
+## How it works
 
-| Thing | State |
-|---|---|
-| Live DB | Supabase `supabase-daygame` (ref `vcjzbmtcgmjrvvklzqaq`), us-east-1, Free plan, Postgres 17.6.1.063, 347 MB of which `public.embeddings_test` is 302 MB |
-| Supabase backups | none (`supabase backups list` empty on Free) |
-| Life-plan nightly | `scripts/backup/plan-backup.sh`, systemd user timer `plan-backup.timer` 03:00, gpg to key `EAD7CED1B9584EA057069E8BAF587F92544CCD17`, copies in `~/dg-backups/nightly` + `OneDrive/daygame-backups`; log shows ok every night since 2026-11-18 |
-| Full copies | `~/dg-backups/full-2026-11-18/` (+ encrypted on OneDrive, 139 MB, incl. embeddings) and `~/dg-backups/live-2026-11-21/` (plain text; I set its files to mode 600 today, they were 644) |
-| Restore ever tested? | life-plan restore script exists (`scripts/restore-life-plan.ts`); a full restore has never been proven |
-| Owner's recent changes | domain `10kdaysclub.com` now on Cloudflare nameservers; Vercel still Hobby; Supabase still the one US org/project. The plan does not depend on these, and keeps working after a move to the EU (Phase 6). |
+```
+ live database ──(read-only login, TLS + SCRAM, once a night)──► GitHub runner (private repo)
+                                                                   dump → checks → restore test
+                                                                   → lock (master key) → store as release
+                                                                   → alarm job: issue to him + dead-man ping
+ this PC, daily 19:30 ──► fetch every new locked copy, check GitHub's sha256
+                          → ~/dg-backups/full-nightly + OneDrive/daygame-backups/full-nightly
+                          → one status line back to GitHub (read by the next night's job)
+```
 
-## Blockers (each attempted once)
+### Parts, and what each one is for
 
-| ID | What | Attempted, and what came back | Blocks | Recommendation |
-|---|---|---|---|---|
-| B1 | A login that can read everything but write nothing | Read-only query: `postgres` holds `pg_read_all_data` **with admin option** and has `rolbypassrls = true` | P1 | Create `backup_reader` (LOGIN, BYPASSRLS, `pg_read_all_data`). pg_dump needs BYPASSRLS or it stops at tables with row security |
-| B2 | GitHub runners have no IPv6; the direct DB host is IPv6-only (from memory) | Linked folder's `pooler-url`: `aws-1-us-east-1.pooler.supabase.com:5432` (session mode, IPv4). Supabase docs (checked): custom roles work on the pooler as `<role>.<project-ref>`, no extra registration | P2 | Use the session pooler on port 5432, user `backup_reader.vcjzbmtcgmjrvvklzqaq` |
-| B3 | Dump tool must match server 17, and work as `backup_reader` | `pg_dump --version` here = 16.15. **Tested 2026-11-22:** `supabase db dump` (CLI 2.120 and 3.2.0) fails as a non-superuser: `permission denied to set role "postgres"` (every dump runs `SET ROLE postgres`) | P2, P3 | Generate the CLI's own script with `supabase db dump --remote … --dry-run`, delete the `--role "postgres"` line, run it inside `supabase/postgres:17.6.1.063` (pinned by digest). Tested: roles, schema and data dumped over the pooler as `backup_reader`; round trip 134/134 tables identical. Commit the generated scripts to the backups repo and regenerate only on a deliberate CLI bump |
-| B4 | Can I create the private repo, set its secrets, make releases? | `gh auth status`: account reachjvc, scopes include `repo` | P2 | Yes, no owner step needed |
-| B5 | Opening a backup without a person typing the passphrase | `gpg --list-secret-keys` shows the master key on this PC, passphrase-protected | P3 | New **restore-test key** (no passphrase, file mode 600, on this PC only). Each backup is locked to both keys. The PC already holds plain copies, so this adds no new exposure. GitHub never gets a private key |
-| B6 | Throwaway database that behaves like Supabase | **Tested 2026-11-22:** a default `supabase start` (CLI 2.120, gotrue v2.197.0) refused live's data: 2 auth tables have newer columns, storage tables missing without storage-api. Pinned to live's versions (gotrue v2.198.0, storage v1.96.4, postgres 17.6.1.063, from a linked folder's `supabase/.temp/*-version`) it loaded with zero errors under `--single-transaction -v ON_ERROR_STOP=1` | P3 | `supabase start` in a throwaway folder with live's version files copied in (refresh by `supabase link` each run), services db + auth + storage (+ kong, pooler). Fail if the versions cannot be read |
-| B7 | Free Actions minutes for a private repo | **Checked 2026-11-22** (docs.github.com billing page): Free includes $12 of compute a month since 2026-10-28 (about 2,000 Linux minutes at $0.006). Without a payment method, runs are blocked when it runs out, not billed. His 2 other private repos have 0 runs. Job ~5 min x 31 = ~$1 | P2 | Inside the free amount. Blocked runs are caught by the 30-hour age rule (G5). If GitHub ever asks for a card: **stop**, that is the owner's call |
-| B8 | `supabase db dump --role-only` as a non-superuser | **Tested locally 2026-11-22:** fails with the CLI as is (B3); works with the `--role` line removed | P2 | Settled by B3's script. Phase 1 still proves it on live |
-| B9 | Things the dump never contains | **Measured 2026-11-22:** trigger `on_auth_user_created` on `auth.users` (not in schema.sql); 3 cron jobs (`prune-error-reports` is in no migration); 4 vault secrets (incl. the push VAPID pair, unreadable by `backup_reader`); `supabase_migrations.schema_migrations`; storage files (0 today) | P2, P3 | Extras file and checks, see Part A findings G1-G4, G15. Vault secrets: owner-held copy, his decision later |
+| Part | Job | Lost if cut |
+|---|---|---|
+| `backup_reader` login | Reads everything, writes nothing; password only in GitHub's secret store | The job would need the admin password |
+| Private repo `reachjvc/daygame-backups`, workflow `nightly.yml` | Runs nightly off this PC; stores copies as releases (no total size limit) | Copies would depend on this PC being on |
+| Restore test on the runner (`restore.sh`, `check.py`) | Loads the copy into an empty local Supabase at live's versions; compares every row, sequences, orphan rows, structure. The same `restore.sh` is the real restore tool, so the real path runs every night | "A backup never loaded back is a hope" |
+| Master key (new, made by him) | The only lasting key. Public part on GitHub; private part only in his key file (OneDrive + USB) and his passphrase | Anyone with GitHub access could read copies |
+| Throwaway key per run | Proves on the runner that the locked file opens and matches; dies with the runner | Nightly proof that the stored file opens |
+| PC mirror (`mirror-backups.sh` + timer) | Second and third place (PC, OneDrive); watches counts, the key file, OneDrive size, the old life-plan job | Losing the GitHub account would lose every copy |
+| Alarm job (issue assigned to him) | Email/push on every red night, nightly comment while broken, closes when green | He would not hear about failures |
+| healthchecks.io check (D2c) | Alarms when no run reports at all | Silent stop if GitHub never runs the job |
 
-No owner action is needed. Creating `backup_reader` is a write to the live DB;
-his "yes to backups" covers it, and `drop role backup_reader` undoes it.
+### Cut from round 2, and what is lost
 
-## Open questions (each with a recommendation)
+| Round-2 part | Why cut | What is lost |
+|---|---|---|
+| Restore-test key without a passphrase on this PC (B5) | Anyone copying two files from this PC could read every future copy (M3) | Nothing: the runner's throwaway key does the proof |
+| PC decrypts and re-checks every copy | Needs a lasting key on the PC; plain files in /tmp (M3) | The PC checks GitHub's sha256 instead (same bytes as the runner proved) |
+| `versions.json`, refreshed by the PC | Broke the first run and could not repair itself (H4, H5) | Nothing: the runner reads live's versions itself, with a pinned fallback |
+| `status/pc-check.json` committed to the repo | "Latest" ordering broke on commit dates (M2) | Nothing: a repository variable `PC_STATUS` instead |
+| Google Calendar alarm via a headless Claude run | Ran with all tools allowed, depended on usage limits, never proven (M1) | One channel; replaced by healthchecks.io (D2c) |
+| Session-start line | Only Claude reads it; repo text would reach every session (M1) | Claude sessions do not announce backup state by themselves |
+| Nightly auth-settings export (R6) | Needed the Supabase access token in a script and a field filter that dropped real settings (M7) | Login settings must be set by hand after a restore (README list) |
+| Row counts compared with live "right after" | False alarms when anyone uses the app during the dump (M2b); pg_dump does not drop rows silently | Nothing found that it would catch; the table list is compared instead |
+| Vault-change check | Would turn every night red after a planned change (H4) | Names are kept in each manifest |
 
-| # | Question | Recommendation | Alternative | Cost if wrong |
-|---|---|---|---|---|
-| Q1 | Copy `public.embeddings_test` (302 MB, a test table) every night? | No. Keep the 2026-11-18 copy of it | Monthly copy | Rebuild test embeddings (hours of compute), no user data lost |
-| Q2 | How long to keep copies | **His decision, because pruning deletes real data.** Until he answers: keep every copy, delete nothing. Size ~4 MB a night compressed (the 2026-11-21 dump without embeddings is 16 MB plain), ~1.5 GB a year. Proposed rule for him to accept or change: newest 30 nightly + first of each month for 12 months | Keep all forever | Storage only; once real customers exist, keeping a deleted customer's data forever is a privacy problem |
-| Q3 | Restore test every night or weekly | Every night, inside the GitHub job, before encrypting (R1). The PC only checks that its encrypted copy opens and matches | Weekly on the PC | A broken backup is noticed up to 6 days later |
-| Q4 | Where a failure shows | (a) issue in the backups repo **assigned to reachjvc** (assignment is a "participating" notification, emailed by default: from memory, Phase 4 checks it); (b) the PC check creates a Google Calendar event "Backups broken: tell Claude" for today, the same way the lag-push reminder works; (c) the session-start line | Email only | Silent failure for weeks (see the red nightly job since 2026-10-31) |
-| Q5 | Supabase Pro | Not now. Later, when paying customers' data is on it (infra memory, proposed) | Now ($25/month) | His money; does not replace this plan anyway: Pro backups die with the project (Supabase docs, checked 2026-11-22) |
-| Q6 | One real disaster drill: load a copy into a **fresh hosted Supabase project** (free, in a new direct org in Frankfurt, no card), sign in as his account on a local app pointed at it | **Yes, once**, after Phase 2 is green. The local throwaway database is close to hosted Supabase but not the same (Phase 1 already found hosted differs). Doubles as the rehearsal for the proposed EU move. Needs his yes: it creates a new org and a second place holding all user data | Skip (V13 stays optional) | The real restore path stays unproven until the day it is needed |
+## Secrets: where each one is made and everywhere it goes
+
+Rule: no password, passphrase or private key passes through a Claude session.
+Claude sees only names, fingerprints, hashes of files and pass/fail lines.
+
+| Secret | Made by, where | Goes to | Never goes to |
+|---|---|---|---|
+| New master passphrase | Him, typed only into GnuPG's own prompt in his terminal (`make-master-key.sh`; caching off) | His password manager (+ paper, optional) | Any file, log, command line, chat, GitHub |
+| New master private key | `make-master-key.sh`, in a temp keyring the script deletes | `master-SECRET-<date>.asc` (passphrase-protected) on OneDrive `daygame-backups/keys` and his USB stick | GitHub; this PC's keyring. Claude never opens, copies or uploads it; the mirror only hashes it |
+| Master public key + fingerprints | Same script prints `MASTER_FPR`, `MASTER_SUBKEY`, `SECRET_FILE_SHA256` (not secret) | He pastes the 3 lines to Claude; backups repo `keys/`, workflow env, PC config | (public) |
+| `backup_reader` password (`bkr_` + 48 hex) | `set-reader-login.sh` in his terminal, in memory only | GitHub secret `BACKUP_DB_PASSWORD` (via stdin) → only the dump and selftest steps → container env → SCRAM login | The database (gets only a SCRAM verifier), disk, logs, Claude. Renew = run the script again |
+| SCRAM verifier | Same script | Live (`pg_authid`); may appear in Supabase's statement log and `pg_stat_statements` | (useless without the 192-bit password) |
+| healthchecks.io ping URL | He creates the check in his browser | He pastes it into `gh secret set HC_PING_URL --repo reachjvc/daygame-backups` (hidden prompt) in his terminal → alarm job only | Claude, logs |
+| healthchecks.io account password | Him | His password manager | Claude |
+| Throwaway runner key | `seal.sh` on the runner, no passphrase | The runner's temp keyring, deleted at the end; the VM is destroyed | Anywhere else |
+| Existing: this PC's GitHub token (`repo` scope), Supabase CLI login | Exist today | Mirror (list/download releases, set `PC_STATUS`); his login script (`db query --linked`) | New places |
+| Existing: old master passphrase | Plain file on this PC + old transcript (C1) | D4: his password manager | New places |
+| Project anon key | Public by design (in every browser) | Workflow env, to read live's service versions | (public) |
+
+## Reference files (tested on throwaway copies)
+
+The tested drafts live outside the repo, in
+`~/.cache/daygame-research/backups-review/r3/drafts/` (archive
+`drafts-r3.tar.gz`, sha256 `0ff8c81fb77567ab1c4f5a2b0c68a8d3206fea22bcb36d8b737bb8ddff6f15f9`).
+The build copies them byte for byte; it does not redesign them.
+
+| Draft | Goes to | sha256 (owner scripts are checked before he runs them) |
+|---|---|---|
+| `owner/make-master-key.sh` | public repo `scripts/backup/owner/` | `d79da0cee50651ef6a03f682aaee533115ac96c42586a41f0119494cff2a5aa0` |
+| `owner/set-reader-login.sh` | public repo `scripts/backup/owner/` | `b37f540737444da72721d81dace56233ebd92889c78552f028ae40bb09e38a92` |
+| `owner/open-test-copy.sh` | public repo `scripts/backup/owner/` | `91a954ccd8ee5d016c156c6909f9b0be630a75b36cce5838296c23abe73346f9` |
+| `pc/mirror-backups.sh` | public repo `scripts/backup/` | `cbbe13322486ec6ae319f2b8fb7303c39d36471c52ea8d733bbe89c95ffb6ddd` |
+| `pc/systemd/full-mirror.{service,timer}` | public repo `scripts/backup/systemd/`, installed to `~/.config/systemd/user/` | |
+| `backups-repo/` (`.github/workflows/nightly.yml`, `bin/*`, `local/config.toml`, `README.md`) | private repo `reachjvc/daygame-backups` | |
+
+What was tested on 2026-11-24, on two throwaway local Supabase stacks (production
+schema from `tests/db/baseline.sql`, fake users and rows, live's versions gotrue
+v2.198.0, storage v1.96.4, postgres 17.6.1.063), host psql 16.15:
+
+- `set-reader-login.sh` through `supabase db query -f` (local path): role made from a SCRAM verifier; login works with `PGREQUIREAUTH=scram-sha-256`; a re-run renews it and the old password fails; refuses to run inside a Claude session.
+- `selftest.sh`: as `backup_reader` all 8 probes pass (reads `auth.users`; every write refused, also with `begin read write`); under another login it stops before any probe; a wrong password prints only "password authentication failed".
+- `dump.sh` in the pinned image as `backup_reader`: roles, schema, data, migration history, extras, catalog; no `PGPASSWORD` value in any script; `roles.sql` holds no password.
+- `check.py` + `restore.sh` end to end: all 13 checks pass. Negative tests: a removed row (V2) is caught by the row compare and the orphan check; a cut `data.sql` (V9) fails the size, table-list and size-vs-last-night checks; a broken checker still writes a manifest marked fail; `restore.sh` refuses the live ref and a non-empty target; a failed load leaves the target empty.
+- `seal.sh`: pass; a swapped key file and a changed file both fail; exactly two recipients; GnuPG refuses to overwrite an output file.
+- Key compatibility: a copy locked to a key made by `make-master-key.sh` opens in GnuPG 2.2.27 (Ubuntu 22.04 container) with the passphrase; a wrong passphrase fails in a fresh keyring.
+- `make-master-key.sh` and `open-test-copy.sh` with a fake prompt program: key file passphrase-protected, temp keyring removed, only fingerprints and a hash printed; the drill opens a copy with the right passphrase and fails with a wrong one.
+- `mirror-backups.sh` with a fake `gh`: first fetch, nothing new, bad download (reported, newer copies still fetched, no partial left), deleted release, tampered local copy, changed key file.
+- `nightly.yml`: actionlint with shellcheck clean. **Not run on GitHub** (creating a repo was out of scope).
 
 ## Phases
 
-Models (R8, per his 2026-11-18 rule "lesser models for the execution"):
-Phases 1-4 and 6 are built by one Sonnet 5.5 session at high effort,
-following this file step by step. Phase 5 (attack) is a fresh Opus 5.5
-session at high effort, never the session that built it. If the build
-session meets anything this plan does not cover, it stops that step and
-writes the problem into "Status log" below instead of improvising.
+Each step carries one mark: **[tested on a copy]**, **[checked in docs](link)**
+or **[from memory, untested]**. Models per the owner's 2026-11-18 rule (big model
+plans, smaller models build): Claude build phases run on **Sonnet 5.5, effort
+high**, in one session started with `claude --model sonnet`; the attack (Phase 9)
+runs on a fresh **Opus 5.5, effort high** session that did not build anything.
 
-### Phase 1: read-only login (depends on: nothing)
+### Phase 0: his answers (owner)
 
-1. Generate a 40-character password in the shell; never print it.
-2. On live, one statement set: `create role backup_reader login bypassrls connection limit 3 password '…'; grant pg_read_all_data to backup_reader; alter role backup_reader valid until 'infinity';` (the last part avoids Supavisor's EAUTHQUERY error for expired roles).
-3. Store the URL `postgresql://backup_reader.vcjzbmtcgmjrvvklzqaq:<pw>@aws-1-us-east-1.pooler.supabase.com:5432/postgres` in `~/.config/daygame-backup/reader-url` (mode 600) and later as a secret in the backups repo. Never in the public repo, never in a log.
+D1-D8, the billing look, the OneDrive look. D1 can be done at once if he says
+yes (Phase 6 step 3), before anything else. **Model:** none.
 
-Acceptance:
-- The create statement itself is the first test on live: live's supautils differs from the local image (`privileged_role = supabase_privileged_role`), so local success does not prove it.
-- Through the pooler: `select count(*) from auth.users` and `select count(*) from public.<any user table>` both return numbers.
-- `begin; insert into public.<table> …; rollback;` and `delete` and `create table` all fail with "permission denied".
+### Phase 1: public-repo files (Sonnet 5.5, high; depends on nothing)
 
-### Phase 2: nightly copy in GitHub (depends on: 1)
+1. Copy from the drafts, byte for byte: `scripts/backup/owner/{make-master-key,set-reader-login,open-test-copy}.sh`, `scripts/backup/mirror-backups.sh`, `scripts/backup/systemd/full-mirror.{service,timer}`. `chmod +x` the four scripts (the timer runs the mirror directly, as it does `plan-backup.sh`). Check each owner script and the mirror against the sha256 in "Reference files"; a mismatch stops the build. **[tested on a copy]**
+2. `.gitignore`: add `*.sql`, `*.dump`, `*.gpg`, `*.tar.gz.gpg`, then allow back `!supabase/migrations/**`, `!supabase/pending-owner-approval/*.sql`, `!tests/db/*.sql` (the only tracked `.sql` folders today; `git ls-files '*.sql'`). Check with `git check-ignore -v` that every tracked `.sql` file is still not ignored. (M6) **[from memory, untested]**
+3. Add to `~/.config/daygame-backup/config` (outside the repo): `ONEDRIVE_DIR=<the OneDrive daygame-backups folder already in BACKUP_DIRS>`. Paths only, no secrets.
+4. Commit with `git commit --only <paths>`, ship with `node scripts/ship.mjs`.
 
-1. `gh repo create reachjvc/daygame-backups --private`. README: what it is, how to restore (plain steps), no secrets.
-2. Public key files in the repo: master key + new restore-test key (Phase 3 step 1 makes it; do that first).
-3. Secrets `BACKUP_DB_PASSWORD` (alone) and `BACKUP_DB_HOST_USER` (host, port, user). Never a URL holding the password: GitHub masks only the whole secret, and the CLI's `--dry-run` prints `PGPASSWORD` in plain text. First step: `echo "::add-mask::$BACKUP_DB_PASSWORD"`. No `--debug`.
-4. Workflow `.github/workflows/nightly.yml`, cron `17 1 * * *` (02:17 Copenhagen winter), plus manual run:
-   - No third-party actions (they would run with the secret); `actions/checkout` pinned by SHA only. Pull `supabase/postgres:17.6.1.063` by digest.
-   - Run the committed dump scripts (B3) in that image with `set -euo pipefail`, absolute output paths, in an empty temp folder: roles, schema, data (`--use-copy`, excluding `public.embeddings_test`, `storage.buckets_vectors`, `storage.vector_indexes`, and the short-lived login tables `auth.refresh_tokens`, `auth.sessions`, `auth.one_time_tokens`, `auth.flow_state`, `auth.mfa_challenges`; a restore then logs everyone out).
-   - Also `migrations.sql`: data of `supabase_migrations.schema_migrations` (else a restored project replays all migrations on the next ship).
-   - Also `extras.sql`, generated by read-only queries: `pg_get_triggerdef` of every non-internal trigger on `auth.*`/`storage.*` tables that calls a non-platform function; one `cron.schedule(...)` per row of `cron.job`; policies on `storage.objects`. Plus `vault.secrets` names and `updated_at` (no values) in the manifest.
-   - Errors from pg_dump go to a temp file; the log shows only exit codes and counts (error text can quote rows).
-   - `manifest.json`: time, CLI version, server version, for each table the number of rows in its COPY block in `data.sql`, sha256 of each file.
-   - Sanity checks that fail the run: any step's exit code non-zero; any file under a minimum size (a failed dump still leaves a 41-byte `data.sql`); `auth.users` row count 0; total size below 50% of the previous night's (read from the previous release's `manifest.json`, which is uploaded unencrypted beside the asset: it holds counts and hashes only, no data); live's table list (catalog) minus the fixed exclusion list (V1) differs from the dumped table list; any table's dump count more than 5% below live's count taken right after; `storage.objects` above 0 (error text: "uploaded files exist now; file backup must be built"); vault secret names or `updated_at` differ from the previous night's manifest (R5: there is no owner's copy to compare with).
-   - **Restore test on the runner (R1, moved here from Phase 3).** Install the Supabase CLI from its GitHub release binary at a pinned version with a pinned sha256 (no `supabase/setup-cli` action, G14). In an empty temp folder, write `supabase/.temp/*-version` from `versions.json` in the backups repo (live's gotrue, storage, postgres versions; the PC refreshes it, Phase 3), then `supabase start` with only db + auth + storage (+ kong, pooler); the main repo's `ci.yml` and `e2e.yml` already run `supabase start` on GitHub runners, so this is known to work there. Fail if `versions.json` is missing a version. Load with `psql --single-transaction -v ON_ERROR_STOP=1 -f roles.sql -f schema.sql -c 'SET session_replication_role = replica' -f data.sql -f migrations.sql -f extras.sql`; psql errors to the temp folder, only counts and table names reach the log. Then `update cron.job set active = false`. Then the round-trip check, per table: `COPY (select <columns from the COPY header> from <table>) TO STDOUT` from the restored DB, sorted, must equal the sorted lines of that table's COPY block in `data.sql` (column list, not `*`). Row counts against `manifest.json`, and sequence values. Structure check: triggers, policies, functions and cron jobs of the restored DB equal the manifest's list from live. Any difference fails the run and names the tables. Write the result (pass/fail, table count, failed table names, no data) into `manifest.json` as `restore_test`.
-   - `tar | gzip | gpg --encrypt -r <master> -r <restore-test>` to `full-YYYY-MM-DD.tar.gz.gpg`, with both full fingerprints written in the workflow (not read from a file anyone could swap); then `gpg --list-packets` must show exactly those two keys. Plain files are written only to the runner's temp folder and deleted at the end; no `set -x`; no `actions/upload-artifact` of anything unencrypted.
-   - Upload as a release asset (tag `YYYY-MM-DD`) plus `manifest.json`. **Never delete a release** (Q2, R2). Release assets are limited to 2 GiB per file (from memory; check once).
-   - Last step: fail if `status/pc-check.json` (Phase 3) is older than 3 days or says fail.
-5. On any failure: open (or comment on) one issue "Backup failing" in the backups repo with `GITHUB_TOKEN` (author github-actions[bot]; an issue opened with his own token would not notify him), **assigned to `reachjvc`** (R3). Fixed text plus the run link, never log lines. Close it on the next green run.
+Acceptance: the four hashes match on `main`; `git log -p` of the commit shows no secret, no dump, no private path beyond `~`-relative ones.
 
-Acceptance:
-- Manual run green; release asset and manifest present; its size and the manifest's counts look like live (99 public tables on live 2026-11-21, 98 in the dump without `embeddings_test`; 9 auth users); `restore_test` says pass.
-- The Actions log contains no row data, no password, no email address (search it).
-- B8 settled: `roles.sql` either dumps, or the fallback is in place.
-- Job time noted (expected ~10-15 min with `supabase start`; ~31 runs a month must stay well inside the ~2,000 free minutes, B7).
+### Phase 2: the new master key (owner)
 
-### Phase 3: fetch, keep, and prove the copy opens (depends on: 2)
+He opens his own terminal (not a Claude window), makes a password-manager entry
+"daygame backup master key" with a generated passphrase, then runs:
 
-The PC no longer runs a database for this (R1). It proves that the encrypted
-copy we hold opens and is byte-for-byte what the GitHub job tested.
+```
+cd ~/projects/daygame-coach && echo "d79da0cee50651ef6a03f682aaee533115ac96c42586a41f0119494cff2a5aa0  scripts/backup/owner/make-master-key.sh" | sha256sum -c && bash scripts/backup/owner/make-master-key.sh
+```
 
-1. Make the restore-test key: `gpg --quick-gen-key "daygame restore test" ed25519 sign never` + encryption subkey, no passphrase, in a separate keyring `~/.config/daygame-backup/restore-gnupg/` (mode 700). Export its public key to the backups repo. Do this before Phase 2 step 2.
-2. New script `scripts/backup/full-pc-check.sh` in this repo (no secrets in it; config from `~/.config/daygame-backup/config`). It:
-   - fails if the newest release is older than 30 hours (a dropped or blocked GitHub run must not let it re-check an old copy and say ok);
-   - downloads the newest release asset and its `manifest.json` with `gh release download`, checks the asset's sha256 against the release;
-   - fails if the manifest's `restore_test` is not pass;
-   - copies the asset into `~/dg-backups/full-nightly/` and `OneDrive/daygame-backups/full-nightly/` (temp name + rename, mode 600; nothing is deleted, Q2);
-   - decrypts with the restore-test keyring into a temp folder (mode 700, `trap` deletes it on any exit), checks every file's sha256 against `manifest.json`, then deletes the plain files;
-   - refreshes `versions.json` (live's gotrue, storage, postgres versions from `supabase link` in a scratch folder, as in B6) and commits it to the backups repo via `gh api` only when it changed, so the next runner restore uses live's versions;
-   - R6: saves live's auth settings (`GET /v1/projects/vcjzbmtcgmjrvvklzqaq/config/auth` with the CLI's existing login on this PC) with every field whose name contains `pass`, `secret`, `key` or `token` removed, encrypted to the master key, into `~/dg-backups/full-nightly/auth-config-YYYY-MM-DD.json.gpg` (email server, redirect URLs, templates: none of this is in the dump). The token never goes to GitHub;
-   - writes `status/pc-check.json` (date, asset, pass/fail, reason, no data) to the backups repo via `gh api`;
-   - on fail, runs the alarm (Phase 4 step 2).
-3. systemd user timer `full-pc-check.timer`, 04:30, `Persistent=true` (catches up after the PC was off). Light job (download + decrypt, seconds), no load gating needed.
-4. Public repo `.gitignore`: ignore `*.sql` outside `supabase/migrations` and `tests` (the CLI writes next to the nearest `supabase/` folder, not the current folder; a dump must never be committable).
+GnuPG asks 3 times (new, again, export). He copies `master-SECRET-<date>.asc`
+to a USB stick and pastes the 3 printed lines (`MASTER_FPR`, `MASTER_SUBKEY`,
+`SECRET_FILE_SHA256`) to Claude. **[tested on a copy]** with a fake prompt
+program; the real terminal prompt (pinentry-curses, installed) **[from memory, untested]**.
+Old-style key preferences, so copies open in GnuPG 2.2 too **[tested on a copy]**,
+[docs](https://raw.githubusercontent.com/gpg/gnupg/master/doc/gpg.texi).
 
-Acceptance: one green run end to end; status file committed; `~/dg-backups/full-nightly` and the OneDrive folder have the file and the auth settings file; no plain `.sql` left anywhere after the run (`find /tmp ~/.cache -name '*.sql' -newer <start>`).
+### Phase 3: the private backups repo (Sonnet 5.5, high; depends on 1, 2)
 
-### Phase 4: failures reach him (depends on: 2, 3)
+1. `gh repo create reachjvc/daygame-backups --private` (no `--clone`). Clone over SSH to `~/.cache/daygame-research/backups/daygame-backups`, outside the public repo. Never run `gh auth refresh` or `gh auth login`; the HTTPS token has no `workflow` scope (M15). [docs](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps); SSH push of workflow files **[from memory, untested]**.
+2. First commit: `README.md` only. Push. Its sha is `ANCHOR_SHA`: every release tag points there, because GitHub's token may refuse to tag a commit that changes workflow files. [docs](https://docs.github.com/en/rest/releases/releases#create-a-release), untested here.
+3. `gh api -X PUT repos/reachjvc/daygame-backups/immutable-releases`, then `GET` must answer 200 (M5). [docs](https://docs.github.com/en/rest/repos/repos#enable-immutable-releases); Free-plan private repo: likely, not stated outright.
+4. Second commit: the drafts' `bin/`, `local/config.toml`, `.github/workflows/nightly.yml` **without its two `schedule:` lines** (so no nightly run, and no alarm, fires before Phase 7 turns it on), and `keys/master-public.asc` copied from `<ONEDRIVE_DIR>/keys/master-public.asc` (the PUBLIC file only). Fill the four `FILL-IN-AT-BUILD` values: `MASTER_FPR` and `MASTER_SUBKEY` exactly as the owner pasted them; `ANCHOR_SHA`; `SUPABASE_PUBLIC_KEY` from `grep -m1 '^NEXT_PUBLIC_SUPABASE_ANON_KEY=' .env.local | cut -d= -f2-` (never open `.env.local`: it also holds service keys). Check `gpg --show-keys` of the public file prints `MASTER_FPR`. Push over SSH.
+5. `actionlint` on the pushed workflow; `grep -c FILL-IN-AT-BUILD` = 0.
 
-1. Session-start line (`.claude/settings.json` hooks): `backups: last copy <date>, check <date> ok` or `backups BROKEN since <date>: <reason>`. Reads the backups repo's newest release and status file with `gh` (time-boxed to 5 s; prints "backups: status unknown" when offline, never blocks the session). BROKEN also when the newest copy is older than 30 hours, the PC check older than 3 days, or "unknown" has lasted 2 days. This line is for Claude sessions; it is not the alarm for him (R3).
-2. Alarm for him, from the PC (R3): when the PC check fails, or sees BROKEN from the GitHub side, it creates one Google Calendar event for today, "Backups broken: tell Claude", with a reminder, using the same headless `claude --model haiku` call pattern as `~/.cache/daygame-research/tools/lag_push.sh` (only the calendar tool allowed). At most one event per day; none once green again.
-3. Alarm for him, from GitHub: the issue from Phase 2 step 5, assigned to `reachjvc`. Check once that assignment sends him an email (his notification settings; fresh GitHub docs). If it does not, say so in the report; do not change his settings.
-4. The two alarms cover each other: PC off for days, the GitHub side goes red (3-day rule) and emails; GitHub broken, the PC side sees no new copy (30-hour rule) and makes the calendar event.
+Acceptance: `gh repo view --json visibility` = PRIVATE; immutable releases on; no secrets set yet (`gh secret list` empty).
 
-Acceptance: break it on purpose (Phase 5, V7) and see: issue assigned to him, calendar event created, session line says BROKEN. Then fix and see the issue closed and no new event.
+### Phase 4: the backup login (owner; depends on 3)
 
-### Phase 5: second agent attacks it (depends on: 1-4)
+In his own terminal:
 
-Run by a different agent with the Part B prompt. The checks are listed below.
+```
+cd ~/projects/daygame-coach && echo "b37f540737444da72721d81dace56233ebd92889c78552f028ae40bb09e38a92  scripts/backup/owner/set-reader-login.sh" | sha256sum -c && bash scripts/backup/owner/set-reader-login.sh
+```
 
-### Phase 6: write it down (depends on: 5)
+It prints two OK lines and DONE. One atomic statement creates or renews
+`backup_reader` (LOGIN, BYPASSRLS, connection limit 3, `pg_read_all_data`,
+read-only by default, 20 min statement limit) from a SCRAM verifier; the
+password goes only to the GitHub secret. **[tested on a copy]** (local CLI path;
+the CLI refuses several statements in one call, hence one `do` block). On live
+through `--linked` (Management API) **[from memory, untested]**: it is the first
+live test, and the next phase proves it. Log exposure: only the verifier can be
+logged. [Postgres: a SCRAM string "is stored as-is"](https://www.postgresql.org/docs/17/sql-createrole.html).
 
-- `docs/runbooks/backups.md`: restore steps in plain words (whole DB into a fresh Supabase project; one account's life plan via the existing script), where the keys are, what to do if this PC is gone (master private key on OneDrive + passphrase in his password manager). Also what the copy does NOT hold and where each lives: auth settings (email server, redirect URLs), vault secrets (owner's copy), uploaded files (none yet), and that everyone is logged out after a restore.
-- Moving to an EU project later (infra memory, proposed): Phase 1 on the new project, update one secret, run once. The restore test is also the dress rehearsal for that move.
-- Keep `plan-backup.sh` running (finer, per-account restores). Do not delete any backups, old or new (only the owner decides removals, Q2).
-- Update the memory notes `live-db-backup-method` and `infra-decision-2026-11-21`.
+### Phase 5: first runs (Sonnet 5.5, high; depends on 4)
 
-## Verification checks for the second agent (Phase 5)
+All by `gh workflow run nightly.yml -R reachjvc/daygame-backups -f mode=<m> -f alarm=false`.
 
-Each check says what proves it. Any failure means "not done".
+1. `mode=selftest`: all probes pass (connected as `backup_reader` over the session pooler with TLS and SCRAM required, reads `auth.users`, read-only by default, 6 write probes refused). If probe 0 fails with "authentication method requirement", the pooler does not offer SCRAM to clients: remove `-e PGREQUIREAUTH=scram-sha-256` from the workflow (keep `PGSSLMODE=require`), note it in the Status log, rerun. **[tested on a copy]** for the probes; pooler + TLS + SCRAM **[from memory, untested]**.
+2. `mode=normal`: green. One release `b-<UTC stamp>-r<run id>` titled PASS with `copy-*.tar.gz.gpg` and `manifest-*.json`; manifest `verdict` pass; its `tables` count equals live's base tables minus the fixed exclusions (count live at that moment, read-only). Note the job time (estimate 10-15 min, **[from memory, untested]**; must stay well inside the ~2,000 free minutes, [docs](https://docs.github.com/en/billing/concepts/product-billing/github-actions)).
+3. Log scan by script only (M14): `gh run view <id> --log -R …` piped into `grep -c 'bkr_'` (must be 0) and `grep -cE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[a-z]{2,}'` (must be 0 apart from GitHub's own lines; print only counts and, if any, the step name). Never print matches.
+4. `mode=break-compare`: run red, `round-trip` fails naming the table a row was removed from; no release made. `mode=break-size`: red, `min-sizes`/`table-list`/`size-vs-last-night` fail; no release. **[tested on a copy]** (check logic); on GitHub untested.
+5. A second `mode=normal` run: green; `size-vs-last-night` compared with run 2.
+
+### Phase 6: this PC (Sonnet 5.5, high; depends on 5)
+
+1. Config additions (`~/.config/daygame-backup/config`): `MIRROR_DIRS="$HOME/dg-backups/full-nightly <ONEDRIVE_DIR>/full-nightly"`, `MASTER_KEY_FILE=<ONEDRIVE_DIR>/keys/master-SECRET-<date>.asc`, `MASTER_KEY_SHA256=<the owner's SECRET_FILE_SHA256 line>`, `ONEDRIVE_LIMIT_MB` (4000 for the free 5 GB plan; set from his answer), `MIRROR_LOG=$HOME/dg-backups/full-nightly/mirror.log`. Install the two systemd units, `systemctl --user enable --now full-mirror.timer`, then `systemctl --user start full-mirror.service` once: log says `ok`, `gh variable get PC_STATUS -R reachjvc/daygame-backups` says `ok <today> copies=<n>`. **[tested on a copy]** (fake `gh`, fake folders); real OneDrive path **[from memory, untested]**.
+2. Lock new life-plan copies to the new key: `gpg --import <ONEDRIVE_DIR>/keys/master-public.asc` (public only) and set `BACKUP_KEY_FPR=<MASTER_FPR>` in the config. Next morning: `gpg --list-packets` of the new nightly file shows `MASTER_SUBKEY` (exit code 2 without the secret key is expected). Old files stay as they are.
+3. **Only after D1 yes:** delete lines 80-94 of `scripts/backup/plan-backup.sh` (the `# Retention:` comment and its Python block; the `done` and the final `echo` stay). Run `bash -n`; commit `--only`, ship. Deletes no file.
+4. **Only after D5 yes:** for each plain item in `~/dg-backups` (`live-2026-11-21/`, `alpha-live-test-account-2026-11-09/`, plain `*.json`), `tar | gzip | gpg -r <MASTER_FPR> -r <a throwaway key made for this>`; prove each opens with the throwaway key and matches; delete the throwaway key; never delete the plain originals (that is his separate yes).
+
+### Phase 7: the alarm reaches him (Sonnet 5.5, medium + owner; depends on 6)
+
+If he said yes to D2c, he first makes the healthchecks.io check (Period 1 day,
+Grace 14 hours, because scheduled runs here start up to 9 hours late; Account
+Settings: daily reminders on) and runs `gh secret set HC_PING_URL --repo reachjvc/daygame-backups`
+in his own terminal, pasting the ping URL at the hidden prompt.
+[healthchecks.io docs](https://healthchecks.io/docs/signaling_failures/).
+
+1. Claude: `mode=break-compare`, `alarm=true`. Expect: run red; issue "Backups broken" opened by `github-actions[bot]` and assigned to `reachjvc`; healthchecks shows down. [docs: assignment subscribes him](https://docs.github.com/en/subscriptions-and-notifications/concepts/about-notifications), [mobile push](https://docs.github.com/en/subscriptions-and-notifications/get-started/configuring-notifications).
+2. He says whether the email and/or push arrived on his phone, and the healthchecks email. Claude never reads his mail.
+3. Claude: `mode=normal`, `alarm=true`: green, issue closed with a comment, healthchecks up.
+4. Claude: put the two `schedule:` lines back, so `nightly.yml` equals the draft again (apart from the four filled values); push over SSH. The next night's scheduled run is the first one that can alarm him by itself.
+
+### Phase 8: the test-copy drill (owner; depends on 6)
+
+In his own terminal, with the key file from OneDrive (or the USB stick) and the
+newest copy in `~/dg-backups/full-nightly/`:
+
+```
+cd ~/projects/daygame-coach && echo "91a954ccd8ee5d016c156c6909f9b0be630a75b36cce5838296c23abe73346f9  scripts/backup/owner/open-test-copy.sh" | sha256sum -c && bash scripts/backup/owner/open-test-copy.sh <key file> <copy>
+```
+
+It prints `OK: opened; all N files match …` or a FAIL line. Fresh keyring,
+passphrase caching off (a cached passphrase faked a pass in testing).
+**[tested on a copy]** with a fake prompt program. This is V6.
+
+### Phase 9: attack (fresh Opus 5.5, high; depends on 5-8)
+
+A session that built nothing runs the attack prompt at the end against the real
+setup and the checks below. Until it passes, the report says "built, not yet attacked".
+
+### Phase 10: write it down (Sonnet 5.5, medium; depends on 9)
+
+- `docs/runbooks/backups.md` (public): the restore steps from the backups README, without key locations; what a copy does not hold; that everyone is logged out after a restore. Marked "draft" until Phase 9 passes.
+- Memory notes `live-db-backup-method` and `infra-decision-2026-11-21`: point to this plan and the new repo.
+- Stop rule in the runbook: before making any repo of his private, re-check this plan's minute budget (M12).
+
+### Phase 11: hosted drill (only if D6 yes; Sonnet 5.5, high + owner)
+
+He makes the new org (Frankfurt, free plan; stop at any card prompt) and the
+project, so its database password is his alone. Claude writes the exact
+commands; he runs them in his own terminal: decrypt one copy into a temp
+folder (his passphrase), `read -rs PGPASSWORD && export PGPASSWORD` (the new
+project's password, at a hidden prompt), then `restore.sh` with the new
+project's pooler URL **without** a password in it, then delete the temp folder.
+He signs in to a local app pointed at it. Keep the project until he says what
+to do with it. **[from memory, untested]**
+
+## Verification checks (Phase 9)
+
+Each check names its proof. Any failure means "not done". Tests that change
+something use temp folders or test switches, never the real copies.
 
 | ID | Check | Pass when |
 |---|---|---|
-| V1 | The copy is complete | Table list in `manifest.json` equals live's base tables in public, auth, storage, minus exactly: `public.embeddings_test`, `auth.schema_migrations`, `storage.migrations`, `storage.buckets_vectors`, `storage.vector_indexes`, the 5 short-lived auth tables (Phase 2). `cron.*`, `vault.*`, `net.*` are never in `data.sql`; cron jobs travel in `extras.sql`, vault secrets only in the owner's copy |
-| V2 | The copy is exact | Tonight's manifest says `restore_test` pass. Then, in a manual run with a test switch, edit one row inside the runner's restored DB before the compare step: the run must FAIL and name that table |
-| V3 | The login cannot write | Inserts, updates, deletes, DDL as `backup_reader` all refused (inside `begin … rollback`) |
-| V4 | Nothing leaks in public | Public repo has no new secret, no dump file, no key private part (`git log -p` of the change); backups repo is private (`gh repo view --json visibility`); Actions logs have no row data, password or email |
-| V5 | GitHub cannot open it | `gpg --list-packets` on the asset shows exactly the two expected key IDs; no private key in any repo secret (`gh secret list`) |
-| V6 | It opens without this PC | On a clean machine or container: import only the master private key from OneDrive, type the passphrase (ask the owner, never see it), decrypt one asset. Owner step; the agent prepares it |
-| V7 | Failures reach him | Point the secret at a wrong password, run the workflow: run red, issue opened and assigned to reachjvc, email sent (ask him or check his notification settings), PC check makes the calendar event, new session line says BROKEN. Restore the secret, rerun: green, issue closed, delete the test calendar event |
-| V8 | A corrupt file is caught | Flip one byte of a downloaded copy and run the PC check on it: FAIL (sha256 or gpg) |
-| V9 | A half-empty dump is caught | Run the dump job once with a test switch that drops `data.sql` to one table: the 50% size check fails it |
-| V10 | PC off for days | Stop the timer, move `status/pc-check.json`'s date back 4 days: the nightly workflow goes red and emails. Re-enable: catches up |
-| V11 | Nothing deleted | No code path deletes a release, a file in `~/dg-backups` or in OneDrive (`grep` the workflow and scripts for `release delete`, `rm` outside temp folders, `find -delete`) |
-| V12 | Live untouched | Live row counts before and after the whole test session differ only by normal use; no new tables, roles other than `backup_reader` |
-| V14 | Structure survives | In tonight's restored copy: trigger `on_auth_user_created` exists, the 3 cron jobs exist and are inactive, `supabase_migrations.schema_migrations` matches live, policy count matches live |
-| V15 | No plain data left, no password in logs | After a PC check (also one killed halfway): no plain files in temp folders, no row text in `journalctl --user`; Actions log has no password (search for a known prefix) and no row data |
-| V13 | Whole-DB restore into a real fresh Supabase project | Only if he said yes to Q6: load one copy into a free project in a new direct org (Frankfurt, no card; stop if any card prompt appears), sign in as his account on a local app pointed at it. Keep the project until he says what to do with it |
+| V1 | The copy is complete | The newest manifest's `table-list` passed, and an independent read-only catalog query on live (base tables in public, auth, storage, supabase_functions minus the fixed exclusions in `bin/catalog.sql`) equals the manifest's `tables` keys |
+| V2 | The copy is exact | A `break-compare` run is red naming a table; tonight's manifest says `round-trip` pass |
+| V3 | The login cannot write | `selftest` run passes; reading `selftest.sh` shows every probe touches zero rows |
+| V4 | Nothing leaks in public | Public repo history of this work: no secret, no dump, no private key, no `PGPASSWORD="…"`; backups repo private; log scan counts 0 |
+| V5 | GitHub cannot open a copy | `gpg --list-packets` on a release asset (empty keyring) lists exactly `MASTER_SUBKEY` + one key in no keyring; `gh secret list` shows only `BACKUP_DB_PASSWORD` (+ `HC_PING_URL`) |
+| V6 | It opens without this PC's keys | Phase 8 result |
+| V7 | Failures reach him | Phase 7 record, with his own words that it arrived |
+| V8 | A bad download or changed local copy is caught | Mirror with a temp config, `DG_GH` set to a fake `gh` and `DG_STATE_DIR` to a temp folder (so the real `PC_STATUS` is not touched): a flipped byte in a fetched file gives `digest-mismatch`, in a stored file `local-copy-differs`; real folders untouched |
+| V9 | A half dump is caught | `break-size` run red |
+| V10 | PC off for a week | Set `PC_STATUS` to `ok <date 8 days ago> test`; a manual run (`alarm=false`) fails `pc-copy`; rerun the mirror; the variable is back |
+| V11 | Nothing is deleted | No code path deletes a copy: search workflow and scripts for `os.remove`, `unlink`, `rmtree`, `release delete`, `--clobber`, `-X DELETE`, `find … -delete`, `rm` outside temp folders; immutable releases on; `plan-backup.sh` has no retention block (after D1) |
+| V12 | Live untouched | Live row counts before and after differ only by normal use; the only new role is `backup_reader` |
+| V13 | Hosted drill | Only if D6 yes |
+| V14 | Structure survives | Tonight's manifest: `structure` and `no-orphan-rows` pass; `extras.sql` holds `on_auth_user_created` and the 3 cron jobs |
+| V15 | No plain data left, no secret in logs | Runner deletes its plain folder; this PC holds only locked files; mirror journal shows only codes; log scan 0 |
+| V16 | Owner scripts unchanged | sha256 of the three owner scripts and the mirror equal "Reference files" |
+| V17 | A red night does not block the next | After a failing run, the next normal run is green and compares with the failed night's manifest |
 
-## Second review changes (2026-11-22, proposed)
+## Findings of the 2026-11-22 check: what changed
 
-| # | Problem found | Change |
+| ID | What changed, and where (or why rejected) |
+|---|---|
+| C1 | New master key made by him (`make-master-key.sh`, Phase 2): passphrase only in GnuPG's prompt, saved in his password manager; private key only in a passphrase-protected file on OneDrive + USB, never on this PC; all new copies locked to it; old copies stay on the old key (D4). The mirror checks daily that the key file is there and unchanged. The drill (Phase 8) comes before the attack. |
+| H1 | D1 is first in his list. Phase 6 step 3 removes lines 80-94 only after his yes. V11 search widened (`os.remove`, `unlink`, `rmtree`, `--clobber`, API DELETE). The mirror alarms when release or local counts drop (tested). |
+| H2 | His script sends only a SCRAM verifier, as one atomic statement through `supabase db query --linked -f`, never a migration (D7). The password never leaves his script's memory except into GitHub's secret store. Rejected: the `set local log_statement …` guard (needs rights the `postgres` role lacks on hosted, from memory; unnecessary when only a verifier can be logged). |
+| H3 | Dump scripts generated offline with a fake address, `export PG…=` lines and `--role "postgres"` removed, `: "${PGPASSWORD:?}"` guard (tested). The build copies them; it never runs `--dry-run` against live. V4 searches for `PGPASSWORD="`. |
+| H4 | Order: dump → checks → restore test → seal → store, always (a failed check is stored, title FAIL, marked pre-release), then the run turns red. Baselines are last night's manifest whatever its verdict, so a new normal heals after one red night (no accept file). Live's service versions read nightly by the runner, pinned fallback. Vault changes only recorded. Uploaded files stay red every night on purpose (a real gap). |
+| H5 | Build prompt rewritten (below): no first-run dependency on missing files; build runs use `alarm=false`; V7 done by a test switch, not by breaking the password; runbook "draft" until the attack passes; D6 is his decision with default skip; his real steps listed; red `main` handled. |
+| M1 | Alarm without any AI: an `alarm` job (`needs: backup`, `if: always()`) opens an issue assigned to him by the bot, comments every red night, closes when green; healthchecks.io dead-man (D2c) covers runs that never start. Calendar/Claude channel and session line cut. He confirms receipt once (Phase 7). |
+| M2 | No "latest release": releases sorted by `createdAt`; the PC mirrors every release. Row counts vs live dropped; table list compared instead. PC copy red only after 7 days; PC problems reach GitHub through `PC_STATUS`. |
+| M3 | Restore-test key dropped. The runner's throwaway key proves the file opens; the PC checks GitHub's sha256. The master key is the only lasting key. |
+| M4 | Said in "In plain words". Password only in the dump and selftest steps; `PGSSLMODE=require` + `PGREQUIREAUTH=scram-sha-256`; `persist-credentials: false`; token only in the prepare, publish and alarm steps; no third-party actions; Postgres image by digest. Rejected: every service image by digest (live's auth/storage versions change; they come from Supabase, which already holds the live data) and blocking the containers' internet (untestable here, more parts, the runner itself is online). `verify-full` with Supabase's CA: proposed later, untested on the pooler. |
+| M5 | Unique tag per run; no `--clobber`; GnuPG and the mirror never overwrite (tested); immutable releases; count drops alarm. A whole release can still be deleted with this PC's token: the USB copy (his) is the only copy out of reach. |
+| M6 | `.gitignore` with allowlist (Phase 1). No dump ever runs on this PC; it holds only locked files. Leftover searches only in the script's own temp folders. |
+| M7 | Vault: names in every manifest, D3. README and runbook list what to set by hand (vault, SMTP key, auth settings, app env) and "check a reminder arrives". Scripts and README travel inside every locked copy (`tools/`). Auth-settings export cut (see "Cut"). Realtime publication is already in `schema.sql` (tested), not a gap. |
+| M8 | Read-only by default, 20 min statement limit, 5 min idle limit; all probes touch zero rows; the probe script refuses any login but `backup_reader` (tested both ways). Remaining, accepted: someone holding the password could run `prune_error_reports()` inside an explicit read-write transaction, and could read login hashes in `pg_authid`. |
+| M9 | `restore.sh`: refuses the live ref and any non-empty target, one transaction (tested). The nightly test uses it, so the real path runs every night. |
+| M10 | `--lock-wait-timeout=60s` in every dump, step timeouts, job limit 80 min (not 360), one concurrency group. |
+| M11 | `live-size-limit` (150 MB, red, copy still stored); bytes per table in the manifest. Rejected: leaving big new tables out automatically (more parts). Remaining: if he ignores the alarm for weeks, transfer grows. |
+| M12 | His billing look (Phase 0). Stop rule in the runbook (Phase 10). |
+| M13 | His OneDrive look sets `ONEDRIVE_LIMIT_MB`; the mirror alarms above it; key on USB too. Remaining: the mirror cannot see whether OneDrive is actually uploading. |
+| M14 | Log scans by script, counts only; the password has a public prefix `bkr_` so it can be counted without knowing it; no helper is ever given a secret or a user's email. |
+| M15 | SSH clone and push, outside the public repo folder; never `gh auth refresh/login`; `ship.mjs` only for the public repo. |
+| L1 | `auth.mfa_amr_claims` and `auth.saml_relay_states` left out (live: both point at left-out tables); orphan check per foreign key; structure compare limited to `public` + our triggers on auth/storage + cron + realtime + storage policies; V2/V9 switches are workflow inputs (all tested). |
+| L2 | Key made with old-style preferences; tested open in GnuPG 2.2.27. |
+| L3 | D5; Phase 6 step 4. |
+| L4 | (a) recipients compared by subkey id, `--list-packets` exit 2 tolerated (tested); (b) key commands live in the owner script (tested); (c) one wording: the password is the only DB secret, host and user sit in the workflow; (d) counts compared with live at run time; (e) auth file dropped; (f) the password never enters Claude's shell; (g) no mode rule for OneDrive; (h) he signs in himself in D6. |
+
+### Earlier rounds, still open before this round
+
+| Item | Now |
+|---|---|
+| G3 vault values | D3 |
+| G15 uploaded files | Red every night if any appear (by design) |
+| B9 things a dump never holds | README "Not in a copy" + manifest vault names |
+| R4/Q6 hosted drill | D6, Phase 11 |
+| R6 auth settings | Cut; by hand after a restore |
+| Q1, Q5 | D8 |
+| Round-2 V6 after the build | Phase 8, before the attack |
+
+## New problems this round found in its own design
+
+| # | Problem | Fix (tested unless marked) |
 |---|---|---|
-| R1 | Nightly restore test on the PC needed a full database stack at night, Docker volumes with plain data, load gating, and the PC being on | Restore test runs in the GitHub job on the plain files before encrypting (the main repo's CI already runs `supabase start` on runners). The PC only checks that its encrypted copy opens and matches the tested files (Phase 2, 3) |
-| R2 | Pruning old copies (old Q2) is deleting real data, which only he decides | Nothing is deleted until he picks a rule (Q2, V11, Part 2) |
-| R3 | The main alarm was the session-start line, which only Claude reads; "main is red" has shown there for three weeks | Issue assigned to him (email) + Google Calendar event from the PC; the session line stays as a third channel (Phase 4) |
-| R4 | The real disaster path (restore into hosted Supabase) was optional and never tested | One drill into a free hosted project, if he says yes (Q6, V13) |
-| R5 | The vault check compared against an "owner's copy" that does not exist | Compare with the previous night's manifest (Phase 2) |
-| R6 | Auth settings (email server, redirect URLs, templates) were in no copy | Nightly redacted, encrypted export on the PC (Phase 3) |
-| R7 | No place for the build session to record problems | "Status log" below |
-| R8 | The plan named no model per phase (his rule 2026-11-18) | Models line under "Phases" |
+| N1 | The CLI refuses several SQL statements in one call | One `do` block |
+| N2 | `postgres` may not update `cron.job` | `cron.alter_job(...)` |
+| N3 | Re-adding the realtime table broke the load; it is already in `schema.sql` | Removed from extras |
+| N4 | Trigger text without schema names | Empty `search_path` in extras and catalog |
+| N5 | `auth.saml_relay_states` points at a left-out table (live probe) | Left out |
+| N6 | The dump container wrote root-owned files | `docker run --user` |
+| N7 | The fallback manifest listed itself | Written outside the folder first |
+| N8 | GnuPG's passphrase cache made a wrong passphrase "pass" | Drill script turns caching off |
+| N9 | A GitHub hiccup in Prepare would skip the dump | Prepare's GitHub calls cannot fail the step |
+| N10 | One bad local file would stop the PC fetching newer copies | Mirror notes the problem and keeps going |
+| N11 | Nobody could read why a night failed (errors only inside the locked copy) | Known phrases only (connection, auth, timeout, "permission denied for table x"), never error text |
+| N12 | The V2 switch edited `error_reports`, which may be empty on live | Removes one row from the first table with rows |
+| N13 | Owner scripts could be run inside a Claude session, or edited later to leak | Absolute refusal inside Claude; he checks each script's sha256 before running it |
+| N14 | The key script's default folder held his Windows user name (public repo) | Folder read from the private config |
+| N15 | GitHub's token may refuse to tag a commit that changes workflows | Tags point at the first commit (untested) |
+| N16 | Backups locked to a key Claude made itself would look fine | `MASTER_FPR` only from his own message; Phase 8 drill proves his passphrase opens them |
+| N17 | The nightly schedule would start, fail and email him while the build is half done | Workflow pushed without its schedule; schedule added in Phase 7 step 4 (plan step, untested) |
+| N18 | Testing the mirror (V8) would overwrite the real `PC_STATUS` | V8 runs with a fake `gh` and a temp state folder |
+| N19 | The hosted drill and the README put a database password in a command line | Hidden prompt into `PGPASSWORD`; he runs those commands himself |
+
+## What can still go wrong
+
+- Up to about a day of changes lost; GitHub starts scheduled runs late (measured on this account: up to 9 hours).
+- GitHub's runner holds the plain data during the job; Supabase's images (by tag, except Postgres) run beside it.
+- This PC's GitHub token can delete whole releases; the PC user can delete local and OneDrive copies. Alarms fire; only his USB copy is out of reach.
+- No passphrase and no key file: nothing opens. Paper copy of the passphrase is his choice.
+- The mirror cannot see whether OneDrive uploads; OneDrive placeholders could make the key-file check fail falsely.
+- A migration shipped during the dump can make one night falsely red (table list or structure).
+- A failed upload loses that night's copy (red, alarmed); no retry.
+- Untested until built: GitHub runner behaviour, immutable releases on this plan, SSH push of the workflow, the pooler with TLS + SCRAM, the live login statement through the Management API, the health and version endpoints with the anon key, notification delivery to his phone.
 
 ## Status log
 
+- 2026-11-24: round 3 written (Opus 5.5). Drafts tested on throwaway copies (see "Reference files"). Nothing built; nothing written to live.
+
 (The build session appends one dated line per phase: done / blocked, and why.)
 
-## Part A findings (2026-11-22)
+## Build prompt (Sonnet 5.5, effort high)
 
-Silent failures and leaks found by the check, each folded into the phases above.
+Start: `claude --model sonnet` (Sonnet 5.5), effort high, in `/home/jonaswsl/projects/daygame-coach`.
 
-| # | Risk | Fix (where) |
-|---|---|---|
-| G1 | Signup trigger on `auth.users` missing from every dump | `extras.sql` + structure check (P2, P3, V14) |
-| G2 | Cron jobs missing; one exists only on live | `cron.schedule` lines in `extras.sql` (P2) |
-| G3 | Vault secrets (push keys) in no backup | Owner-held encrypted copy, his decision; nightly name/date check (P2) |
-| G4 | Migration history missing, replay risk | `migrations.sql` (P2) |
-| G5 | Dropped or blocked GitHub run, PC re-tests old copy | 30-hour age rule (P3, P4) |
-| G6 | Round trip proves reload, not completeness | Catalog vs dump list, counts vs live (P2) |
-| G7 | Failed dump leaves a small non-empty file | Exit codes, minimum sizes (P2) |
-| G8 | Password printed by `--dry-run`, unmasked inside a URL | Separate password secret, add-mask (P2) |
-| G9 | CLI writes next to nearest `supabase/` folder; `.sql` not git-ignored | Absolute paths, temp folder, `.gitignore` (P2, P3) |
-| G10 | Restore errors quote rows into the journal | Errors to temp, counts only (P3) |
-| G11 | Crashed test leaves plain data in Docker volumes | Runner is thrown away after each job (R1); PC check cleans its temp folder on exit (P3, V15) |
-| G12 | Master key never checked nightly | Pinned fingerprints, `--list-packets` (P2) |
-| G13 | Leaked copy would hold live login tokens | Leave out short-lived auth tables (P2) |
-| G14 | Third-party actions run with the secret | None used, image by digest (P2) |
-| G15 | Uploaded files never backed up | Fail when `storage.objects` > 0 (P2) |
-| G16 | Restored copy runs the every-minute job | Deactivate cron after load (P3) |
-| G17 | "Status unknown" forever | BROKEN after 2 days (P4) |
-| G18 | Wait while gaming has no limit | No longer needed: no heavy job on the PC (R1) |
+> You build the database backups exactly as `Plans/database-backups.md` says. Read the whole plan and CLAUDE.md first. Do Phases 1, 3, 5, 6, 7 (your part) and 10, in that order, and nothing the plan does not list. Phases 0, 2, 4, 8 and his part of 7 are the owner's; Phase 9 is another session's; Phase 11 only if the Status log records his yes to D6.
+>
+> Rules:
+> 1. Never create, see, print, store or move a password, passphrase or private key. Never run anything in `scripts/backup/owner/` (they refuse inside Claude anyway). Never open, copy, hash by hand or upload any `master-SECRET-*` file; only the mirror script hashes it. Never open `.env.local`; get the anon key only with the exact `grep` in Phase 3 step 4. `MASTER_FPR`, `MASTER_SUBKEY` and `SECRET_FILE_SHA256` come only from the owner's own message.
+> 2. Copy the drafts from `~/.cache/daygame-research/backups-review/r3/drafts/` byte for byte. Before copying, check `sha256sum ~/.cache/daygame-research/backups-review/r3/drafts-r3.tar.gz` equals the plan's value. If a draft must change, stop and write why in the Status log; do not change an owner script at all.
+> 3. Live database: no writes of any kind; read-only SELECTs only, through the linked folder named in `~/.config/daygame-backup/config`.
+> 4. Delete nothing: no release, tag, backup file, OneDrive file or plain copy. `rm` only inside temp folders you made. Never `--clobber`. Never `gh auth refresh` or `gh auth login`; push the backups repo over SSH from `~/.cache/daygame-research/backups/daygame-backups`.
+> 5. Every workflow run you start uses `-f alarm=false`, except the two runs in Phase 7. Push `nightly.yml` without its two `schedule:` lines in Phase 3 and put them back only in Phase 7 step 4.
+> 6. Log scans only by script, printing counts (Phase 5 step 3). Never give a subagent a secret, a log excerpt or a user's email.
+> 7. No spending. Any card prompt or paid plan: stop and tell the owner.
+> 8. Public-repo files: `git commit --only <paths>`, ship with `node scripts/ship.mjs`. If the session-start line says main is red, find who broke it (`gh run list`, `git log`) and name it in the Status log; do not fix unrelated code; your ships wait until main is green.
+> 9. When a phase needs the owner, append the Status log line, tell him in plain words exactly what to run or look at (the plan's commands, with the sha256 check), and end your turn. Continue when he answers.
+> 10. If something is not covered by the plan, or a step fails twice, stop that step, write it in the Status log, and do not improvise.
+> 11. Phase 6 step 3 only after the Status log records his yes to D1; step 4 only after D5.
+>
+> At the end, report in plain words: what is built, what each acceptance check showed, what waits for him, and "built, not yet attacked" until Phase 9 passes. Never call it safe or final.
 
-## Part 2: rules for the session that builds it
+## Attack prompt (Phase 9; fresh Opus 5.5, effort high)
 
-- Live DB: only Phase 1's role statements write to it. Every test write goes in `begin; … rollback;`.
-- Never print, log or commit the reader password, a private key, or dump contents. The public repo (`reachjvc/Daygame_coach`) gets only scripts and docs.
-- Plain-text dumps live only in temp folders that the script deletes, and in `~/dg-backups` with mode 600.
-- No spending. If any service asks for a card or a paid plan, stop and tell the owner.
-- No deleting: no release, backup file or OneDrive file is removed, by code or by hand (Q2).
-- Commit repo files with `git commit --only <paths>` and ship with `node scripts/ship.mjs`.
-- Before calling it done: Phase 5 by a different agent, all of V1-V12, V14, V15 green, then report in plain words.
-
-## Prompts
-
-**Part A: check the plan before building** (paste into a new session):
-
-> Read `Plans/database-backups.md` in /home/jonaswsl/projects/daygame-coach. Do not build anything and do not write to the live database. Check, with fresh sources or read-only probes, every fact the plan marks "from memory" or "unconfirmed", plus: does `supabase db dump` work over the session pooler with a non-superuser role that has `pg_read_all_data` + BYPASSRLS; does a `supabase start` stack accept `data.sql` from a live dump including `auth`; GitHub Free private-repo Actions allowance and release-asset limits today; does GitHub email the owner for issues opened by his own token. List every way the plan could fail silently or leak data, each with a fix. Report: which facts held, which did not, and the changes you propose to the plan.
-
-**Part B: attack the finished setup** (after Phases 1-4 are built):
-
-> Read `Plans/database-backups.md` in /home/jonaswsl/projects/daygame-coach and run every check V1-V12, V14, V15 in its "Verification checks" table against the real setup (backups repo `reachjvc/daygame-backups`, the live DB read-only except `begin … rollback`, the timers on this PC). Do not trust any earlier "done". For V6 prepare the steps and ask the owner to type the passphrase himself; never see it. For each check give pass/fail with the exact command and the output that proves it. Restore every setting you changed for a test (V7, V10) and show that it is back.
+> Read `Plans/database-backups.md` in /home/jonaswsl/projects/daygame-coach. Run every check V1-V17 in its "Verification checks" table against the real setup (private repo `reachjvc/daygame-backups`, the live database read-only, the timers and config on this PC). Trust no earlier "done". Never create, see or move a password, passphrase or private key; never open `master-SECRET-*` or `.env.local`, and never run the scripts in `scripts/backup/owner/`. Workflow runs you start use `-f alarm=false`. Tests that change something use temp folders, a temp config or the workflow's test switches; never touch the real copies. Do not delete anything. For each check: pass/fail, the exact command, and the output that proves it (counts and names only, no row data). Put back every setting you changed (V10) and show it is back. Report in plain words: which checks passed, which failed, and what must change.
