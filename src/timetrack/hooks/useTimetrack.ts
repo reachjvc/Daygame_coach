@@ -219,6 +219,14 @@ export function useTimetrack({ account }: { account?: string } = {}) {
   const pendingLoadNotice = useRef<{ text: string; tone: "info" | "error" } | null>(null)
   /** the running entry already warned about, not a yes/no: a second forgotten timer is news */
   const forgottenWarned = useRef<Id | null>(memory.warnedForgottenId)
+  /**
+   * True while the page has not yet heard from the account since it opened or
+   * woke (`TogglLab` sets it from the sync's check). Its copy may be hours old:
+   * a timer the PC stopped still runs here, and the phone used to open on
+   * "“daygame” has been running for 16 hours" a second before the check
+   * stopped it (owner, 2026-11-25). The warning waits for the check.
+   */
+  const [warningsHeld, holdWarnings] = useState(true)
   const saveFailed = useRef(false)
 
   // --- load once on the client ---------------------------------------------
@@ -758,7 +766,7 @@ export function useTimetrack({ account }: { account?: string } = {}) {
 
   // --- a timer left running for half a day is almost certainly forgotten ---
   useEffect(() => {
-    if (!state) return
+    if (!state || warningsHeld) return
     const forgotten = forgottenTimer(state, nowSec)
     if (!forgotten || forgottenWarned.current === forgotten.entry.id) return
     forgottenWarned.current = forgotten.entry.id
@@ -768,7 +776,7 @@ export function useTimetrack({ account }: { account?: string } = {}) {
       `${what ? `“${what}”` : "A timer"} has been running for ${plural(Math.round(forgotten.hours), "hour")}. Forgot to stop it? Type how long you really worked into the timer, and it ends then.`,
       "error",
     )
-  }, [state, nowSec, pushToast])
+  }, [state, nowSec, pushToast, warningsHeld])
 
   // --- project alerts -----------------------------------------------------
   const entryCount = state?.entries.length ?? 0
@@ -993,6 +1001,8 @@ export function useTimetrack({ account }: { account?: string } = {}) {
     dismissToast,
     idlePrompt,
     resolveIdle,
+    /** the page passes the sync's "checking" here: warnings wait while it is true */
+    holdWarnings,
     pomodoro: {
       phase: pomodoroPhase,
       endsAt: pomodoroEndsAt,

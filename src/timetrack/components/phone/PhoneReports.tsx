@@ -8,6 +8,8 @@
  * and its sheet (presets and a month grid), "Tracked hours" — total, then
  * billable and amount, here only when there are any (one person, no team) —
  * bars per day, and "Group by Projects | Clients" as a donut with its list.
+ * Tags and Descriptions join them here (owner, 2026-11-25): what was typed as
+ * the description, "business", is a slice of its own without a project.
  * "Details" opens the full reports the PC has, every tab kept. ⬇ in the
  * header downloads what is shown, as a CSV. The heat-map is left out: it is
  * Toggl's, nobody asked for it, and it is not cheap on a phone.
@@ -37,6 +39,14 @@ const MONTHS = ["January", "February", "March", "April", "May", "June", "July", 
 
 type Choice = { preset: DatePreset } | { range: DateRange }
 
+type PhoneGroup = "project" | "client" | "tag" | "description"
+const GROUPS: readonly (readonly [PhoneGroup, string, string])[] = [
+  ["project", "Projects", "Project"],
+  ["client", "Clients", "Client"],
+  ["tag", "Tags", "Tag"],
+  ["description", "Descriptions", "Description"],
+]
+
 export function PhoneReports({
   state,
   nowSec,
@@ -55,7 +65,7 @@ export function PhoneReports({
 }) {
   const todayKey = dateKey(new Date(nowSec * 1000))
   const [choice, setChoice] = useState<Choice>({ preset: "this_week" })
-  const [groupBy, setGroupBy] = useState<"project" | "client">("project")
+  const [groupBy, setGroupBy] = useState<PhoneGroup>("project")
   const [sheetOpen, setSheetOpen] = useState(false)
   useBackCloses(sheetOpen, () => setSheetOpen(false))
   const range = "preset" in choice ? presetRange(choice.preset, todayKey, state.user.weekStart) : choice.range
@@ -82,7 +92,7 @@ export function PhoneReports({
   const duration = (seconds: number) => formatDuration(seconds, state.user.durationFormat)
 
   downloadRef.current = () =>
-    downloadFile(`summary-${range.start}-${range.end}.csv`, summaryToCsv(summary, groupBy === "project" ? "Project" : "Client"), "text/csv")
+    downloadFile(`summary-${range.start}-${range.end}.csv`, summaryToCsv(summary, GROUPS.find(([id]) => id === groupBy)![2]), "text/csv")
 
   return (
     <div className="space-y-3">
@@ -132,27 +142,21 @@ export function PhoneReports({
       </section>
 
       <section aria-label="Group by" className="rounded-xl border border-border bg-card p-3">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Group by</h3>
-          <div role="radiogroup" aria-label="Group by" className="flex rounded-lg border border-border p-0.5">
-            {(
-              [
-                ["project", "Projects"],
-                ["client", "Clients"],
-              ] as const
-            ).map(([id, name]) => (
-              <button
-                key={id}
-                type="button"
-                role="radio"
-                aria-checked={groupBy === id}
-                onClick={() => setGroupBy(id)}
-                className={cn("min-h-11 rounded-md px-3 text-xs font-medium", groupBy === id ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
-              >
-                {name}
-              </button>
-            ))}
-          </div>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Group by</h3>
+        {/* four across under the title: beside it they clipped at 390px */}
+        <div role="radiogroup" aria-label="Group by" className="mb-3 mt-2 grid grid-cols-4 rounded-lg border border-border p-0.5">
+          {GROUPS.map(([id, name]) => (
+            <button
+              key={id}
+              type="button"
+              role="radio"
+              aria-checked={groupBy === id}
+              onClick={() => setGroupBy(id)}
+              className={cn("min-h-11 min-w-0 rounded-md px-1 text-xs font-medium", groupBy === id ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
+            >
+              {name}
+            </button>
+          ))}
         </div>
         <DonutChart
           slices={summary.pie.map((slice) => ({ key: slice.key, label: slice.label, color: slice.color, value: slice.seconds }))}

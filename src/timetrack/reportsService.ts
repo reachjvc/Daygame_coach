@@ -266,7 +266,9 @@ export function dimensionValues(
     }
     case "description": {
       const label = entry.description.trim() || "(no description)"
-      return [{ key: `desc:${label.toLowerCase()}`, label, color: null }]
+      // a colour each, as tags have: with none, every slice of the donut was the page's one colour
+      const color = entry.description.trim() ? hashColor(label.toLowerCase(), PROJECT_COLORS) : NO_PROJECT_COLOR
+      return [{ key: `desc:${label.toLowerCase()}`, label, color }]
     }
     case "billable":
       return [

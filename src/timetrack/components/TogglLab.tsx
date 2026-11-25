@@ -231,6 +231,16 @@ export function TogglLab({
   })
   /** the server runs a newer build: reloaded when safe, otherwise offered (Plans/time-log-phone.md 2.2) */
   const newBuild = useNewBuild(sync.pendingCount)
+  /**
+   * The forgotten-timer warning waits until the account has answered since
+   * opening or waking: an old copy's timer may long be stopped on the PC.
+   * The check lands in the same render as the state it brought, so the
+   * render after the hold lifts judges that state, not the old copy.
+   */
+  const holdWarnings = controller.holdWarnings
+  useEffect(() => {
+    holdWarnings(sync.check.checking)
+  }, [holdWarnings, sync.check.checking])
 
   /**
    * Tell every dropdown how much of the bottom of the screen this bar occupies.

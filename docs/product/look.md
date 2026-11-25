@@ -6,10 +6,13 @@ The five rules below are his (kept on 2026-11-19). Each names what holds it.
 
 | Part | Lockup | Colour | Token |
 |---|---|---|---|
-| Life | 10K Days · Life | gold `#f5c542` | `--facet-life` |
-| Quit | 10K Days · Quit | violet `#a78bfa` | `--facet-quit` |
+| Life | 10K Days · Life | orange `#ff6b35` (gold `#f5c542` until 2026-11-25) | `--facet-life` |
+| Quit | 10K Days · Quit | orange `#ff6b35` (violet `#a78bfa` until 2026-11-25) | `--facet-quit` |
 | Dating | 10K Days · Dating | orange `#ff6b35` | `--facet-dating` |
 | Umbrella (no part) | 10K Days Club | orange `#ff6b35`, picked on the brand board (2026-11-19); the mark always wears it | `--facet-brand` |
+
+On 2026-11-25 the owner asked for the orange back on every page, as before the rebrand. The parts keep their own
+tokens, so a part can take its own colour again in one line of `app/globals.css`.
 
 Which addresses belong to which part: `src/shared/facets.ts`. Text on a part colour is `#121212`.
 

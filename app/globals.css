@@ -54,10 +54,13 @@
 
   /* THE THREE PARTS AND THE UMBRELLA (Plans/rebrand-10kdaysclub.md, Phase 3; look C,
      picked 2026-11-19). Each page takes one through [data-facet] below, chosen by its
-     address (src/shared/facets.ts). docs/product/look.md has the rules. */
-  --facet-life: #f5c542;
+     address (src/shared/facets.ts). docs/product/look.md has the rules.
+     2026-11-25 the owner asked for the orange back everywhere: Life was gold (#f5c542)
+     and Quit violet (#a78bfa). The parts keep their own variables, so a part can take
+     its own colour again by changing one line here. */
+  --facet-life: #ff6b35;
   --facet-life-foreground: #121212;
-  --facet-quit: #a78bfa;
+  --facet-quit: #ff6b35;
   --facet-quit-foreground: #121212;
   --facet-dating: #ff6b35;
   --facet-dating-foreground: #121212;

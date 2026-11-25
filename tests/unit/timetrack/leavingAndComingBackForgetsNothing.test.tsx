@@ -110,6 +110,30 @@ describe("the forgotten-timer warning", () => {
     await arrive()
     expect(screen.queryByText(/has been running for/), "the same warning again, for the same timer").toBeNull()
   })
+
+  /**
+   * The copy on this device may be hours old: the PC may have stopped the
+   * timer long ago. The phone opened on "has been running for 16 hours" and a
+   * second later the check stopped it (owner, 2026-11-25). Until the account
+   * has answered, the warning waits.
+   */
+  test("waits until the account has answered", async () => {
+    let answer: (response: Response) => void = () => {}
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise<Response>((resolve) => (answer = resolve))),
+    )
+    store(running(baseState(), "night shift", new Date(2026, 10, 3, 2, 0)))
+    await arrive()
+    expect(screen.queryByText(/has been running for/), "warned from the copy before the check answered").toBeNull()
+
+    await act(async () => {
+      answer(new Response("{}", { status: 401 }))
+      // the hold lifts in the render after the answer lands
+      await new Promise((resolve) => setTimeout(resolve, 20))
+    })
+    expect(screen.getAllByText(/has been running for 13 hours/)).toHaveLength(1)
+  })
 })
 
 describe("what you typed and did not start", () => {
