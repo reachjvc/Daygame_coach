@@ -384,8 +384,8 @@ export function formatMoney(amount: number, currency: string): string {
  * What a duration box teaches next to it (plan D11), and what it says when it
  * cannot read what was typed. One wording, every box.
  */
-export const DURATION_HINT = "90 = 90 min · 1.30 = 1 h 30 · 1.5 = 1 h 30"
-export const DURATION_UNREADABLE = "Could not read that duration — try 1:30, 1.30 or 90"
+export const DURATION_HINT = "200 = 2 h · 45 = 45 min · 1.30 = 1 h 30"
+export const DURATION_UNREADABLE = "Could not read that duration — try 130 for 1:30, 1.30 or 1:30"
 
 /**
  * Parse a duration the way Toggl's duration field does.
@@ -395,6 +395,27 @@ export const DURATION_UNREADABLE = "Could not read that duration — try 1:30, 1
  * "1h30" → 5400 · "5m30" → 330 (a bare number after the last unit is the next unit down)
  * Returns null when nothing sensible can be read.
  */
+/**
+ * WHAT A PERSON TYPES INTO A DURATION BOX: DIGITS FILL FROM THE RIGHT.
+ *
+ * Toggl's phone duration field [SRC `DurationFieldInfo.cs`]: the last two
+ * digits are minutes, the rest hours, so 200 is 2:00, 130 is 1:30 and 45 is
+ * 0:45 (the minutes are not capped at 59: 90 is 1:30). The PC boxes read bare
+ * digits as minutes, so two hours was "120" there and "200" on the phone; the
+ * owner found that "makes no sense" (2026-11-25). Every typed box reads it
+ * this way now. At most five digits. Anything else ("1.30", "1:30", "2h") is
+ * `parseDurationInput`. Files (CSV import) keep `parseDurationInput`.
+ */
+export function parseTypedDuration(raw: string): number | null {
+  const text = raw.trim()
+  if (!/^\d+$/.test(text)) return parseDurationInput(text)
+  const significant = text.slice(0, 5).replace(/^0+/, "")
+  if (!significant) return 0
+  const minutes = Number(significant.slice(-2))
+  const hours = significant.length > 2 ? Number(significant.slice(0, -2)) : 0
+  return hours * 3600 + minutes * 60
+}
+
 export function parseDurationInput(raw: string): number | null {
   const text = raw.trim().toLowerCase().replace(/,/g, ".")
   if (!text) return null

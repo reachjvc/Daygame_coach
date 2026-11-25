@@ -46,7 +46,7 @@ import {
   formatIdleSpan,
   formatTimeOfDay,
   isoFromEpochSeconds,
-  parseDurationInput,
+  parseTypedDuration,
   parseEndTimeInput,
   parseStartTimeInput,
   plural,
@@ -711,13 +711,13 @@ function EntryFields({
   }
 
   const commitDuration = (raw: string) => {
-    const parsed = parseDurationInput(raw)
+    const parsed = parseTypedDuration(raw)
     if (parsed === null) {
       pushToast(DURATION_UNREADABLE, "error")
       return
     }
     // a running entry takes the timer bar's rule: shorter ends it, longer moves its start
-    const options = { entryId: entry.id, shownSeconds: durationFrozen === null ? null : parseDurationInput(durationFrozen) }
+    const options = { entryId: entry.id, shownSeconds: durationFrozen === null ? null : parseTypedDuration(durationFrozen) }
     const apply = (base: TimetrackState) =>
       running
         ? setRunningElapsed(base, parsed, nowIso(), options)
@@ -1753,7 +1753,7 @@ export function EntryDetailModalBody({
       return
     }
     if (edit.field === "duration") {
-      const seconds = parseDurationInput(text)
+      const seconds = parseTypedDuration(text)
       if (seconds === null) {
         pushToast(DURATION_UNREADABLE, "error")
         return
@@ -1764,7 +1764,7 @@ export function EntryDetailModalBody({
         () => {
           if (isRunning(current)) {
             // shorter ends it, longer moves its start: see `setRunningElapsed`
-            const shownSeconds = held === null ? null : parseDurationInput(held)
+            const shownSeconds = held === null ? null : parseTypedDuration(held)
             const options = { entryId: entry.id, shownSeconds }
             const result = landOnCurrent((base) => setRunningElapsed(base, seconds, nowIso(), options))
             if (result?.stopped) announceEndedEarly(result.stopped, seconds, () => latestState.current, setState, pushToast)
@@ -1945,7 +1945,7 @@ export function EntryDetailModalBody({
 
   // what the boxes show: the drums' pair while they hold one, the entry otherwise
   const endDays = pair.stop ? daysBetween(dateKey(pair.start), dateKey(pair.stop)) : 0
-  const typedLength = typed?.field === "duration" && typed.edited ? parseDurationInput(typed.text) : null
+  const typedLength = typed?.field === "duration" && typed.edited ? parseTypedDuration(typed.text) : null
   const durationReading = typedLength === null ? null : `${typed!.text.trim()} = ${formatIdleSpan(typedLength)}`
   // an end the drums set before the start has no length to show: "Ends before it starts" says why
   const backwards = pair.stop !== null && Date.parse(pair.stop) < Date.parse(pair.start)

@@ -27,7 +27,7 @@ import {
   isoFromEpochSeconds,
   lengthQuestion,
   otherHalfOfDay,
-  parseDurationInput,
+  parseTypedDuration,
   parseEndTimeInput,
   parseTimeInput,
   unreadableTimeMessage,
@@ -514,7 +514,7 @@ export function TimerBar({
   }, [runningSeconds, editingDuration])
 
   const commitRunningDuration = () => {
-    const seconds = parseDurationInput(durationInput)
+    const seconds = parseTypedDuration(durationInput)
     setEditingDuration(false)
     /**
      * Untouched, it is not committed. A shorter time ends the timer now, and the
@@ -538,7 +538,7 @@ export function TimerBar({
      * locked date or a submitted timesheet made the number snap back with
      * nothing said.
      */
-    const options = { shownSeconds: shown === null ? null : parseDurationInput(shown) }
+    const options = { shownSeconds: shown === null ? null : parseTypedDuration(shown) }
     // a length over 12 hours asks first: see `askBeforeLong`
     askBeforeLong(
       seconds,
@@ -584,7 +584,7 @@ export function TimerBar({
 
   /** The typed length, logged as a finished entry that ends now: see `typedLength` */
   const logTypedLength = () => {
-    const seconds = parseDurationInput(durationInput)
+    const seconds = parseTypedDuration(durationInput)
     if (seconds === null) {
       pushToast(DURATION_UNREADABLE, "error")
       return
@@ -646,7 +646,7 @@ export function TimerBar({
     const text = lengthTyping.current
     typeLength(null)
     if (text === null || !manualSpan || text.trim() === formatDuration(manualLength ?? 0, state.user.durationFormat)) return
-    const seconds = parseDurationInput(text)
+    const seconds = parseTypedDuration(text)
     if (seconds === null) {
       pushToast(DURATION_UNREADABLE, "error")
       return

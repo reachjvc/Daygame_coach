@@ -272,7 +272,7 @@ describe("one tap on a row", () => {
     fireEvent.click(within(screen.getByRole("main")).getByText("Email"))
     fireEvent.click(inSheet().getByRole("button", { name: "Type a duration" }))
     const box = inSheet().getByRole("textbox", { name: "Duration" })
-    expect(inSheet().getByText("90 = 90 min · 1.30 = 1 h 30")).toBeTruthy()
+    expect(inSheet().getByText("200 = 2 h · 45 = 45 min · 1.30 = 1 h 30")).toBeTruthy()
     for (const key of ["1", "3", "0"]) fireEvent.change(box, { target: { value: (box as HTMLInputElement).value + key } })
     expect((box as HTMLInputElement).value).toBe("1:30")
     fireEvent.keyDown(box, { key: "Enter" })

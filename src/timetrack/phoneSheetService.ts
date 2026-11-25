@@ -46,7 +46,7 @@ export const SHEET_REFUSALS = {
 } as const
 
 /** Shown while a length is typed into the big duration */
-export const SHEET_DURATION_HINT = "90 = 90 min · 1.30 = 1 h 30"
+export const SHEET_DURATION_HINT = "200 = 2 h · 45 = 45 min · 1.30 = 1 h 30"
 
 export const UNREADABLE_TIME = "Could not read that time — try 9:30, 930 or 9:30 pm"
 export const UNREADABLE_DURATION = "Could not read that duration — try 130 for 1:30, 1.30 or 90"

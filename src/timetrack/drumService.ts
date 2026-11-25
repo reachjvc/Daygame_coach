@@ -24,7 +24,7 @@
  * (scenario 10); a time to the second is still typed in the box beside them.
  */
 
-import { addDays, dateKey, dateKeyToDate, daysBetween, formatDuration, pad2, parseDurationInput, parseEndTimeInput, parseStartTimeInput } from "./timetrackFormatService"
+import { addDays, dateKey, dateKeyToDate, daysBetween, formatDuration, pad2, parseTypedDuration, parseEndTimeInput, parseStartTimeInput } from "./timetrackFormatService"
 import { LONG_ENTRY_SECONDS } from "./timetrackFormatService"
 import type { DurationFormat, IsoDate, IsoDateTime, TimeFormat } from "./types"
 import { startTypedInto } from "./typedStartService"
@@ -337,7 +337,7 @@ export function typedIntoPair(
     return stop ? { ...pair, stop } : null
   }
   if (field === "duration") {
-    const seconds = parseDurationInput(text)
+    const seconds = parseTypedDuration(text)
     if (seconds === null) return null
     if (pair.stop === null) return { ...pair, start: isoAt(ms(nowIso) - seconds * 1000) }
     return { ...pair, stop: isoAt(ms(pair.start) + seconds * 1000) }
