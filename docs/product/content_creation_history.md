@@ -206,6 +206,20 @@ The page was a private draft with no videos on it yet (the clips were still bein
 
 - page: "This is not a good process. Way too much reading for me."
 
+### Reel B Tree page, his notes (page 3m1VCU…, 2026-11-24 11:49-11:52 UTC) [Track 1] [his words, verbatim]
+
+No 👍 given.
+- F1 (1:06): "This is mostly fine, theres still a few weird cuts"
+- F2 (0:17): "From the fiest to the second celeb, the cut is a little.weird, and captions are written weirdly"
+- F5 (1:07): "I like this ending the msot, and the initial top text works well too"
+- page: "With my notes, we should be able to release in 1-2 short rounds"
+
+Chat, 2026-11-25, answering Claude's questions:
+- Finish F5? "i have not thought about any piano music, and there still might be a bit of optimization for the ending. Every time we have s9omething, like "music" lets try a few variants. But yes, i mostly agree"
+- Record the E5 line? "yes, ill record it, should i use video too?"
+- Cuts: picked "Fix, show finished reel".
+- Then: "You can go ahead"
+
 ## Earlier sections, moved here unchanged on 2026-11-21
 
 ## The owner's words [Video 01, Track 2] [his words, summary]
