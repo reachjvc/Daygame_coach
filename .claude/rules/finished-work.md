@@ -2,7 +2,7 @@
 paths:
   - "src/**"
   - "app/**"
-  - "docs/plans/**"
+  - "Plans/**"
   - "supabase/**"
   - "components/**"
 ---

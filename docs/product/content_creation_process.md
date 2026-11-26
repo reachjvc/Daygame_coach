@@ -1,214 +1,178 @@
-# Content creation process
+# Content creation: how we make it
 
-How we make content, and what we learned. Read `docs/product/content_creation.md`
-first: it has what is going on now. His exact words, and the older sections
-that used to be here, are in `docs/product/content_creation_history.md`.
+Read `docs/product/content_creation.md` first: it says what is on now.
+This file says how to work. Quotes are his words; the code after a quote
+(R6-B, RS-P1…) finds it in his notes file, `~/research/content/notes-history.md`.
+Lines marked **[Claude]** are Claude's method, not his words; drop one if he
+says it is wrong.
 
-**Status (owner, 2026-11-18): not decided.** About 40% of a final process.
-Everything Claude wrote here is a proposal until he says yes.
+## The one thing to get right
 
-**Next film to improve: "Outvoted" v2** (Claude, proposed 2026-11-21;
-Track 2). It carries out his notes of 2026-11-20 (faster; other kinds of
-animation, "at night" and "in the morning" the obvious spots; the blocks
-stay the main line; himself filmed; breathing gone) and of 2026-11-21 (no
-AI still paintings or slow zooms; variety from kinds of animation; GPU near
-full at night, proven with numbers; filming = him speaking the script on
-camera; the blocks' type of animation is right, the blocks are not the gold
-standard; short loops; GPU by day when free, the night always has work).
-[his words; history "The owner's words"] Plan:
-`Plans/outvoted-animation-round.md`. A night session builds only from this
-line; if it is out of date, the night does not start. [Claude, proposed]
-Status 2026-11-21 21:00: after his notes, the whole v2 film now has S8b
-and S6a (his picks); a flicker test (grain now / lower / none, proposed
-lower) and a 7-shot filming list for 22 Nov are on his loop page, the
-shots also on his daily page. Waits for his grain pick and the filming.
-[record]
+He: "you tend to drift away from what i want, and then make fixed rules that
+actually serve to make future versions drift too" (R3-6).
 
-Tracks (proposed 2026-11-21): **Track 1** celebrity clip reels; **Track 2**
-our own films (Outvoted, the next reels); **Track 3** text reels (his
-words 2026-11-22: shorter, easier, mostly text; lessons not written yet);
-**Track 4** direct selling (his words 2026-11-22; lessons not written yet);
-**Video 01**; **Finding the look** (finder, ten ways). Headings here and in the history file name
-theirs. Mistakes, one entry each, newest first:
-`docs/product/content_mistakes.md` (proposed).
+- Do what his note points at. Don't turn it into a general rule unless he
+  says it generally. "I never said 12 seconds. But theres a big difference
+  between 1.5 sec and 12 seconds" (chg-1). "i never said that NO VERSION must
+  never be longer" (R3-5).
+- Keep his hedges. "Just an idea" is one tool to try, not an order (R4-4).
+  His examples are seeds: find 10-20 things his idea points at, then pick
+  the best (RS-T3, RS-U7).
+- **His questions are questions, not orders.** "I more likely asked if this was
+  how it is supposed to be. I dont really watch reels" (chg-4). Answer with
+  evidence from strong real reels: "just figure out once and for all how reels
+  should really look" (RS-T12).
+- Never quietly drop something he said works. "this is a mistake by you, to
+  softly remove something ive said works, very dangerous" (Outvoted Morning).
+- When unsure what he meant, ask him. Don't guess and build (RS-Q7).
+- Stay creative: "maintain dynamism to maximize creativity" (RS-P1). Hold a
+  position when you have reasons, unless he brings a new fact. Say which claims
+  are checked and which are from memory (H11 in the mistakes log).
 
-## How this file is kept (proposed 2026-11-21, not decided)
+## A round, step by step
 
-His words (2026-11-21, R3-6): "you tend to drift away from what i want, and
-then make fixed rules that actually serve to make future versions drift too".
+1. **Read** his new notes (first step in `content_creation.md`). Copy them word
+   for word into his notes file.
+2. **Story first.** Know what the reel is about and what it promises before any
+   animation: "what i wanted was for you to first figure out what you wanted the
+   story the to be about" (Same Night A1).
+3. **Build one whole reel**, the "trunk". Variants are branches on beats of
+   that trunk. Also make full-length reels of the variants, so every part is
+   seen in the whole story: "What does not work is if we begin developing
+   fruits or branches that are not connected to the tree" (chat, 2026-11-23).
+   When asked to improve one reel, improve that reel; don't send eight
+   experiments (round 2).
+4. **Many real options, few wasted ones.** "as many as you can realistically
+   make that would make sense" (RS-Q3). Variety means different kinds of
+   animation or story, not the same shots recoloured. Use cheaper models for
+   the legwork (RS-P4).
+5. **Rough first, then quality.** A lower-quality version is fine for judging
+   pace and flicker; "Then i can say, now we're at what i want, and then you
+   can improve the quality" (chat, 2026-11-22). But near-still storyboards or
+   sketches don't work: "a bunch of very simple animations". Show frames before
+   a long render, and ask creative questions before a costly one (H3, H4).
+6. **Check before he looks.** [Claude] A fresh reviewer that did not build it
+   compares it with the film he liked and with strong real reels, frame by
+   frame. Claude judging its own work with nothing to compare against failed
+   (first night run). He judges beauty, not Claude (H14).
+7. **Show him little.** Videos with a 👍 and an auto-saving note box on each.
+   No reading: "This is not a good process. Way too much reading for me"
+   (Outvoted Trunk). Show only the part that differs: "i dont need to watch 6
+   times 1min17seconds of video, to figure out the music in the ending"
+   (R10-2). Show the seconds clearly while he watches. Plain names for
+   versions: "these names are insane to me" (q2-v1).
+8. **Don't update a page while he is on it.** It "reset what i was doing"
+   (loop 3).
+9. **Aim for fewer rounds.** "if we could get to this point from no input from
+   me, then that would be great" (R6-page). He spent 30-40 minutes on one round:
+   "too much" (R5-page). He also expects "a decent amount of iterations before
+   you fully have built your own skills as an editor" (RS-M5).
 
-Two files, two jobs:
-- **History file** = the raw record. His notes go in word for word, each tied
-  to the round, the version and the video time it was about. Nothing there is
-  reworded or deleted.
-- **This file** = only the lessons. Short (under about 150 lines).
+When he keeps saying the same thing, propose time to research how to do the
+job better, for example AI failure modes ("just an example", RS-M5).
+No people tests: he cannot show drafts to people, so compare with similar
+published videos instead.
 
-Every lesson line here:
-1. points to the words it comes from (R3-4, or a history section);
-2. keeps his own hedges and limits: "only", "maybe", "could", "for this
-   reel". "Don't only make them longer" never becomes "make them shorter";
-3. names its scope: this reel, celebrity reels, or all content;
-4. says whose it is: **[his words]**, **[his yes]** (he agreed to Claude's
-   wording) or **[Claude's reading]**.
+## What he likes and dislikes
 
-Pruning, after every round of his notes, one line at a time (never a
-rewrite of the whole file):
-- A [Claude's reading] he has not confirmed by the next round is deleted.
-- A line his newer words contradict is deleted; the newer words win.
-- A line with no source in the history file is deleted.
-- Duplicates are merged into the line with the best source.
-- The round's page lists every line added and deleted, each with a 👍 and a
-  note box, so he can stop a wrong change. Git keeps the old text.
+Each line says where he said it. Use it there; try it elsewhere only as a tool.
+"We can use all sorts of tools for all sorts of types of reels" (R5-ddel-1).
 
-Before building a round: the page shows each choice with the quote it comes
-from. A choice with no quote is labelled "Claude's guess" on the page.
+**Story and words**
+- Hook, climax, resolution: a real story that delivers what the top line
+  promises, not too fast (Clean & Sober reference, R5). He prefers telling a
+  story over "erratic zooming".
+- A strong top line that stays the whole reel. "celebrities" or "how billy idol
+  and 4 other superstars quit drugs" beats a vague "people" (chat, 2026-11-23).
+  Name people the viewer may not know (R5-V2).
+- A real ending with punch: "quitting is a decision ONLY you can make, for
+  reasons only you can decide" (Clip Reel B, E1). Never AI-sounding lines: "I
+  hate the AI soundingness of this" (R6-end-1).
+- Captions short and sharp (R5-O11). Plain dark word cards are boring; text
+  goes over moving pictures. His line comes WITH the text, if both are there
+  (E4).
+- Show meaning in the picture, not in labels: "night" as text is "somewhat
+  nonsensical" (q1-calm).
 
-Why this way (research 2026-11-21; sources checked on the page unless
-marked "snippet"):
-- Two 2025-26 studies found that an AI that keeps rewriting its notes into
-  general lessons gets worse over time: the lessons get short and generic
-  and drop their conditions. Keeping the raw cases and editing one line at a
-  time did better. ACE paper (arxiv.org/abs/2510.04618, ICLR 2026);
-  "Useful Memories Become Faulty…" (dylanzsz.github.io/faulty-memory, 2026,
-  early-stage). Both measured on benchmarks, not creative work.
-- User research practice: write exactly what people said, not what you think
-  it means (GOV.UK service manual).
-- Decision records: a changed decision gets a new entry that supersedes the
-  old one, with a status (Microsoft architecture guide, 2026).
-- Anthropic's own advice for instruction files: under 200 lines, review often
-  for outdated or conflicting lines; with conflicting lines the AI picks one
-  "arbitrarily" (code.claude.com/docs/en/memory).
-- Video review tools pin each note to a time in one version (Frame.io, Vimeo;
-  snippet).
-- Not found: any test of this on creative feedback. The rules above are
-  Claude's reading of the sources.
+**Celebrity reels (Track 1)**
+- Length "somewhere in 45-85 sec for MOST videos", no fixed number (RS-Q2).
+- Full screen 9:16, following the face. Black bars: first "unsure if there
+  should be that on a reel" (R3-4), later "i guess they are framed, so we just
+  do as they do" and "i was probably wrong" (R5). Do what strong reels do.
+- Placement (R10-1): the superstar's name can go anywhere; the source always
+  bottom-left, all the way at the bottom, naming the source actually on screen
+  (R3-2); captions near the middle, never on the speaker's face. The top line
+  can sit over the competitor's logo (R5-V1).
+- Inserts long enough to make sense. Short ones are "weird and make no sense to
+  a real watcher" (R3-4).
+- A toolbox, then several versions, then find what works (R4-1). Hunt wide for
+  footage: "tangentially relevant, like some1 saying the same thing, or a
+  slightly different thing" (RS-U2). Animations fit here too (RS-U6). Tools he
+  liked: a quick compilation of several people saying the same thing (R5-S11),
+  filming from another angle, pictures framing the interview, kept short (R5).
+- Real people saying it beat an AI narrator (R3-1). He may voice parts himself
+  (chg-0). He was "not sure about never describing the screen" (RS-T4).
+- "We want to steal like an artist, not just steal" (R6-page). Under 50% from
+  one reel is fine with him (2026-11-22); measure it (`copyscore.py`). Don't
+  use the same people in reels released close together.
+- Tell him the risk of each project. His stance: "if the biggest risk is a
+  copyright claim, then we can just learn from it" (RS-Q4). [Claude, from
+  platform rules, 2026-11-20] The bigger risk is being flagged as a repost
+  account: a credit line does not protect; mirroring, speed changes, borders or
+  removing captions are not "our own"; narration that only describes the screen
+  does not count. Add real value.
 
-This replaces the earlier proposal that "each note is fixed and saved as a
-rule for later reels" (way 5, 2026-11-20): saving notes as general rules is
-how the drift happened.
+**Our own films (Track 2)**
+- On the Outvoted animations: "that particular type of animation is the correct
+  one". On the way of working: "this thign of short clips, multiple variants,
+  larger creativity", "my narration becomes super lively at a cheap cost to me"
+  (loop 7, type-reading). But not "that we always use wooden blocks ... That is
+  not really the strategy".
+- Goal: "graphically looking awesome ... super coherent, rather than a bunch of
+  screens that change" (2026-11-19). Too many swaps, or things on screen for
+  only a moment, break it (Candles: "only on screen for a few seconds").
+- A few things that work well, not a hundred and not one (First 30 Seconds, C).
+  "I didnt mean stop having almost any new animations, i meant let things
+  breathe" (A).
+- No bouncing, jumpy blocks ("dunk dunk dunk"). Zooms only when they mean
+  something. Not too much writing on screen. Words on the objects (blocks,
+  pillars, candles) (Outvoted Morning).
+- Him in the film for a short time, or animated into the story: "me being
+  animated out of bed in the same story figure" (loop 3). Filming = him
+  speaking the script, in ways that are easy to film (RS-Q6).
+- Never AI still paintings with a slow zoom or pan (his rule, 2026-11-21). No
+  paid AI tools. Breathing out of his voice "if that is possible".
+- Cost matters less than the result: "that is not as important as finding the
+  right thing" (S8b).
 
-## Lessons: celebrity clip reels [Track 1]
+## Craft facts (measured)
 
-Worked, or worth more tries:
-- Full screen 9:16, following the speaker's face. The viral original plays
-  next to ours on the review page. [his words, 2026-11-20; history "Celebrity
-  clip reels"] Scope: celebrity reels.
-- Combining narration with other pictures or other interviews has "some
-  inkling that they could be quite successful". [his words, 2026-11-21,
-  round 2] He then asked for **real people on camera** saying the points
-  ("clips of like TV anchors or whatever, saying the things you want to
-  say"), in place of the AI narrator. [his words, R3-1]
-- Idea, his "just an idea": show the research paper on screen when the
-  reel names a finding (the abstinence violation effect). [his words, R3-4]
-  It was "just a general idea": find about 20 things it points at that are
-  not papers, then pick the few that work best. [his words, RS-T3]
-- Most reels "somewhere in 45-85 sec", no fixed number. [his words, RS-Q2]
-  Scope: celebrity reels.
-- Openings and story lines: "find like 10 or 20 things to show me, and i
-  pick the thing thats most catching, especially when it is the thing
-  people see initially". [his words, RS-U7]
-- Where things go on screen: the person's name can go anywhere; the
-  source always in the bottom-left corner, all the way at the bottom;
-  captions near the middle, but not on the face of the person speaking.
-  [his words, R10-1] Scope: celebrity reels.
-- When he is to choose between variants (music, endings): say plainly what
-  to compare and show only the part that differs, not several full reels.
-  "i dont need to watch 6 times 1min17seconds of video". [his words, R10-2]
-- "generally i will appear in a decent amount of our reels", for example
-  the outro, "or i can appear in many ways"; probably not reacting. "we
-  want to generally design a process where it is easy for me to appear".
-  [his words, RS-Q6]
+- Cuts on transcript word times chop words: the times end before the sound
+  does. Cut on the sound (`cutsafe.py`), then check by ear. Round 7's builder
+  said a chopped word was "fixed" and it was not. Claude cannot hear; he is the
+  ear, so flag any doubtful cut for him.
+- Breath at cuts (round 10, reviewed as natural): 0.15-0.25 s inside one speaker,
+  0.35-0.5 s between speakers.
+- Check that the next clip really answers the question it follows. Round 9
+  stitched in an answer that the man never gave.
+- Level clips to within 1 LU of each other. Never run loudnorm after apad or
+  atrim.
+- `barscheck.py` finds black edges in a render.
+- Each asset brief names its beat, its seconds, what to show and what to hide (H1).
 
-Did not work:
-- Cuts that chop words off: "unwatchable". [his words, 2026-11-21] Cause:
-  transcript word times end before the sound does. [measured] Fix in use:
-  the cut check on the sound (`cutsafe.py`).
-- Black bars or blurred bands, including black edges inside the picture
-  (photos in a frame, VHS edges). [his words, 2026-11-20, R3-3, R3-4]
-  The framed layout "seems more like a mistake". [his words, RS-U4]
-  [measured] round 3 had black edges in all three versions; `barscheck.py`
-  finds them.
-- Short inserts between the interview: "so short and irrelevant", "weird
-  and make no sense to a real watcher, like they could simply be longer, so
-  we watch less of the original footage". [his words, R3-1, R3-4]
-- One source name on screen the whole time. The name should come up for
-  the source actually on screen ("it isnt cbs all the time"). [his words,
-  R3-2]
-- Round 2: every version shorter than the base; he never said no version
-  may be longer. [his words, 2026-11-21, R3-5]
-- A plain dark card with words: boring. Text goes over moving pictures of
-  him. [his words, 2026-11-21]
-- Versions that lost the story and became "something weird"; eight
-  experiments when he wanted the one reel improved. [his words, 2026-11-21]
-- A big source tag. Small, in a corner. [his words, 2026-11-21]
-- Round 3 overall: "not very good attempts". [his words, R3-4]
+## Nights and the GPU
 
-Not judged yet: round 1's ten reels as reels to post; the kids episode
-(B1–B3) and theme cast lists.
+Claude builds scenes by evening; the GPU renders at night, and there is always
+more queued work than the night can finish. Prove GPU use with numbers
+(`tools/gpu_log.sh`), never claim it. Every GPU job goes through
+`tools/gpu_gate.py`. A new kind of work needs his 👍 before it runs overnight.
 
-## Lessons: our own films [Track 2, Video 01, Finding the look]
+## Tools
 
-Worked, or worth more tries:
-- Claude's animations are "quite nice"; an idea bank of reusable worlds.
-  [his words, 2026-11-18]
-- The falling block tower (video 01) and the drawn street scene. [his
-  words, 2026-11-19]
-- The "Outvoted" blocks film: "definitely on the right path"; the blocks
-  tell a whole story. The best style he has seen yet; he likes the more
-  beautiful animations. [his words, 2026-11-20, 2026-11-21]
-- The research summary on the ten ways page: "very good and useful". [his
-  words, 2026-11-20]
-
-- Outvoted v2 (own films): "this thing of short clips, multiple variants,
-  larger creativity" is what he wanted; "my narration becomes super lively
-  at a cheap cost to me". [his words, 2026-11-21, type-reading and loop 7]
-  His limit, same note: not "that we always use wooden blocks": "that is not
-  really the strategy". The blocks are one look, not the rule. [his words]
-- Filmed himself: "they may not need to see me all of the time, for every
-  single video"; he likes being there for a short time, or being part of
-  an animation (F3, F7, F8; "me animated out of bed in the same story
-  figure"). [his words, 2026-11-21, loop 3]
-
-Did not work:
-- Question rounds on single items: too slow. Rough sketches and single
-  options: too hard to decide from. [his words, 2026-11-18]
-- Four moving options for one scene: too few, not specific enough, but
-  they gave good ideas. [his words, 2026-11-18]
-- A moving storyboard of near-stills: "a bunch of very simple animations".
-  [his words, 2026-11-19]
-- The "Outvoted" film: too slow, too much blocks only, breathing still
-  audible. [his words, 2026-11-20]
-- A page of sentence tables to cut: "almost impossible to understand". [his
-  words, 2026-11-20]
-- AI still paintings with a slow zoom: never again. [his words, 2026-11-21]
-- The outperformer finder: probably the wrong direction; a channel uses one
-  style on all its videos. Find the style he likes, and new work to copy or
-  put our own spin on. [his words, 2026-11-21]
-- Claude's own check of its night output ("came out well"), with nothing to
-  compare against. [his words 2026-11-21 on the result; cause is Claude's
-  reading; history "Why it went wrong"]
-
-- Outvoted v2: a 6-second snippet makes the right pick hard; the choice
-  in one spot changes what fits the next, so the story has to be judged as a
-  whole. [his words, 2026-11-21, loop 6] Open: not solved yet.
-- "The screen on all of these flickers too much" [his words, 2026-11-21,
-  S8b]. Open. [measured: it is film grain re-drawn every frame, not render
-  noise; test of lower grain in progress]
-- Updating his review page while he works "reset what i was doing" [his
-  words, 2026-11-21, loop 3]. Open: publish less often while he is on it.
-
-Not judged yet: the look finder page; three looks of the same ten seconds;
-Outvoted v2 (`Plans/outvoted-animation-round.md`).
-
-## Tools (facts)
-
-Private folder `~/.cache/daygame-research/celeb-reels/code/`:
-- `render4.py` (round 4) = `render3.py` plus a source name per picture,
-  still pictures (the paper) and the black-edge check after every render.
-- `render3.py` builds a reel from an edit list (`edl3/`). It refuses to
-  render if a cut lands in speech (`cutsafe.py`, measured on the sound), and
-  after rendering it checks every word near a cut was heard.
-- `barscheck.py` lists every stretch with a black edge in a rendered reel;
-  it exits with an error if there is one.
-- Idea bank for our own films: `~/.cache/daygame-research/content/bank/`.
-- GPU use log for night renders: `~/.cache/daygame-research/tools/gpu_log.sh`.
+Private, in `~/.cache/daygame-research/`:
+- Celebrity reels: `celeb-reels/code/` (render, compose and page scripts
+  numbered by round; `cutsafe.py`, `barscheck.py`, `copyscore.py`,
+  `add_owner*.sh` for his filmed line, `noteskit.js` for page notes).
+- Own films: `content/reel-outvoted/`, `content/reel-beliefs/`, idea bank
+  `content/bank/`.
+- Past mistakes, one entry each: `~/research/content/mistakes-log.md`.

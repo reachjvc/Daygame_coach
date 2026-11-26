@@ -8,8 +8,8 @@ only when the owner says so.**
 
 Owner, 2026-11-19: he does not want to review ~70 variants. He wants "a list of tools we intend to have, and then
 begin working on finishing them one by one, on both browser and mobile, so that i can say 'this is done' and we dont
-have to think so much about it anymore". Features he calls done are the ones that later move into his own rebuild
-(memory `project-rewrite-with-jacob`: "only features both agree are DONE"; quit comes first).
+have to think so much about it anymore". (2026-11-26: the plan for him to rebuild the app himself is off; Claude
+builds. A tool he calls done is still done and nobody changes it.)
 
 The review of 2026-11-19 (about 150 findings; private reports with steps and screenshots in
 `~/.cache/daygame-research/quit-review-2026-11-19/`: A–E and F1–F2 `-report.md`) is the fix list for every tool

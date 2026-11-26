@@ -1,5 +1,6 @@
 /**
- * Render docs/research/change-your-life/06-short-script.md from the same array
+ * Render ~/research/change-your-life/06-short-script.md (private research folder,
+ * moved out of the public repo on 2026-11-26) from the same array
  * the /test/change-your-life/short page renders.
  *
  * One source, two outputs: a script that drifts from the page it was approved on
@@ -9,10 +10,12 @@
  */
 
 import { writeFileSync } from "node:fs"
+import { homedir } from "node:os"
+import { join } from "node:path"
 
 import { CYL_SCRIPT, CYL_SCRIPT_NOTES } from "../src/goals/data/changeYourLife"
 
-const OUT = "docs/research/change-your-life/06-short-script.md"
+const OUT = join(homedir(), "research/change-your-life/06-short-script.md")
 
 function timecode(seconds: number): string {
   const m = Math.floor(seconds / 60)

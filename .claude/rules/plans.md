@@ -1,13 +1,13 @@
 ---
 paths:
-  - "docs/plans/**"
+  - "Plans/**"
 ---
 
 # Writing plans
 
-- Plain-language section first (what changes, why, what the owner will see); file paths and line numbers underneath.
-- Milestones are working app states ("M1: user can create a goal"), not layers.
-- Each deliverable names its acceptance test. Flag destructive steps.
-- When `docs/product/<slice>-concept.md` exists, include `## Your concept, item by item` with a verdict per item (`tests/unit/docs/planConceptCheck.test.ts` enforces it).
-- Put the few design rules up for approval, each with its cost if wrong — not counts.
-- Once approved, execute end to end. Mark done with `**Status:** done <date>`.
+- Plans live in `Plans/<name>.md`. Size the plan to the task: a small job gets a short plan.
+- Plain-language part first (what changes, why, what the owner will see); file paths and line numbers underneath.
+- Phases are working app states ("M1: user can create a goal"), not layers. Each names its acceptance test and the model that runs it (big model plans and reviews; Sonnet or Haiku builds).
+- List blockers and try each one once for real (read-only probes, dry runs); write what came back. Flag destructive steps.
+- Open questions each carry a recommendation and the cost if it is wrong.
+- Keep the status line at the top current. When a plan is finished, replaced or parked, add it to `Plans/ARCHIVE.md` and delete it.

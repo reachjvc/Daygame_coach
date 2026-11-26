@@ -1,44 +1,38 @@
-# Plans that are finished or replaced
+# Removed plans
 
-Removed from this folder because nothing in them is left to do.
-Code comments still name some of them. To read one, run
-`git show <commit>:Plans/<file>`, with the commit in the last column (the last commit that had it).
+Plans leave this folder when they are finished, replaced or parked. Code comments still name some of them.
+To read one: `git show <commit>:Plans/<file>` (or `docs/plans/<file>` for the oldest ones).
 
-| Plan | Why it went | Read it at |
-|---|---|---|
-| tests-catch-what-matters.md | Finished 2026-11-20: Phases 0–9 done (red main names its first red commit, lint and hidden pages caught at commit, every API route asked signed out, write tests 125 to 26 unasserted, 6 flaky specs fixed, live site checked after each deploy, mutation scores on 8 daily files, phone time-wheel specs). Open items are in its Phase 9 review findings. | c8dd735c |
-| quit-review-fixes.md | Replaced 2026-11-19, the same day, by quit-finish.md: the owner wants tools finished one by one instead of a variant review. Its findings live on as the fix list. | 279fe920 |
-| caddy-deploy-and-cicd.md | Removed 2026-11-18: the owner reopened hosting and asked for the Hetzner plans to go. Phases 0–5b are built (`infra/`, CI images); code comments still cite its steps. Also removed: `docs/plans/own-platform-and-app.md`, `docs/plans/foundation.md`, `docs/plans/local-deploy-and-cd-pipeline.md` (same commit). | 0d687eb7 |
-| plan-progress-percent.md | Finished 2026-11-14: Phases 1–4 live (Today shows "Your plan is N % done", rings fill by percentage, Everything lists every step). His plan read 45 % on the day. | ea048b1d |
-| time-log-phone.md | Finished 2026-11-14: Phases 0–8 live (phone fixes, the frame, sheet, list, calendar, reports/settings, rename to Time Log, audit fixes). The owner's three phone checks are below. | b61a4736 |
-| life-plan-rebuild.md | Finished 2026-11-10: Phases 1–7, Q4 and the wheel live; owner accepted every card on the sign-off page in chat ("ill jsut accept all ur recommendations"). | 88ca5fe6 |
-| time-tracker-leftovers.md | Finished: Phases 1–5 live; the last two limits it noted were fixed in 7516348e. | 7516348e |
-| toggl-parity.md | Finished: Phases 0–8 live; its last bugs were done through time-tracker-leftovers.md. | 7516348e |
-| time-tracker-like-toggl.md | Replaced by toggl-parity.md, which also shipped its Phase 7. | 7516348e |
-| tests-worth-their-keep.md | Finished 2026-10-16, all ten phases; its four migrations were applied the same day. | 7516348e |
-| tests-worth-their-keep.inventory.md | The file-by-file list for the plan above. | 7516348e |
-| thought.md | Retired 2026-11-08, replaced by energy-audit.md. | 7516348e |
-| life-plan-map.md | Replaced by life-plan-tables.md, which was its result. | 7516348e |
-| life-plan-tables.md | Replaced: life-plan-rebuild.md carried out Q1–Q10, life-plan-achievements.md Q11. | 7516348e |
-| life-plan-after-setup.md | Finished 2026-11-09: Phases 0–6 live (land on Today, Due now, one weekly reminder, values on step 7 only). R2 stays "not now"; R3 lives in life-plan-review-reads-back.md. Its decision page stays: https://claude.ai/artifact/Tbhg3XTAizXkLmutiUaQpp | 6412d7c6 |
-| life-plan-achievements.md | Finished: built and live 2026-11-05 (Q11). The sign-off card `q11-achievements` stays on the sign-off page. | 6412d7c6 |
-| life-plan-readings.md | Finished: built 2026-11-05 (round 2). The sign-off card `readings` stays on the sign-off page. | 6412d7c6 |
-| life-plan-goal-status.md | Finished: built and live 2026-11-05 (round 3). The sign-off card `goal-status` stays on the sign-off page. | 6412d7c6 |
-| life-plan-dated-steps.md | Finished: built and live 2026-11-05 (round 4). The sign-off card `dated-steps` stays on the sign-off page. | 6412d7c6 |
+## Cleanup of 2026-11-26, commit `4c210f65`
 
-## Still worth trying on your phone (from time-tracker-leftovers.md)
+**Parked with work still open** (bring one back when its turn comes):
 
-1. **Undo during a slow upload.** On weak signal (e.g. a lift or basement), swipe an entry away, tap Undo
-   at once, then go back to good signal. The entry should still be there on the PC.
-2. **"What's still running."** Start a timer on the PC. On the phone, stop a different entry from its row.
-   The message should name the timer still running on the PC.
-3. **The edit box.** Open an entry in the PC calendar. Rename it on the phone. The PC box
-   should show the new name within a few seconds.
-4. **A Stop while it checks.** Take the phone out after a while, tap Stop while the badge says Checking…,
-   and lock the phone at once. Open the tracker again: the timer should be stopped at the time you tapped.
+| Plan | What was still open |
+|---|---|
+| rebrand-10kdaysclub.md, rebrand-round-2.md | Front-page words round; privacy fix on branch `privacy-r2` |
+| plan-in-steps.md, plan-new-from-real.md | New /plan on the copy space: phases 7–8, questions Q1 and Q8 |
+| site-navigation-build.md, site-navigation.md | Phases 5–6, waiting for his sign-off |
+| energy-audit.md, perfect-week.md | Live; his phone test and first use pending |
+| role-models.md, role-models-candidates.md | Phase 0b |
+| sell-page.md, street-scene.md, street-scene-photo-showcase.md | Pages built or planned, no go yet |
+| beliefs-rethink.md | Rounds 1–2; round 3 continues in beliefs-rethink-r3.md |
 
-## Still worth trying on your phone (from time-log-phone.md)
+**Replaced:** quit-tool.md and quit-copy.md (by quit-finish.md); outvoted-animation-round.md, reel-outvoted.md,
+celeb-clip-reels.md, clip-reels-toolbox.md, night-process.md, quit-reels-study.md (their lessons are now in
+`docs/product/content_creation_process.md`).
 
-1. **The keyboard.** Open an entry and tap its name: the whole sheet should sit above the keyboard.
-2. **The wheels.** Open an entry, tap its Start box and swipe the hour wheel up and down.
-3. **Letter gaps.** Send one screenshot of the Timer list: do labels like "YESTERDAY" show gaps inside words?
+**Finished:** alpha-test-week-audit-time.md, tests-green-and-fast.md, program-builder.md, site-structure.md,
+life-plan-review-reads-back.md, and all of `docs/plans/` (17 plans from August to October).
+
+## Earlier removals
+
+| Plan | Read it at |
+|---|---|
+| tests-catch-what-matters.md | c8dd735c |
+| quit-review-fixes.md | 279fe920 |
+| caddy-deploy-and-cicd.md | 0d687eb7 |
+| plan-progress-percent.md | ea048b1d |
+| time-log-phone.md | b61a4736 |
+| life-plan-rebuild.md | 88ca5fe6 |
+| life-plan-after-setup.md, life-plan-achievements.md, life-plan-readings.md, life-plan-goal-status.md, life-plan-dated-steps.md | 6412d7c6 |
+| time-tracker-leftovers.md, toggl-parity.md, time-tracker-like-toggl.md, tests-worth-their-keep.md, thought.md, life-plan-map.md, life-plan-tables.md | 7516348e |
