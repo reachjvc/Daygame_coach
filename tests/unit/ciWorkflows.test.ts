@@ -88,7 +88,7 @@ function shardsOf(job: string, body: string): Shard[] {
 
 const e2eJobs = jobs(e2e)
 /** The jobs that run Playwright. A new one not named here makes its lanes look like lanes nothing runs. */
-const browserJobs = ["e2e-fast", "lanes", "nightly"]
+const browserJobs = ["e2e-fast", "lanes", "nightly", "timelog-guard"]
 const liveCheckJobs = jobs(uncommented(readFileSync(join(root, ".github/workflows/live-check.yml"), "utf8")))
 // The `live` project belongs to live-check.yml (Phase 6 of Plans/tests-catch-what-matters.md), not to e2e.yml.
 const SHARDS = browserJobs.flatMap((job) => shardsOf(job, e2eJobs[job] ?? ""))
@@ -107,12 +107,27 @@ describe("the browser tests that CI actually runs", () => {
     // `github.ref == 'refs/heads/main'` is never true on a pull request, whose
     // ref is refs/pull/N/merge, and every lane would skip, green.
     expect(e2eJobs["e2e-fast"]).not.toMatch(/^ {4}if:/m)
+    // the Time Log guard runs on every push, on every branch, like e2e-fast
+    expect(e2eJobs["timelog-guard"]).not.toMatch(/^ {4}if:/m)
     expect(e2eJobs["lanes"]).toMatch(
       /^ {4}if: \$\{\{ github\.event_name != 'push' \|\| github\.ref == 'refs\/heads\/main' \|\| github\.ref == 'refs\/heads\/beta' \|\| startsWith\(github\.ref, 'refs\/heads\/ship-'\) \}\}$/m,
     )
     expect(e2eJobs["nightly"]).toMatch(
       /^ {4}if: \$\{\{ github\.event_name == 'schedule' \|\| github\.event_name == 'workflow_dispatch' \}\}$/m,
     )
+  })
+
+  test("E2E passed needs the Time Log guard on every push, not only on main", () => {
+    // The guard is outside `lanes`, which skips most branches. If the gate stopped waiting for it, or
+    // let it be skipped, a red Time Log story would reach main under a green "E2E passed".
+    const gate = e2eJobs["e2e-passed"] ?? ""
+    expect(gate).toMatch(/needs: \[e2e-fast, lanes, timelog-guard\]/)
+    expect(gate).toContain("GUARD: ${{ needs.timelog-guard.result }}")
+    // not inside the `if [ "$FULL" = true ]` branch: it is required whatever the branch
+    expect(gate).toMatch(/^ {10}\[ "\$GUARD" = success \] \|\| exit 1$/m)
+    // and the two projects are the ones it runs, each on its own runner
+    const guard = SHARDS.filter((s) => s.job === "timelog-guard").map((s) => s.lane).sort()
+    expect(guard).toEqual(["timelog-guard-desktop", "timelog-guard-phone"])
   })
 
   test("every Playwright project is run by exactly one CI job", () => {
@@ -155,7 +170,8 @@ describe("the browser tests that CI actually runs", () => {
   test("every shard keeps a uniquely named report, and one job merges them whatever happened", () => {
     // Without a name per shard, merging overwrites shard 1 of one lane with another's.
     expect(e2eJobs["lanes"]).toMatch(/PLAYWRIGHT_BLOB_OUTPUT_NAME: report-\$\{\{ matrix\.lane \}\}-\$\{\{ strategy\.job-index \}\}\.zip/)
-    expect(e2eJobs["report"]).toMatch(/needs: \[e2e-fast, lanes, nightly\]/)
+    expect(e2eJobs["report"]).toMatch(/needs: \[e2e-fast, lanes, timelog-guard, nightly\]/)
+    expect(e2eJobs["timelog-guard"]).toMatch(/PLAYWRIGHT_BLOB_OUTPUT_NAME|steps: \*lane-steps/)
     // A red shard must not skip the report that says what went red; only a cancelled run may.
     expect(e2eJobs["report"]).toMatch(/if: \$\{\{ !cancelled\(\) \}\}/)
   })
@@ -240,6 +256,26 @@ describe("the live-site check stays out of the pull-request lanes", () => {
   test("is run by live-check.yml alone, never by e2e.yml", () => {
     expect(LIVE_SHARDS.map((s) => s.lane)).toEqual(["live"])
     expect(SHARDS.filter((s) => s.lane === "live")).toEqual([])
+  })
+})
+
+describe("the Time Log guard runs once, in its own two projects", () => {
+  const FILE = "tests/e2e/timelog-guard/stories.spec.ts"
+  const guards = PROJECTS.filter((p) => p.name?.startsWith("timelog-guard-"))
+  const ignores = (p: (typeof PROJECTS)[number]) => [p.testIgnore ?? []].flat().some((r) => r instanceof RegExp && r.test(FILE))
+  const selects = (p: (typeof PROJECTS)[number]) => !(p.testMatch instanceof RegExp) || p.testMatch.test(FILE)
+
+  test("there is one at phone size and one at PC size, in Copenhagen time, with no service worker", () => {
+    expect(guards.map((p) => p.name).sort()).toEqual(["timelog-guard-desktop", "timelog-guard-phone"])
+    expect(guards.find((p) => p.name === "timelog-guard-phone")?.use?.isMobile, "the phone project is a phone").toBe(true)
+    expect(guards.find((p) => p.name === "timelog-guard-desktop")?.use?.isMobile ?? false, "the PC project is not").toBe(false)
+    for (const p of guards) expect(p.use?.timezoneId, `${p.name}: a fixed time zone`).toBe("Europe/Copenhagen")
+  })
+
+  test("only they run the folder: every other project ignores it", () => {
+    for (const p of guards) expect(selects(p), `${p.name} does not select ${FILE}`).toBe(true)
+    const doubled = PROJECTS.filter((p) => !guards.includes(p) && selects(p) && !ignores(p)).map((p) => p.name)
+    expect(doubled, "projects that would run the guard a second time").toEqual([])
   })
 })
 
@@ -345,7 +381,7 @@ describe("the duration ratchet watches what CI runs", () => {
   test("the names it looks for are the names GitHub shows", () => {
     // The ratchet matches the API's display name: `lane shard` for a matrix
     // job, from this exact template, and the job key for a job with no `name:`.
-    for (const job of ["lanes", "nightly"]) {
+    for (const job of ["lanes", "nightly", "timelog-guard"]) {
       expect(e2eJobs[job]).toMatch(/^ {4}name: \$\{\{ matrix\.lane \}\} \$\{\{ matrix\.shard \}\}$/m)
     }
     expect(e2eJobs["e2e-fast"]).not.toMatch(/^ {4}name:/m)

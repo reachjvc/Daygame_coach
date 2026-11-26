@@ -6,6 +6,8 @@ name: E2E Tests
 # WHAT RUNS WHEN.
 #
 #   every push          `e2e-fast`: the desktop route sweep, minutes.
+#                       `timelog-guard`: the owner's everyday Time Log stories,
+#                       once at phone size and once at PC size (tests/e2e/timelog-guard).
 #   pull requests into  `lanes`: every pull-request lane of playwright.config.ts,
 #   main and beta, and  split into shards that run side by side.
 #   pushes to them
@@ -338,15 +340,40 @@ jobs:
     steps: *lane-steps
 
   # ===========================================================================
+  # THE TIME LOG GUARD. Every push, every branch.
+  #
+  # The owner's everyday Time Log tasks (docs/tech.md section 6), told once at
+  # phone size (Pixel 7) and once at PC size, and what the phone leaves out on
+  # purpose. They are the two projects `timelog-guard-phone` and
+  # `timelog-guard-desktop`; every other project ignores their folder
+  # (playwright.config.ts), so they run here and nowhere else. They are not in
+  # `lanes`, which skips every branch but main, beta and ship-*; the gate below
+  # requires this job on every push, like `e2e-fast`, so "E2E passed" on main
+  # always includes them. One matrix job per project, same steps as the lanes
+  # (the anchor above), each with a backend and an app of its own.
+  # ===========================================================================
+  timelog-guard:
+    name: ${{ matrix.lane }} ${{ matrix.shard }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { lane: timelog-guard-phone, shard: 1/1, browser: chromium }
+          - { lane: timelog-guard-desktop, shard: 1/1, browser: chromium }
+    steps: *lane-steps
+
+  # ===========================================================================
   # THE GATE. GitHub's branch protection on main requires this one check
   # ("E2E passed"), so a commit reaches main only after every browser job
   # here passed on it (scripts/ship.mjs). On main and ship-* every lane must
   # pass; on other branches the lanes are skipped by design and only the fast
-  # job counts.
+  # job and the Time Log guard count (both run on every push).
   # ===========================================================================
   e2e-passed:
     name: E2E passed
-    needs: [e2e-fast, lanes]
+    needs: [e2e-fast, lanes, timelog-guard]
     if: ${{ always() && github.event_name != 'schedule' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -355,17 +382,19 @@ jobs:
         env:
           FAST: ${{ needs.e2e-fast.result }}
           LANES: ${{ needs.lanes.result }}
+          GUARD: ${{ needs.timelog-guard.result }}
           FULL: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta' || startsWith(github.ref, 'refs/heads/ship-') }}
         run: |
-          echo "e2e-fast: $FAST, lanes: $LANES (every lane required: $FULL)"
+          echo "e2e-fast: $FAST, timelog-guard: $GUARD, lanes: $LANES (every lane required: $FULL)"
           [ "$FAST" = success ] || exit 1
+          [ "$GUARD" = success ] || exit 1
           if [ "$FULL" = true ]; then [ "$LANES" = success ] || exit 1; fi
 
   # ===========================================================================
   # ONE REPORT FOR THE WHOLE RUN, whichever jobs ran and however they ended.
   # ===========================================================================
   report:
-    needs: [e2e-fast, lanes, nightly]
+    needs: [e2e-fast, lanes, timelog-guard, nightly]
     # A red shard must not skip the report that says what went red. A
     # cancelled run (a newer push superseded it) has nothing to report.
     if: ${{ !cancelled() }}

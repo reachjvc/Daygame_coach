@@ -96,7 +96,7 @@ page "Backup Plan Check, Round 3" https://claude.ai/artifact/FEU5eytturiPhW5oa8B
 
 ## 6. Time Log safety nets
 
-Claude's proposal, 2026-11-19. Not started: no `tests/e2e/timelog-guard/` yet. Full plan: `git show 18efdb10:Plans/time-log-safety-nets.md`.
+Claude's proposal, 2026-11-19. Step 3 is built (not yet checked by him): `tests/e2e/timelog-guard/`, run on every push by the CI job `timelog-guard` (projects `timelog-guard-phone` and `timelog-guard-desktop`; `E2E passed` waits for it). Rest not started. Full plan: `git show 18efdb10:Plans/time-log-safety-nets.md`.
 - His goal: the Time Log stops getting worse without him knowing.
 - His bug: he opens the Time Log on his phone after a timer ran (on the phone or the PC), and sometimes it shows the wrong thing. No crash is logged for it.
 - His Time Log rule (2026-11-14): nothing changes on the PC unless it makes the PC better or more like the phone. Claude's way to keep it: phone changes in shared files behind `isMobile`/`sm:`, PC screenshots before and after.

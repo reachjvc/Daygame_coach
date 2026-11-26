@@ -106,6 +106,13 @@ const SWEEPS = /sweep\//
  * run in the pull-request lanes.
  */
 const LIVE = /(^|\/)live\//
+/**
+ * The Time Log guard (tests/e2e/timelog-guard): the owner's everyday Time Log
+ * stories, run at phone and PC size by two projects of their own, on every
+ * push (e2e.yml, job `timelog-guard`). Every other project ignores the folder,
+ * so nothing runs twice.
+ */
+const GUARD = /\/e2e\/timelog-guard\/[^/]*\.spec\.ts$/
 
 /**
  * The derived sweeps open every page in the app (tests/support/appRoutes.ts).
@@ -156,13 +163,13 @@ export default defineConfig({
     // === Every pull request ===
     {
       name: 'desktop',
-      testIgnore: [/mobile\//, SWEEPS, LIVE],
+      testIgnore: [/mobile\//, SWEEPS, LIVE, GUARD],
       grepInvert: TIMING,
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'timing',
-      testIgnore: [/mobile\//, SWEEPS, LIVE],
+      testIgnore: [/mobile\//, SWEEPS, LIVE, GUARD],
       grep: TIMING,
       workers: 1,
       use: { ...devices['Desktop Chrome'] },
@@ -176,14 +183,14 @@ export default defineConfig({
      */
     {
       name: 'android',
-      testIgnore: [SWEEPS, LIVE],
+      testIgnore: [SWEEPS, LIVE, GUARD],
       grep: PHONE,
       grepInvert: TIMING,
       use: { ...devices['Pixel 7'] },
     },
     {
       name: 'timing-android',
-      testIgnore: [SWEEPS, LIVE],
+      testIgnore: [SWEEPS, LIVE, GUARD],
       grep: PHONE_TIMING,
       workers: 1,
       use: { ...devices['Pixel 7'] },
@@ -202,19 +209,31 @@ export default defineConfig({
       use: { ...devices['Pixel 7'] },
     },
 
+    // === The Time Log guard: every push, both sizes (e2e.yml, job `timelog-guard`) ===
+    {
+      name: 'timelog-guard-phone',
+      testMatch: GUARD,
+      use: { ...devices['Pixel 7'], timezoneId: 'Europe/Copenhagen' },
+    },
+    {
+      name: 'timelog-guard-desktop',
+      testMatch: GUARD,
+      use: { ...devices['Desktop Chrome'], timezoneId: 'Europe/Copenhagen' },
+    },
+
     // === Nightly (Q5): the other engines and the iPhone ===
     // One worker each: they are small, and they carry the @timing tests that
     // are engine-sensitive (a background tab's timers differ by engine).
     {
       name: 'firefox',
-      testIgnore: [SWEEPS, LIVE],
+      testIgnore: [SWEEPS, LIVE, GUARD],
       grep: ENGINE,
       workers: 1,
       use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'webkit',
-      testIgnore: [SWEEPS, LIVE],
+      testIgnore: [SWEEPS, LIVE, GUARD],
       grep: ENGINE,
       workers: 1,
       use: { ...devices['Desktop Safari'] },
@@ -226,7 +245,7 @@ export default defineConfig({
      */
     {
       name: 'phone',
-      testIgnore: [SWEEPS, LIVE],
+      testIgnore: [SWEEPS, LIVE, GUARD],
       grep: PHONE,
       grepInvert: TIMING,
       workers: process.env.CI ? 2 : undefined,
@@ -234,7 +253,7 @@ export default defineConfig({
     },
     {
       name: 'timing-phone',
-      testIgnore: [SWEEPS, LIVE],
+      testIgnore: [SWEEPS, LIVE, GUARD],
       grep: PHONE_TIMING,
       workers: 1,
       use: { ...devices['iPhone 14'] },
