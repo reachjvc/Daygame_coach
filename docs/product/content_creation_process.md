@@ -90,6 +90,11 @@ better (RS-M5). He can't show drafts to people: compare with published videos.
   all the way at the bottom. Captions near the middle, never on a face. Names
   anywhere (R10-1, R11-1). Name each person, long enough to read (B, E1_full).
   Put the top line over the competitor's logo spot (R5-V1).
+- Cuts: no cut may start or end inside a word, not even a word that runs on
+  ("You need to get clearer on the cuts", R12-1). Check every cut on the sound
+  itself, not only on word timings. Pace: "I wonder if we can do something to
+  make it a little more snappy" (R12-2). (Claude, round 12, he judges) try
+  trimming pauses over ~0.3 s inside one speaker.
 - Inserts long enough to make sense (R3-4). Hunt wide for footage: "tangentially
   relevant, like some1 saying the same thing" (RS-U2). Tools he liked: a quick
   compilation of people saying the same thing (R5-S11), another camera angle,

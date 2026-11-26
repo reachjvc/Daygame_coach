@@ -33,13 +33,13 @@ finish them today because potentially it really should point to it" (2026-11-23)
 Focus: get **one finished piece out** (2026-11-22).
 
 **Track 1, Reel B** (five superstars who quit drinking or drugs)
-- Page "Reel B Final": the reel with the text-only ending he 👍'd (E5d). His notes
-  there (2026-11-26 13:06-13:08, not yet in his notes file): a cut chops a word at
-  0:15 ("You need to get clearer on the cuts"); music under only one man is
-  "weird"; make it "a little more snappy"; "i would prefer having some of their
-  real music playing, and then with the last actor, we could just start some
-  online outro music"; and "would i really get copyright striken for played a few
-  seconds of music from these bands?" (answer with the risk).
+- Round 12 page "Reel B Round 12" (2026-11-26) acts on his Reel B Final notes
+  (R12-1..3, now in his notes file): every cut re-checked on the sound (0:15 was one
+  word running into the next); pauses over 0.3 s cut out (P1 1:10, P2
+  1:06 with two lines dropped); each man's band intro under him, piano for
+  the last man. Votes: pace P1/P2, band music yes/no. Copyright answered on the page:
+  band songs are in the review draft only; for posting they go in through
+  Instagram's own music ("Add to mix"), which is licensed.
 - Earlier: outro music "does not really add anything, i think. I think it could
   in some scenarios"; he wants to see 10 real videos that use it (R11-2).
 - Music M2-M5 are Kevin MacLeod, CC BY 4.0: the post needs a credit line.
