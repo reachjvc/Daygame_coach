@@ -62,6 +62,6 @@ His own words, 2026-11-19, a rule he asked for:
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+`next dev` no longer writes an AGENTS.md copy of this note: `agentRules: false` in `next.config.mjs` turns that off.
 
 <!-- END:nextjs-agent-rules -->

@@ -84,6 +84,12 @@ const nextConfig = {
    * if that indicator is ever wanted on a wide screen.
    */
   devIndicators: false,
+  /**
+   * NO AGENTS.md. `next dev` otherwise writes (and re-writes) an AGENTS.md
+   * holding the same "read node_modules/next/dist/docs" note that CLAUDE.md
+   * already carries. Claude Code reads CLAUDE.md, so the second copy was noise.
+   */
+  agentRules: false,
   turbopack: {
     resolveAlias: {
       // Prevent Node.js-only ONNX runtime from being bundled (used by @huggingface/transformers)
