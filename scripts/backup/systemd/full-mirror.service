@@ -1,0 +1,7 @@
+[Unit]
+Description=Copy new database backups from GitHub to this PC and OneDrive
+
+[Service]
+Type=oneshot
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=%h/projects/daygame-coach/scripts/backup/mirror-backups.sh

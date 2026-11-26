@@ -117,3 +117,12 @@ infra/caddy/local-root-ca.crt
 /reports/
 /.stryker-tmp/
 /stryker-setup-*.js
+
+# Database backups: never commit dumps or locked copies (scripts/backup, Plans/database-backups)
+*.sql
+*.dump
+*.gpg
+*.tar.gz.gpg
+!supabase/migrations/**
+!supabase/pending-owner-approval/*.sql
+!tests/db/*.sql

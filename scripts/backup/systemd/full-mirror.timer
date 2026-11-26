@@ -1,0 +1,9 @@
+[Unit]
+Description=Daily backup mirror at 19:30 (GitHub's 01:17 UTC run often starts hours late)
+
+[Timer]
+OnCalendar=*-*-* 19:30:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

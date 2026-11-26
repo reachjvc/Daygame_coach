@@ -77,20 +77,5 @@ for dir in $BACKUP_DIRS; do
   mkdir -p "$dir" || fail "mkdir $dir"
   cp "$STAGED" "$dir/.$NAME.partial" || fail "copy to $dir"
   mv -f "$dir/.$NAME.partial" "$dir/$NAME" || fail "rename in $dir"
-  # Retention: newest 30 dailies + the first file of each of the last 12 months.
-  python3 - "$dir" <<'PY' || fail "retention in $dir"
-import os, re, sys
-d = sys.argv[1]
-files = sorted(f for f in os.listdir(d) if re.fullmatch(r"life-plan-\d{4}-\d\d-\d\d\.json\.gz\.gpg", f))
-keep = set(files[-30:])
-firsts = {}
-for f in files:
-    firsts.setdefault(f[10:17], f)
-for m in sorted(firsts)[-12:]:
-    keep.add(firsts[m])
-for f in files:
-    if f not in keep:
-        os.remove(os.path.join(d, f))
-PY
 done
 echo "$(date -Is) ok $NAME" >> "$LOG_FILE"
