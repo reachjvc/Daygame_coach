@@ -60,7 +60,7 @@ Working in the shared folder:
 
 The live database and login run on Supabase, Free plan. It holds his real data and every user's.
 The data is about sex life, addiction, health and mood: special-category data under EU law (GDPR Article 9).
-- Reading is fine: `npx supabase db query --remote --read-only "<select>"`, from a linked scratch folder (the checkout is not linked). SELECT only. Never add `--yes`: it runs the statement with full write rights (newer CLIs ask for it; the answer is `--read-only`). CLI 3.x replaced `--linked` with `--remote`.
+- Reading is fine: `npx supabase db query --remote --read-only "<select>"`, from a linked scratch folder (the checkout is not linked). SELECT only. Never add `--yes`: it runs the statement with full write rights (newer CLIs ask for it; the answer is `--read-only`). Two CLIs: `npx supabase` fetches 3.x, where `--remote` replaced `--linked`; the installed `~/.local/bin/supabase` is 2.120.0 (uses `--linked`). The backup scripts and the GitHub backup job need 2.120.0: don't upgrade it until they are changed.
 - Never run `supabase projects api-keys` (it prints the service key) and never open `.env.local` (it holds service keys).
 - Live writes happen only through a migration or the app. Never from a test or a script.
 - Migrations: write `supabase/migrations/<timestamp>_*.sql`, ask him, then apply. Run `supabase migration list --remote` first (CLI 3.x: without `--remote` both commands target the local database): `db push --remote` applies every pending migration, other sessions' too.
