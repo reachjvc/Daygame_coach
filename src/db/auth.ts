@@ -9,10 +9,8 @@ export type AuthSuccess = {
   success: true
   userId: string
   /**
-   * Carried because two callers need it and neither should reach for
-   * `getUser()` to get it: `/api/whoami` reports it, and the AI allowlist in
-   * `/api/test/generate-draft` gates on it. Optional because the identity
-   * provider does not guarantee one.
+   * Carried so `/api/whoami` can report it without reaching for `getUser()`.
+   * Optional because the identity provider does not guarantee one.
    */
   email: string | undefined
   supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>

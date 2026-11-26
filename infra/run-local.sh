@@ -109,7 +109,7 @@ https://localhost/ 200
 https://localhost/dashboard 307
 http://localhost/ 308
 https://localhost/test/crash 404
-https://localhost/api/test/pending-draft 404
+https://localhost/api/test/scripts 404
 CHECKS
   [ -z "$(docker port dg-app 2>/dev/null)" ] || die "the app container publishes a port; it must be reachable only through Caddy."
   printf '    dg-app                         publishes no port\n'
