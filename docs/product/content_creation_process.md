@@ -107,6 +107,13 @@ Worked, or worth more tries:
 - Openings and story lines: "find like 10 or 20 things to show me, and i
   pick the thing thats most catching, especially when it is the thing
   people see initially". [his words, RS-U7]
+- Where things go on screen: the person's name can go anywhere; the
+  source always in the bottom-left corner, all the way at the bottom;
+  captions near the middle, but not on the face of the person speaking.
+  [his words, R10-1] Scope: celebrity reels.
+- When he is to choose between variants (music, endings): say plainly what
+  to compare and show only the part that differs, not several full reels.
+  "i dont need to watch 6 times 1min17seconds of video". [his words, R10-2]
 - "generally i will appear in a decent amount of our reels", for example
   the outro, "or i can appear in many ways"; probably not reacting. "we
   want to generally design a process where it is easy for me to appear".

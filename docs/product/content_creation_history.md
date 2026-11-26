@@ -220,6 +220,12 @@ Chat, 2026-11-25, answering Claude's questions:
 - Cuts: picked "Fix, show finished reel".
 - Then: "You can go ahead"
 
+### Reel B round 10, his chat note (page AFFAAs…, 2026-11-26) [Track 1] [his words, verbatim]
+
+No 👍 or notes on the page.
+- R10-1: "for the celeb reels, https://claude.ai/artifact/AFFAAssocLNjj6z2tfGG37, you still dont write the things where it makes sense. The superstar name can go whereever, sources should always go left corner all the way in the bottom, captions should be somewhere near the middle but not directly in the face of the person speaking. All these can go in process docs."
+- R10-2: "If you want me to test out music or something, make this much more clear, i dont need to watch 6 times 1min17seconds of video, to figure out the music in the ending or what it is you want"
+
 ## Earlier sections, moved here unchanged on 2026-11-21
 
 ## The owner's words [Video 01, Track 2] [his words, summary]
