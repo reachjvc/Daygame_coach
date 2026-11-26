@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
 /**
- * A NEW BUILD LOADS WHEN IT IS SAFE (Plans/time-log-phone.md 2.2, C5).
+ * A NEW BUILD LOADS WHEN IT IS SAFE, AND NEVER IN FRONT OF YOU
+ * (Plans/time-log-phone.md 2.2, C5).
  *
- * The installed app could run yesterday's code for days. On coming back into
- * view the tracker asks which build the server runs: a different one reloads
- * the page when nothing is open and nothing waits to sync, and otherwise
- * offers "Updated · Tap to reload".
+ * The installed app could run yesterday's code for days. Going out of view and
+ * coming back, the tracker asks which build the server runs. A different one
+ * reloads the page only while it is out of view, with nothing open and nothing
+ * waiting to sync; otherwise it offers "Updated · Tap to reload". It used to
+ * reload the moment the page came back into view, under the owner's click.
  */
 
 import { act, cleanup, renderHook } from "@testing-library/react"
@@ -26,13 +28,15 @@ afterEach(() => {
   vi.unstubAllGlobals()
   reload.mockReset()
   document.body.innerHTML = ""
+  Object.defineProperty(document, "visibilityState", { configurable: true, value: "visible" })
 })
 
 function serverRuns(buildId: string) {
   vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ buildId }), { status: 200 })))
 }
 
-async function comeBack() {
+async function becomes(visibility: "hidden" | "visible") {
+  Object.defineProperty(document, "visibilityState", { configurable: true, value: visibility })
   await act(async () => {
     document.dispatchEvent(new Event("visibilitychange"))
     await new Promise((resolve) => setTimeout(resolve, 0))
@@ -42,23 +46,32 @@ async function comeBack() {
 test("the same build does nothing", async () => {
   serverRuns("a".repeat(40))
   const { result } = renderHook(() => useNewBuild(0))
-  await comeBack()
+  await becomes("hidden")
+  await becomes("visible")
   expect(reload).not.toHaveBeenCalled()
   expect(result.current.ready).toBe(false)
 })
 
-test("a new build with nothing open and nothing waiting reloads at once", async () => {
+test("a new build found out of view, with nothing open and nothing waiting, reloads there", async () => {
   serverRuns("b".repeat(40))
   renderHook(() => useNewBuild(0))
-  await comeBack()
+  await becomes("hidden")
   expect(reload).toHaveBeenCalledTimes(1)
+})
+
+test("a new build found on coming back into view is offered, not loaded", async () => {
+  serverRuns("b".repeat(40))
+  const { result } = renderHook(() => useNewBuild(0))
+  await becomes("visible")
+  expect(reload).not.toHaveBeenCalled()
+  expect(result.current.ready).toBe(true)
 })
 
 test("a new build with a sheet open is offered, not loaded", async () => {
   serverRuns("b".repeat(40))
   document.body.innerHTML = '<div role="dialog"></div>'
   const { result } = renderHook(() => useNewBuild(0))
-  await comeBack()
+  await becomes("hidden")
   expect(reload).not.toHaveBeenCalled()
   expect(result.current.ready).toBe(true)
 })
@@ -66,7 +79,7 @@ test("a new build with a sheet open is offered, not loaded", async () => {
 test("a new build with changes waiting to sync is offered, not loaded", async () => {
   serverRuns("b".repeat(40))
   const { result } = renderHook(() => useNewBuild(2))
-  await comeBack()
+  await becomes("hidden")
   expect(reload).not.toHaveBeenCalled()
   expect(result.current.ready).toBe(true)
 })

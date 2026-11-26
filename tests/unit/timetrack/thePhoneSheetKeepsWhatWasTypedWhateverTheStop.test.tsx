@@ -17,6 +17,7 @@
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
+import { CHECKING_SHOWN_AFTER_MS } from "@/src/timetrack/components/SyncBadge"
 import { TogglLab } from "@/src/timetrack/components/TogglLab"
 import { STORAGE_KEY } from "@/src/timetrack/config"
 import { stateToRows } from "@/src/timetrack/timetrackMapperService"
@@ -88,7 +89,7 @@ describe("the running sheet", () => {
     serve(account)
 
     render(<TogglLab />)
-    await wait(50)
+    await wait(CHECKING_SHOWN_AFTER_MS)
     expect(screen.getByRole("button", { name: /^Checking…/ })).toBeInTheDocument()
 
     fireEvent.click(bar().getByRole("button", { name: "Edit the running time entry" }))

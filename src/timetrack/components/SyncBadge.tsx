@@ -18,12 +18,26 @@
  * wait for it (D2).
  */
 
+import { useEffect, useRef, useState } from "react"
+
 import { cn } from "@/lib/utils"
 
 import type { CheckState, SyncStatus } from "../hooks/useTimetrackSync"
 
 /** Longer than this without hearing from the account, and the badge turns amber */
 export const CHECK_STALE_MS = 5 * 60_000
+
+/**
+ * A CHECK SHORTER THAN THIS IS NOT SHOWN.
+ *
+ * Every return to the page checks the account, and on a Windows PC every click
+ * back into a browser window that another window covered is a return. Most
+ * checks land in a fraction of a second, so "Checking…" blinked on and off at
+ * each click (owner, 2026-11-26: "i dont need it to do that visually to me").
+ * Start and Stop still wait for the check from its first moment; only the
+ * words wait, and the badge keeps saying what it said before.
+ */
+export const CHECKING_SHOWN_AFTER_MS = 500
 
 type Tone = "quiet" | "busy" | "amber" | "alarm"
 
@@ -152,6 +166,23 @@ export function describeBadge(status: SyncStatus, pending: number, check: CheckS
   }
 }
 
+/** True for the first `CHECKING_SHOWN_AFTER_MS` of a check: the time it is not shown */
+function useQuietCheck(checking: boolean): boolean {
+  const [late, setLate] = useState(false)
+  // a new check starts quiet again (React's "adjust state while rendering" pattern)
+  const [wasChecking, setWasChecking] = useState(checking)
+  if (wasChecking !== checking) {
+    setWasChecking(checking)
+    setLate(false)
+  }
+  useEffect(() => {
+    if (!checking) return
+    const timer = setTimeout(() => setLate(true), CHECKING_SHOWN_AFTER_MS)
+    return () => clearTimeout(timer)
+  }, [checking])
+  return checking && !late
+}
+
 export function SyncBadge({
   status,
   pending,
@@ -174,7 +205,14 @@ export function SyncBadge({
   /** tapped: check the account now, and send what is waiting */
   onCheck: () => void
 }) {
-  const shown = describeBadge(status, pending, check, nowMs)
+  const quiet = useQuietCheck(check.checking)
+  const real = describeBadge(status, pending, check, nowMs)
+  const saysChecking = real?.label === "Checking…"
+  // what the badge said before "Checking…", kept while the check is still short;
+  // anything else (signed out, not saved) shows at once
+  const before = useRef<Shown | null>(null)
+  if (!saysChecking) before.current = real
+  const shown = saysChecking && quiet ? before.current : real
   if (!shown) return null
   // Nothing to see on a phone when all is saved (Plans/time-log-phone.md 6.6), but a
   // screen reader still hears it, and the browser suite waits on these words

@@ -10,9 +10,9 @@
  */
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 
-import { SyncBadge } from "@/src/timetrack/components/SyncBadge"
+import { CHECKING_SHOWN_AFTER_MS, SyncBadge } from "@/src/timetrack/components/SyncBadge"
 import { stateToRows } from "@/src/timetrack/timetrackMapperService"
 
 import { renderDevice, wait } from "./deviceHarness"
@@ -35,9 +35,25 @@ function badge(check: { checking: boolean; lastCheckedAt: number | null; failed:
 }
 
 describe("the badge", () => {
-  test("says Checking… until the first check lands", () => {
-    const button = badge({ checking: true, lastCheckedAt: null, failed: false })
-    expect(button).toHaveTextContent("Checking…")
+  test("says Checking… once a check has taken longer than half a second", () => {
+    vi.useFakeTimers()
+    render(<SyncBadge status="synced" pending={0} check={{ checking: true, lastCheckedAt: null, failed: false }} nowMs={NOW} onCheck={() => {}} />)
+    act(() => {
+      vi.advanceTimersByTime(CHECKING_SHOWN_AFTER_MS)
+    })
+    expect(screen.getByRole("button")).toHaveTextContent("Checking…")
+  })
+
+  test("a check that lands quickly changes nothing on screen", () => {
+    vi.useFakeTimers()
+    const settled = { checking: false, lastCheckedAt: NOW - MIN, failed: false }
+    const { rerender } = render(<SyncBadge status="synced" pending={0} check={settled} nowMs={NOW} onCheck={() => {}} />)
+    const before = screen.getByRole("button").textContent
+    rerender(<SyncBadge status="synced" pending={0} check={{ ...settled, checking: true }} nowMs={NOW} onCheck={() => {}} />)
+    act(() => {
+      vi.advanceTimersByTime(CHECKING_SHOWN_AFTER_MS - 1)
+    })
+    expect(screen.getByRole("button").textContent, "a short check blinked Checking… on screen").toBe(before)
   })
 
   test("never says Saved while a change still waits to be sent", () => {

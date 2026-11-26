@@ -16,6 +16,7 @@
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"
 
+import { CHECKING_SHOWN_AFTER_MS } from "@/src/timetrack/components/SyncBadge"
 import { TogglLab } from "@/src/timetrack/components/TogglLab"
 import { STORAGE_KEY } from "@/src/timetrack/config"
 import { stateToRows } from "@/src/timetrack/timetrackMapperService"
@@ -98,7 +99,7 @@ describe("a phone that opens with an old copy", () => {
     serve(account)
 
     render(<TogglLab />)
-    await wait(50)
+    await wait(CHECKING_SHOWN_AFTER_MS)
     expect(screen.getByRole("button", { name: /^Checking…/ }), "no sign that it was checking").toBeInTheDocument()
 
     // the old copy still says Gym is running, and the owner taps Stop on it
@@ -177,7 +178,7 @@ describe("a phone that wakes with an old copy", () => {
     account.stop(gymId, PC_STOP)
     holdReads = true
     setVisibility("visible")
-    await wait(50)
+    await wait(CHECKING_SHOWN_AFTER_MS)
     expect(screen.getByRole("button", { name: /^Checking…/ }), "no sign that it was checking").toBeInTheDocument()
 
     fireEvent.click(main().getByRole("button", { name: "Stop timer" }))

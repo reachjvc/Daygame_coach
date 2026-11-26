@@ -1,17 +1,26 @@
 "use client"
 
 /**
- * A NEW BUILD IS LOADED WHEN IT IS SAFE (Plans/time-log-phone.md 2.2, C5).
+ * A NEW BUILD IS LOADED WHEN IT IS SAFE, AND NEVER IN FRONT OF YOU
+ * (Plans/time-log-phone.md 2.2, C5).
  *
  * The installed app on a phone is put away, not closed, so it could run
- * yesterday's code for days after a deploy. Each time the tracker comes back
- * into view it asks `/api/healthz` which build the server runs. When that is
- * not this page's build:
+ * yesterday's code for days after a deploy. So the tracker asks `/api/healthz`
+ * which build the server runs, each time it goes out of view and each time it
+ * comes back. When that is not this page's build:
  *
- *   - nothing open and nothing waiting to sync: the page reloads at once;
- *   - otherwise `ready` turns on, and the tracker shows a slim
- *     "Updated · Tap to reload" bar. A reload with a sheet open would drop
- *     what was being typed there; the sync queue itself is kept on disk.
+ *   - out of view, nothing open and nothing waiting to sync: the page reloads
+ *     there and then, so it is already the new build when it is looked at again;
+ *   - in view, or with something open or waiting: `ready` turns on, and the
+ *     tracker shows a slim "Updated · Tap to reload" bar. A reload with a sheet
+ *     open would drop what was being typed there; the sync queue itself is kept
+ *     on disk.
+ *
+ * IT USED TO RELOAD THE MOMENT THE PAGE CAME BACK INTO VIEW. On a Windows PC
+ * that is every click back into a browser window another window had covered
+ * (Chrome counts a covered window as hidden), and on a day with nine deploys
+ * the owner watched the page flash and rebuild under his click (2026-11-26:
+ * "i dont need it to do that visually to me").
  *
  * A page with no build id of its own (a test, an odd local build) never asks.
  */
@@ -37,20 +46,21 @@ export function useNewBuild(pendingCount: number): { ready: boolean; reload: () 
     const own = process.env.NEXT_PUBLIC_BUILD_ID
     if (!own) return
     const check = async () => {
-      if (document.visibilityState !== "visible" || asking.current) return
+      if (asking.current) return
       asking.current = true
       try {
         const response = await fetch(HEALTHZ_PATH, { cache: "no-store" })
         const body = (await response.json().catch(() => null)) as { buildId?: unknown } | null
         const served = typeof body?.buildId === "string" ? body.buildId : null
         if (!served || served === own) return
-        if (!somethingOpen() && pending.current === 0) {
+        // read after the answer: the page may have come back into view while it was asked
+        if (document.visibilityState === "hidden" && !somethingOpen() && pending.current === 0) {
           window.location.reload()
           return
         }
         setReady(true)
       } catch {
-        // offline or the server is restarting: the next return to the page asks again
+        // offline or the server is restarting: the next coming or going asks again
       } finally {
         asking.current = false
       }

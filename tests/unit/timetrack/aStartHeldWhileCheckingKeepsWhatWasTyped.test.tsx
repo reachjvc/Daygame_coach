@@ -17,6 +17,7 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import { afterEach, beforeEach, expect, test, vi } from "vitest"
 
+import { CHECKING_SHOWN_AFTER_MS } from "@/src/timetrack/components/SyncBadge"
 import { TogglLab } from "@/src/timetrack/components/TogglLab"
 import { STORAGE_KEY } from "@/src/timetrack/config"
 import { stateToRows } from "@/src/timetrack/timetrackMapperService"
@@ -63,7 +64,7 @@ test("the typed words wait as the next thing, and Switch now ends Gym and starts
   })
 
   render(<TogglLab />)
-  await wait(50)
+  await wait(CHECKING_SHOWN_AFTER_MS)
   expect(screen.getByRole("button", { name: /^Checking…/ })).toBeInTheDocument()
   fireEvent.change(main().getByPlaceholderText("What are you working on?"), { target: { value: "Stretching" } })
   fireEvent.click(main().getByRole("button", { name: "Start timer" }))
