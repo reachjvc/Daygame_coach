@@ -30,7 +30,7 @@ const SKIP_NAMES = new Set(['node_modules', '.next', '.git'])
 // Skipped only where they sit at the repo root (a `data` or `infra` folder
 // deeper down, like src/tracking/data/ or tests/unit/infra/, holds real code).
 // `public` is NOT skipped: tests import `@/public/sw.js`.
-const SKIP_ROOT = new Set(['docs', 'Plans', 'supabase', 'infra', 'data', 'new_new_clean_attempt', 'assets-aside'])
+const SKIP_ROOT = new Set(['docs', 'Plans', 'supabase', 'infra', 'data', 'assets-aside'])
 const CODE = /\.(tsx?|mjs|js|json)$/
 const EXTENSIONS = ['.ts', '.tsx', '.js', '.mjs', '.json']
 // `import type { X } from …` and `export type … from …` vanish when TypeScript

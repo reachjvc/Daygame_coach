@@ -35,7 +35,7 @@
  *    people it did not work for, people who relapsed at nine years, and people
  *    who disagree with each other. See `SURVIVORSHIP` below.
  *
- * Full corpus and citations: `docs/research/recovery-testimonials/`.
+ * Full corpus and citations: `~/research/recovery-testimonials/` (private, on the owner's PC).
  */
 
 /**

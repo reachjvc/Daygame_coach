@@ -36,6 +36,7 @@ Working in the shared folder:
 - Every `spawnSync` in a test gets `NODE_ENV: "test"` in its env.
 - `/security-review` fails here (no `origin/HEAD`). Run the review through a subagent on `<start>..HEAD`.
 - Never `git worktree remove --force` before checking that its last commit landed.
+- An old worktree holds the docs of its own commit, not today's. Before working in one, rebase it on the newest main (`git rebase origin/main`) so you read the current rules.
 - The service worker (offline Time Log) runs only in a production build: `npm run build && npx next start -p 3200`.
 - The migration history cannot be replayed from nothing (`supabase db reset` fails). That is why the test database is built from `tests/db/baseline.sql` plus the newer migrations.
 - The test database's base is `tests/db/baseline.sql` (stamped 20261110130000). Refresh it with `scripts/db/baseline.sh` once production has newer migrations (`--check` shows drift). Never hand-write a test schema: one once hid a feature that never saved.

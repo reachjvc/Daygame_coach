@@ -3,6 +3,11 @@
 Plans leave this folder when they are finished, replaced or parked. Code comments still name some of them.
 To read one: `git show <commit>:Plans/<file>` (or `docs/plans/<file>` for the oldest ones).
 
+## Old pipeline attempts, removed 2026-11-26: read them at `77e121f4`
+
+`new_new_clean_attempt/` (the March pipeline redesign, 115 files) and `scripts/voice_to_voice/` (a February
+"future feature"), with his yes. The live video pipeline is in `docs/video-pipeline.md`.
+
 ## Article-writing lab, removed 2026-11-26: read it at `d82eedfb`
 
 The February lab (`/test/articles`, its `/api/test/*` routes, `docs/articles/`, `src/articles/articlesService.ts`)
