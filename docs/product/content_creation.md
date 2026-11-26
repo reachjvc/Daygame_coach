@@ -100,6 +100,12 @@ reels from a search of 172 (300K+ views, all addictions), grouped by format: tin
 quit-app accounts, celebrity clip with a picture on top, one-shot jokes, short lists
 on a plain video, explained with a drawing, a man in his car with a free tool. Data
 and videos: `~/.cache/daygame-research/quit-reels/viral/` (rank.py, page/build.py).
+Main dashboard: page "Reels Dashboard" (expert KPIs plus his: times usual, views per
+follower, likes and comments against usual, like rate, shares; competitors; posting
+pace). Updated by hand for now; builder `~/.cache/daygame-research/quit-reels/dashboard/`
+(data.py, select.py, build.py). Daily self-update waits for his 👍.
+How much to post (Claude's proposal, from the data): 21 reels a week. About 15% of
+niche reels beat their account's usual by 3x, so 21 a week gives about 3 outliers.
 
 **Track 4, selling: nothing made.** His idea: a bar chart of quit success rates
 with "my coaching" on top and a money-back line, e.g. "quit your addiction 100%
