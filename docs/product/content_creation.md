@@ -46,25 +46,30 @@ Focus: get **one finished piece out** (2026-11-22).
 - Folder: `~/.cache/daygame-research/celeb-reels/`.
 
 **Track 2, Outvoted** (about 1:40, the blocks film)
-- The best-cut round worked: "much higher quality" (2026-11-26).
-- Before moving on: "we need to develop some way for you to understand how long
-  different things need to be on screen, before we can move on" (o-shadow). The
-  swap at 0:23 does not work yet: remove it or try another way.
-- Keep the quest-scroll opening: "very clean". Maybe add more (an hour clock)
-  without crowding it (o-open).
-- Open: the blocks on strings don't look like real physics; hands go through the
-  blankets in the bed scene; "weed" should not be on the final block.
-- Next: he records the voice (page "Outvoted Voice Script"), and the end line
-  again "with video too" (o-line). The new voice re-times the film in one command.
+- Round 2 built (2026-11-26, page "Night Reels Round 2", waits for his look):
+  quest scroll kept plus an alarm clock on the table; 0:23 swap gone (hanging
+  blocks continue from the opening, strings simulated; fallback B re-cuts old
+  clips); the final block reads YOUR ONE THING, not weed; full reel
+  `trunk-n24/b9/out/Outvoted-best3.mp4`. His filmed end line goes after the clip.
+- A way to judge how long things stay on screen (his ask): `trunk-n24/b9/DWELL.md`
+  and `dwell_check.py` (Claude, proposed, partly judgement).
+- Still open: hands through the blankets in the bed scene; the three tower
+  landings at 34.9-36.3 s ("dunk dunk dunk" risk; only the new voice moves them).
+- Next: he records the voice (page "Outvoted Voice Script", take 9 "on screen"
+  line is now out of date) and the end line again "with video too".
 - Folder: `~/.cache/daygame-research/content/reel-outvoted/film/trunk-n24/`
   (start with TRUNK.md).
 
 **Track 2, Same Night** (reel R7: why beliefs decide how quitting feels)
-- Best cut: clip C2. He records that line himself, "a little faster" (C2).
-- Next: Claude reads the belief tools in the quit tools and proposes 25 beliefs
-  with reframes, as explicit as possible; he picks 4-5.
-- "Belief" should pop on the page they write on; maybe no captions; maybe his
-  face in a circle in the top corner. The "So I tested it" line is unanswered.
+- He records the voice himself, "a little faster" (C2).
+- 25 beliefs page done; he 👍 15 (page "25 Beliefs for Same Night"). His new idea:
+  four addictions (nicotine, porn, weed, alcohol) with the same number of
+  general and specific beliefs each, shown faster. Claude's proposal (12 beliefs,
+  about 44 s): `reel-beliefs/script-v2/PROPOSAL.md`; waits for his answers on the
+  page "Night Reels Round 2". Porn has no liked line yet.
+- "Belief" pops on the page (clip built with a placeholder circle for his face,
+  no captions): `reel-beliefs/best2/`. The page text is still the old five
+  lines; rebuilt after his pattern pick. "So I tested it" is unanswered.
 - The site has 12 lies for nicotine only (weed 4, porn 5, alcohol 5), so the
   script must not say "twelve for each".
 - Folder: `~/.cache/daygame-research/content/reel-beliefs/`.
