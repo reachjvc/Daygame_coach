@@ -220,6 +220,13 @@ Chat, 2026-11-25, answering Claude's questions:
 - Cuts: picked "Fix, show finished reel".
 - Then: "You can go ahead"
 
+### Outvoted Reels page, his notes (page Dc7StfU…, 2026-11-26 06:31-06:32 UTC) [Track 2] [his words, verbatim]
+
+No 👍 given.
+- V1, Tremor ending (1:41): "i prefer a few things in this one, about 90% done"
+- V2, Candles ending (0:37): "i could see the different sized blocks working, but theyre only on screen for a few seconds"
+- Chat, 2026-11-26: "i looked at the night reels now. I gess the next thing is to record my voice. Can you send me an artifact of the script you'd like me to say"
+
 ### Reel B round 10, his chat note (page AFFAAs…, 2026-11-26) [Track 1] [his words, verbatim]
 
 No 👍 or notes on the page.
