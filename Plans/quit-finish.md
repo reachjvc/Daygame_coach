@@ -81,12 +81,16 @@ None is ticked, and the quit notes board has no notes yet.
   table above.
 
 **2. Our own belief tool (study, round 3).** Claude studied about 25 real belief tools: working copies and
-video studies are on the look page; all their beliefs are on one belief list (the 25 Nov version, 368 cards; a
-newer build exists but is not published).
+video studies are on the look page. All their beliefs are on the **Belief Map** (published 2026-11-26): one block
+per single belief, Easyway's wording and reply first, then the same belief in other tools (592 beliefs, every line
+word for word). It replaces the older belief list for deciding.
 - 2026-11-25: you struck 44 beliefs and wrote two notes on the list: "this was hard for me to read, but probably
   valuable" and "so many replications of the exact same words, it is a kind of bad job youve done here". Claude then
   rebuilt the list: one row per belief, and a box per tool with a plain summary and that tool's own lines.
-- No marks yet on the round-3 tools on the look page. Next: you mark Keep, Cut, 👍 or notes on the list and mark the look
+- 2026-11-26: you found that version too hard to work with (one Cut hit several beliefs; competitor lines mixed).
+  You asked for: the belief as Easyway words it, their reply, addiction copies shown once, then the cousins from
+  other tools. Claude built that as the Belief Map. Your old strikes show there as "You struck this before".
+- No marks yet on the round-3 tools on the look page. Next: you mark Keep, Cut, 👍 or notes on the Belief Map and mark the look
   page. Then Claude designs our tool: start from the copy you liked best and turn each change into one plain
   question (Keep / Change). Then build, check, and you say done.
 - The 12 lies test stays as it is until you decide (see question 7).
@@ -140,8 +144,9 @@ newer build exists but is not published).
   `~/.cache/daygame-research/one-pagers-v2/rulebook-private.md`. Source data: `docs/research/addiction-one-pagers/08-v3/`.
 - Your pages: daily page https://claude.ai/artifact/FJPtUMkjkJnEtwvn5J6M1t; quit notes board
   https://claude.ai/artifact/E2ThcB2qrCmcbCyJVhVdDJ (source `~/.cache/daygame-research/quit-finish/board/`);
-  belief tools look page https://claude.ai/artifact/AdANNvEXV3dMFoZsC3WrtF; belief list
-  https://claude.ai/artifact/JZf7qwpmp45tzpVRhastfx (built by `round3/beliefs/page/build3.py` in the belief study).
+  belief tools look page https://claude.ai/artifact/AdANNvEXV3dMFoZsC3WrtF; Belief Map
+  https://claude.ai/artifact/55QSbJEd4RUizQfr9AwoWn (built by `round3/beliefs/page/build4.py`, tests `test6.cjs`, in
+  the belief study); older belief list https://claude.ai/artifact/JZf7qwpmp45tzpVRhastfx (`build3.py`).
 - Private folders (they name other products; never copy into the repo): review reports of 2026-11-19
   `~/.cache/daygame-research/quit-review-2026-11-19/` (A–E, F1, F2 `-report.md`); build notes and fetched sources
   `~/.cache/daygame-research/quit-finish/`; belief study `~/.cache/daygame-research/quit-copy/beliefs/round3/`.
