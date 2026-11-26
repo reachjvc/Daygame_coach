@@ -56,12 +56,16 @@ Focus (owner, 2026-11-22): get **one finished piece out** first.
 - Page "Outvoted Voice Script" (9 takes) waits for his recording. The new voice
   re-times the film in one command.
 - Still open: bed physics (hands through blankets).
+- Best cut (2026-11-26, page "Night Reels Best Cut"): V1 Tremor plus the shadow-man
+  (different-sized blocks) from V2. Open: shadow-man length, opening, filmed line.
 - Private folder: `~/.cache/daygame-research/content/reel-outvoted/film/trunk-n24/`
   (start with TRUNK.md).
 
 **Track 2, Same Night** (reel R7, "why beliefs decide how quitting feels").
 - Page "Same Night Trunks": three orders of the story. Claude proposes T2;
   his pick is open. Only clip C is built; nothing more until he picks.
+- His notes (2026-11-24): C2 "probably use this"; show the word "belief" bigger and
+  popping. Done in the best cut. Open: order, keep all 4 pops, the "I tested it" line.
 - Fact: the site has 12 lies for nicotine only (weed 4, porn 5, alcohol 5), so
   "twelve for each" is not true.
 - Private folder: `~/.cache/daygame-research/content/reel-beliefs/`.
