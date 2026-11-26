@@ -1,8 +1,14 @@
 # Track 3: the top of our niche on Instagram (producers, reels, text posts)
 
-Status (2026-11-26): plan 3, proposed by Claude, not approved. Replaces plans 1 and 2 of the same day (he called them
-expensive and weak). Nothing paid runs until he says yes to the probe batch (about $0.33). Spent so far: $0.32 of the
-free $5 a month.
+Status (2026-11-26, evening): he approved the probe batch and asked for cheap first and daily tracking. Probes ran
+($0.11): Social Blade gives exact counts but no Instagram history; the reel search finds creators but its view counts
+are rough; similar-accounts gave 1 result; the search returned 0 carousels. A free route replaced the paid plan:
+vidIQ's free Instagram audit gives exact followers and every reel of the last 30 days (matches Apify on 20 reels).
+A daily tracker now runs from cron (hourly, reads each account once a day, $0) into a SQLite file on this PC:
+`~/.cache/daygame-research/quit-reels/tracker/` (track.py, report.py, seeds.txt with account labels, 13 tests in
+test_tracker.py). Day 1: 46 niche accounts, 481 reels. Page "Instagram Tracker" waits on his calls: videos of top
+reels (~$0.05/week), weekly creator search (~$0.15/week), carousels (no route), where the database lives.
+Spent so far this month: $0.43 of $5. The sections below are plan 3 as proposed before the probes.
 
 ## In plain words
 
