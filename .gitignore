@@ -126,3 +126,7 @@ infra/caddy/local-root-ca.crt
 !supabase/migrations/**
 !supabase/pending-owner-approval/*.sql
 !tests/db/*.sql
+
+# The Time Log's approved screen photos are tests, not output (docs/tech.md section 6)
+!tests/e2e/timelog-guard/photos/__screens__/
+!tests/e2e/timelog-guard/photos/__screens__/**/*.png
