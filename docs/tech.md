@@ -108,6 +108,8 @@ Next steps, in order:
 2. Reproduce it with a two-device browser test, repeated 30 times. Commit the failing test, then the fix.
 3. His 10 everyday Time Log tasks as tests at phone and PC size (he checks the list).
 4. Clock traps with a fake clock: midnight, summer/winter time, timers over 24 hours.
+Screen photos (built, not yet checked by him): `tests/e2e/timelog-guard/photos/`, six screens at phone and PC size, run on every push by the CI job `timelog-photos` (`E2E passed` waits for it). Run them with `bash scripts/timelog-photos.sh` (needs `E2E_STACK_ENV` and `PW_BASE_URL`, header of the script): only inside its pinned Docker image, never `npx playwright test` directly (the spec throws).
+Rule: when a photo must change on purpose, show him the old and the new on an artifact page and update it (`--update-snapshots`) only after his yes. Never raise the 1% tolerance to get past a red run.
 Claude's doubt: screen-photo tests and the test lock cost the most; do them last. "Hold the live site back when the Time Log check fails" is mostly true already: since 20 Nov main takes only commits that passed E2E.
 
 ## 7. The live site

@@ -113,6 +113,16 @@ const LIVE = /(^|\/)live\//
  * so nothing runs twice.
  */
 const GUARD = /\/e2e\/timelog-guard\/[^/]*\.spec\.ts$/
+/**
+ * The Time Log's approved screen photos (tests/e2e/timelog-guard/photos): run by
+ * the two `timelog-photos-*` projects only, and only inside the pinned Docker
+ * image (scripts/timelog-photos.sh), because a photo is compared pixel by pixel
+ * and fonts and edges differ on every other machine. A subfolder, so GUARD
+ * (direct children only) never matches it; every other project ignores it.
+ */
+const PHOTOS = /\/e2e\/timelog-guard\/photos\//
+
+const PHOTO_PATH = 'tests/e2e/timelog-guard/photos/__screens__/{projectName}/{arg}{ext}'
 
 /**
  * The derived sweeps open every page in the app (tests/support/appRoutes.ts).
@@ -163,13 +173,13 @@ export default defineConfig({
     // === Every pull request ===
     {
       name: 'desktop',
-      testIgnore: [/mobile\//, SWEEPS, LIVE, GUARD],
+      testIgnore: [/mobile\//, SWEEPS, LIVE, GUARD, PHOTOS],
       grepInvert: TIMING,
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'timing',
-      testIgnore: [/mobile\//, SWEEPS, LIVE, GUARD],
+      testIgnore: [/mobile\//, SWEEPS, LIVE, GUARD, PHOTOS],
       grep: TIMING,
       workers: 1,
       use: { ...devices['Desktop Chrome'] },
@@ -183,14 +193,14 @@ export default defineConfig({
      */
     {
       name: 'android',
-      testIgnore: [SWEEPS, LIVE, GUARD],
+      testIgnore: [SWEEPS, LIVE, GUARD, PHOTOS],
       grep: PHONE,
       grepInvert: TIMING,
       use: { ...devices['Pixel 7'] },
     },
     {
       name: 'timing-android',
-      testIgnore: [SWEEPS, LIVE, GUARD],
+      testIgnore: [SWEEPS, LIVE, GUARD, PHOTOS],
       grep: PHONE_TIMING,
       workers: 1,
       use: { ...devices['Pixel 7'] },
@@ -221,19 +231,35 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], timezoneId: 'Europe/Copenhagen' },
     },
 
+    // === The Time Log's screen photos: every push, inside Docker only (e2e.yml, job `timelog-photos`) ===
+    // Photos are stored without an operating-system suffix, because they are only ever made in one place:
+    // the Playwright image pinned in scripts/timelog-photos.sh.
+    {
+      name: 'timelog-photos-phone',
+      testMatch: PHOTOS,
+      snapshotPathTemplate: PHOTO_PATH,
+      use: { ...devices['Pixel 7'], timezoneId: 'Europe/Copenhagen' },
+    },
+    {
+      name: 'timelog-photos-desktop',
+      testMatch: PHOTOS,
+      snapshotPathTemplate: PHOTO_PATH,
+      use: { ...devices['Desktop Chrome'], timezoneId: 'Europe/Copenhagen' },
+    },
+
     // === Nightly (Q5): the other engines and the iPhone ===
     // One worker each: they are small, and they carry the @timing tests that
     // are engine-sensitive (a background tab's timers differ by engine).
     {
       name: 'firefox',
-      testIgnore: [SWEEPS, LIVE, GUARD],
+      testIgnore: [SWEEPS, LIVE, GUARD, PHOTOS],
       grep: ENGINE,
       workers: 1,
       use: { ...devices['Desktop Firefox'] },
     },
     {
       name: 'webkit',
-      testIgnore: [SWEEPS, LIVE, GUARD],
+      testIgnore: [SWEEPS, LIVE, GUARD, PHOTOS],
       grep: ENGINE,
       workers: 1,
       use: { ...devices['Desktop Safari'] },
@@ -245,7 +271,7 @@ export default defineConfig({
      */
     {
       name: 'phone',
-      testIgnore: [SWEEPS, LIVE, GUARD],
+      testIgnore: [SWEEPS, LIVE, GUARD, PHOTOS],
       grep: PHONE,
       grepInvert: TIMING,
       workers: process.env.CI ? 2 : undefined,
@@ -253,7 +279,7 @@ export default defineConfig({
     },
     {
       name: 'timing-phone',
-      testIgnore: [SWEEPS, LIVE, GUARD],
+      testIgnore: [SWEEPS, LIVE, GUARD, PHOTOS],
       grep: PHONE_TIMING,
       workers: 1,
       use: { ...devices['iPhone 14'] },
@@ -300,7 +326,9 @@ export default defineConfig({
       : `npx next dev -p ${E2E_PORT}`,
     url: BASE_URL,
     ignoreHTTPSErrors: LOCAL_HTTPS,
-    reuseExistingServer: !process.env.CI,
+    // Under CI a server that is already there is an error (a leftover from another step), except when
+    // the run was told where the app is: the photo job starts the app on the runner, outside Docker.
+    reuseExistingServer: !process.env.CI || !!process.env.PW_BASE_URL,
     // The CI build alone measured ~90 s on a 4-CPU runner, and every shard
     // builds; 120 s left a shard one slow runner away from failing unbuilt.
     timeout: process.env.CI ? 300_000 : 120_000,

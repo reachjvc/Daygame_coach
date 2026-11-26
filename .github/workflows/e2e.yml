@@ -8,6 +8,8 @@ name: E2E Tests
 #   every push          `e2e-fast`: the desktop route sweep, minutes.
 #                       `timelog-guard`: the owner's everyday Time Log stories,
 #                       once at phone size and once at PC size (tests/e2e/timelog-guard).
+#                       `timelog-photos`: the approved screen photos of the Time Log,
+#                       phone and PC, compared inside one pinned Docker image.
 #   pull requests into  `lanes`: every pull-request lane of playwright.config.ts,
 #   main and beta, and  split into shards that run side by side.
 #   pushes to them
@@ -365,15 +367,119 @@ jobs:
     steps: *lane-steps
 
   # ===========================================================================
+  # THE TIME LOG'S APPROVED SCREEN PHOTOS. Every push, every branch.
+  #
+  # Six screens at phone size and at PC size, each compared with an approved
+  # photo (tests/e2e/timelog-guard/photos). They are the projects
+  # `timelog-photos-phone` and `timelog-photos-desktop`; every other project
+  # ignores their folder. One matrix entry per project, each with a backend and
+  # an app of its own, like the guard.
+  #
+  # THE BROWSER RUNS INSIDE THE PINNED PLAYWRIGHT IMAGE, not on the runner:
+  # a photo is compared pixel by pixel, and fonts and edges differ on every
+  # other machine. scripts/timelog-photos.sh holds the image (tag and digest) and
+  # is the same command the photos are made with on the owner's computer, so CI
+  # and local draw the same pixels. The backend and the app stay on the runner
+  # (the container shares its network); the container only holds the browser
+  # and the tests. A photo that must change is changed on purpose, with the
+  # owner's yes (docs/tech.md section 6); never by raising a tolerance here.
+  #
+  # A red run keeps the pictures (what was expected, what was drawn, the
+  # difference) for 7 days. No traces: this repository is public.
+  # ===========================================================================
+  timelog-photos:
+    name: ${{ matrix.lane }} ${{ matrix.shard }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { lane: timelog-photos-phone, shard: 1/1, browser: chromium }
+          - { lane: timelog-photos-desktop, shard: 1/1, browser: chromium }
+    steps:
+      # FIRST, BEFORE ANYTHING TOUCHES THE NETWORK: see `lanes` above.
+      - name: Keep the test backend's ports out of the ephemeral range
+        run: sudo sysctl -w net.ipv4.ip_local_reserved_ports=55320-55329
+
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Cache the Next build
+        uses: actions/cache@v4
+        with:
+          path: .next-e2e/cache
+          key: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.120.0
+
+      # The test backend, started here on the runner (the container cannot start
+      # it). Its address and keys, and the three variables the app is built and
+      # started with, are handed on to the next steps. They are the local
+      # stack's own keys, the same on every machine; they open nothing else.
+      - name: Start the test backend
+        run: |
+          stack="$(node scripts/db/test-stack.mjs up)"
+          {
+            echo "E2E_STACK_ENV=$stack"
+            echo "NEXT_PUBLIC_SUPABASE_URL=$(node -p 'JSON.parse(process.argv[1]).API_URL' "$stack")"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(node -p 'JSON.parse(process.argv[1]).ANON_KEY' "$stack")"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$(node -p 'JSON.parse(process.argv[1]).SERVICE_ROLE_KEY' "$stack")"
+          } >> "$GITHUB_ENV"
+
+      - name: Build the app
+        run: npm run build
+        env:
+          NEXT_DIST_DIR: .next-e2e
+
+      - name: Start the app
+        run: |
+          nohup npm start -- -p 3200 > app.log 2>&1 &
+          for _ in $(seq 1 60); do
+            curl -fsS http://localhost:3200/api/healthz > /dev/null 2>&1 && exit 0
+            sleep 2
+          done
+          cat app.log
+          exit 1
+        env:
+          NEXT_DIST_DIR: .next-e2e
+
+      - name: Take the photos in the pinned image
+        run: bash scripts/timelog-photos.sh --project=${{ matrix.lane }}
+        env:
+          CI: true
+          PW_BASE_URL: http://localhost:3200
+
+      - name: Keep the pictures
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: photos-${{ matrix.lane }}
+          path: |
+            test-results/
+            tests/e2e/timelog-guard/photos/__screens__/
+          retention-days: 7
+
+  # ===========================================================================
   # THE GATE. GitHub's branch protection on main requires this one check
   # ("E2E passed"), so a commit reaches main only after every browser job
   # here passed on it (scripts/ship.mjs). On main and ship-* every lane must
   # pass; on other branches the lanes are skipped by design and only the fast
-  # job and the Time Log guard count (both run on every push).
+  # job, the Time Log guard and the screen photos count (all run on every push).
   # ===========================================================================
   e2e-passed:
     name: E2E passed
-    needs: [e2e-fast, lanes, timelog-guard]
+    needs: [e2e-fast, lanes, timelog-guard, timelog-photos]
     if: ${{ always() && github.event_name != 'schedule' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -383,11 +489,13 @@ jobs:
           FAST: ${{ needs.e2e-fast.result }}
           LANES: ${{ needs.lanes.result }}
           GUARD: ${{ needs.timelog-guard.result }}
+          PHOTOS: ${{ needs.timelog-photos.result }}
           FULL: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta' || startsWith(github.ref, 'refs/heads/ship-') }}
         run: |
-          echo "e2e-fast: $FAST, timelog-guard: $GUARD, lanes: $LANES (every lane required: $FULL)"
+          echo "e2e-fast: $FAST, timelog-guard: $GUARD, timelog-photos: $PHOTOS, lanes: $LANES (every lane required: $FULL)"
           [ "$FAST" = success ] || exit 1
           [ "$GUARD" = success ] || exit 1
+          [ "$PHOTOS" = success ] || exit 1
           if [ "$FULL" = true ]; then [ "$LANES" = success ] || exit 1; fi
 
   # ===========================================================================

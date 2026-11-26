@@ -88,7 +88,7 @@ function shardsOf(job: string, body: string): Shard[] {
 
 const e2eJobs = jobs(e2e)
 /** The jobs that run Playwright. A new one not named here makes its lanes look like lanes nothing runs. */
-const browserJobs = ["e2e-fast", "lanes", "nightly", "timelog-guard"]
+const browserJobs = ["e2e-fast", "lanes", "nightly", "timelog-guard", "timelog-photos"]
 const liveCheckJobs = jobs(uncommented(readFileSync(join(root, ".github/workflows/live-check.yml"), "utf8")))
 // The `live` project belongs to live-check.yml (Phase 6 of Plans/tests-catch-what-matters.md), not to e2e.yml.
 const SHARDS = browserJobs.flatMap((job) => shardsOf(job, e2eJobs[job] ?? ""))
@@ -107,8 +107,9 @@ describe("the browser tests that CI actually runs", () => {
     // `github.ref == 'refs/heads/main'` is never true on a pull request, whose
     // ref is refs/pull/N/merge, and every lane would skip, green.
     expect(e2eJobs["e2e-fast"]).not.toMatch(/^ {4}if:/m)
-    // the Time Log guard runs on every push, on every branch, like e2e-fast
+    // the Time Log guard and the screen photos run on every push, on every branch, like e2e-fast
     expect(e2eJobs["timelog-guard"]).not.toMatch(/^ {4}if:/m)
+    expect(e2eJobs["timelog-photos"]).not.toMatch(/^ {4}if:/m)
     expect(e2eJobs["lanes"]).toMatch(
       /^ {4}if: \$\{\{ github\.event_name != 'push' \|\| github\.ref == 'refs\/heads\/main' \|\| github\.ref == 'refs\/heads\/beta' \|\| startsWith\(github\.ref, 'refs\/heads\/ship-'\) \}\}$/m,
     )
@@ -121,13 +122,22 @@ describe("the browser tests that CI actually runs", () => {
     // The guard is outside `lanes`, which skips most branches. If the gate stopped waiting for it, or
     // let it be skipped, a red Time Log story would reach main under a green "E2E passed".
     const gate = e2eJobs["e2e-passed"] ?? ""
-    expect(gate).toMatch(/needs: \[e2e-fast, lanes, timelog-guard\]/)
+    expect(gate).toMatch(/needs: \[e2e-fast, lanes, timelog-guard, timelog-photos\]/)
     expect(gate).toContain("GUARD: ${{ needs.timelog-guard.result }}")
     // not inside the `if [ "$FULL" = true ]` branch: it is required whatever the branch
     expect(gate).toMatch(/^ {10}\[ "\$GUARD" = success \] \|\| exit 1$/m)
     // and the two projects are the ones it runs, each on its own runner
     const guard = SHARDS.filter((s) => s.job === "timelog-guard").map((s) => s.lane).sort()
     expect(guard).toEqual(["timelog-guard-desktop", "timelog-guard-phone"])
+  })
+
+  test("E2E passed needs the screen photos on every push too, and they are run by their own two projects", () => {
+    // Same reason as the guard: outside `lanes`, so only the gate makes a changed screen block main.
+    const gate = e2eJobs["e2e-passed"] ?? ""
+    expect(gate).toContain("PHOTOS: ${{ needs.timelog-photos.result }}")
+    expect(gate).toMatch(/^ {10}\[ "\$PHOTOS" = success \] \|\| exit 1$/m)
+    const photos = SHARDS.filter((s) => s.job === "timelog-photos").map((s) => s.lane).sort()
+    expect(photos).toEqual(["timelog-photos-desktop", "timelog-photos-phone"])
   })
 
   test("every Playwright project is run by exactly one CI job", () => {
@@ -279,7 +289,53 @@ describe("the Time Log guard runs once, in its own two projects", () => {
   })
 })
 
+describe("the Time Log screen photos run once, in their own two projects, in one pinned image", () => {
+  const FILE = "/repo/tests/e2e/timelog-guard/photos/screens.spec.ts"
+  const photos = PROJECTS.filter((p) => p.name?.startsWith("timelog-photos-"))
+  const selects = (p: (typeof PROJECTS)[number]) => !(p.testMatch instanceof RegExp) || p.testMatch.test(FILE)
+  const ignores = (p: (typeof PROJECTS)[number]) => [p.testIgnore ?? []].flat().some((r) => r instanceof RegExp && r.test(FILE))
+  const script = readFileSync(join(root, "scripts/timelog-photos.sh"), "utf8")
+
+  test("one at phone size and one at PC size, in Copenhagen time, photos stored with no operating-system suffix", () => {
+    expect(photos.map((p) => p.name).sort()).toEqual(["timelog-photos-desktop", "timelog-photos-phone"])
+    expect(photos.find((p) => p.name === "timelog-photos-phone")?.use?.isMobile, "the phone project is a phone").toBe(true)
+    expect(photos.find((p) => p.name === "timelog-photos-desktop")?.use?.isMobile ?? false, "the PC project is not").toBe(false)
+    for (const p of photos) {
+      expect(p.use?.timezoneId, `${p.name}: a fixed time zone`).toBe("Europe/Copenhagen")
+      expect(p.snapshotPathTemplate, `${p.name}: where its photos live`).toBe("tests/e2e/timelog-guard/photos/__screens__/{projectName}/{arg}{ext}")
+    }
+  })
+
+  test("only they run the folder: every other project ignores it, the guard's pattern does not reach into it", () => {
+    for (const p of photos) expect(selects(p), `${p.name} does not select ${FILE}`).toBe(true)
+    const doubled = PROJECTS.filter((p) => !photos.includes(p) && selects(p) && !ignores(p)).map((p) => p.name)
+    expect(doubled, "projects that would also run the photos, where the image is not the pinned one").toEqual([])
+  })
+
+  test("they are run inside the image whose tag is Playwright's own version, pinned by digest", () => {
+    // Another Playwright than the image's would draw another picture, and a tag alone can be re-pushed.
+    const version = JSON.parse(readFileSync(join(root, "node_modules/@playwright/test/package.json"), "utf8")).version as string
+    const image = script.match(/^IMAGE="([^"]+)"$/m)?.[1] ?? ""
+    expect(image).toMatch(new RegExp(`^mcr\\.microsoft\\.com/playwright:v${version.replace(/\./g, "\\.")}-noble@sha256:[0-9a-f]{64}$`))
+    expect(script, "the spec refuses to run without this").toContain("-e PW_IN_PHOTO_IMAGE=1")
+    expect(script, "the container shares the host's network, where the app and the backend are").toContain("--network host")
+    expect(script, "files written there belong to the user, not root").toContain('--user "$(id -u):$(id -g)"')
+  })
+
+  test("CI runs them through that same script, and keeps no trace", () => {
+    const job = e2eJobs["timelog-photos"] ?? ""
+    expect(job).toContain("bash scripts/timelog-photos.sh --project=${{ matrix.lane }}")
+    expect(job, "the app is started on the runner and named to the container").toContain("PW_BASE_URL: http://localhost:3200")
+    expect(job, "a picture of what was drawn is kept when the job is red").toMatch(/if: failure\(\)/)
+    expect(job).not.toMatch(/trace/i)
+    // the browser is the image's: one downloaded on the runner would be a second, unpinned machine
+    expect(job, "the photos must not use a browser installed on the runner").not.toContain("playwright install")
+  })
+})
+
 describe("which phone and how many workers (Plans/tests-green-and-fast.md, Phase 5)", () => {
+  /** Jobs whose browser lives in a Docker image, not on the runner: no browser download, cache or system libraries to check */
+  const BROWSER_IN_IMAGE = ["timelog-photos"]
   const lanesIn = (job: string) => new Set(SHARDS.filter((s) => s.job === job).map((s) => s.lane))
   const project = (name: string) => PROJECTS.find((p) => p.name === name)
 
@@ -307,6 +363,7 @@ describe("which phone and how many workers (Plans/tests-green-and-fast.md, Phase
       expect(steps, `${job}: Next cache key`).toContain(
         "key: next-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ github.sha }}",
       )
+      if (BROWSER_IN_IMAGE.includes(job)) continue
       expect(steps, `${job}: no browser cache`).toContain("path: ~/.cache/ms-playwright")
       expect(steps.indexOf("path: ~/.cache/ms-playwright"), `${job}: browsers cached after the install`).toBeLessThan(
         steps.indexOf("npx playwright install"),
@@ -317,7 +374,7 @@ describe("which phone and how many workers (Plans/tests-green-and-fast.md, Phase
   test("system libraries are installed only when the browser will not start without them, and then for sure", () => {
     // apt's mirror was throttled to 67 kB/s under load (E2E 44405093527), so the
     // install is a fallback; but a browser that cannot start must never be run.
-    for (const job of browserJobs) {
+    for (const job of browserJobs.filter((j) => !BROWSER_IN_IMAGE.includes(j))) {
       const steps = /steps: \*lane-steps/.test(e2eJobs[job] ?? "") ? e2eJobs["lanes"] : (e2eJobs[job] ?? "")
       // Either `launch(...) || install-deps`, or `if ! launch(...); then ... install-deps` (the lanes, which
       // restore and save the downloaded .deb files around it).
@@ -381,7 +438,7 @@ describe("the duration ratchet watches what CI runs", () => {
   test("the names it looks for are the names GitHub shows", () => {
     // The ratchet matches the API's display name: `lane shard` for a matrix
     // job, from this exact template, and the job key for a job with no `name:`.
-    for (const job of ["lanes", "nightly", "timelog-guard"]) {
+    for (const job of ["lanes", "nightly", "timelog-guard", "timelog-photos"]) {
       expect(e2eJobs[job]).toMatch(/^ {4}name: \$\{\{ matrix\.lane \}\} \$\{\{ matrix\.shard \}\}$/m)
     }
     expect(e2eJobs["e2e-fast"]).not.toMatch(/^ {4}name:/m)
@@ -478,12 +535,13 @@ describe("when CI runs at all", () => {
     for (const job of browserJobs) {
       // `nightly` reuses `lanes`' steps through a YAML anchor (`steps: *lane-steps`).
       const steps = /steps: \*lane-steps/.test(e2eJobs[job] ?? "") ? e2eJobs["lanes"] : (e2eJobs[job] ?? "")
+      // `timelog-photos` runs Playwright through scripts/timelog-photos.sh (inside Docker), not `npx playwright test` itself
+      const runs = steps.includes("npx playwright test") ? "npx playwright test" : "scripts/timelog-photos.sh"
       const browserCli = steps.match(/- uses: supabase\/setup-cli@v\d+\n\s+with:\n\s+version: ([\d.]+)/)
       expect(browserCli, `e2e.yml's ${job} does not install the Supabase CLI`).not.toBeNull()
       expect(browserCli![1], `e2e.yml's ${job} installs another Supabase CLI than the test stack`).toBe(pinned)
-      expect(steps.indexOf("supabase/setup-cli"), `${job} installs the CLI after Playwright needs it`).toBeLessThan(
-        steps.indexOf("npx playwright test"),
-      )
+      expect(steps.indexOf(runs), `${job} never runs Playwright`).toBeGreaterThan(-1)
+      expect(steps.indexOf("supabase/setup-cli"), `${job} installs the CLI after Playwright needs it`).toBeLessThan(steps.indexOf(runs))
     }
   })
 

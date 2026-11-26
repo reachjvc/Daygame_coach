@@ -50,7 +50,7 @@ describe("commit-checks: main takes a commit only when both gates passed", () =>
     const e2e = readFileSync(".github/workflows/e2e.yml", "utf8")
     expect(REQUIRED_CHECKS).toEqual(["CI passed", "E2E passed"])
     expect(ci).toMatch(/^ {2}ci-passed:\n {4}name: CI passed\n {4}needs: \[static, unit, database\]\n {4}if: \$\{\{ always\(\) \}\}$/m)
-    expect(e2e).toMatch(/^ {2}e2e-passed:\n {4}name: E2E passed\n {4}needs: \[e2e-fast, lanes, timelog-guard\]$/m)
+    expect(e2e).toMatch(/^ {2}e2e-passed:\n {4}name: E2E passed\n {4}needs: \[e2e-fast, lanes, timelog-guard, timelog-photos\]$/m)
   })
 
   test("Vercel does not deploy the ship-* test branches", () => {
