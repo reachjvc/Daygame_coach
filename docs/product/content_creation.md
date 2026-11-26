@@ -35,13 +35,13 @@ finish them today because potentially it really should point to it" (2026-11-23)
 Focus: get **one finished piece out** (2026-11-22).
 
 **Track 1, Reel B** (five superstars who quit drinking or drugs)
-- Round 12 page "Reel B Round 12" (2026-11-26) acts on his Reel B Final notes
-  (R12-1..3, now in his notes file): every cut re-checked on the sound (0:15 was one
-  word running into the next); pauses over 0.3 s cut out (P1 1:10, P2
-  1:06 with two lines dropped); each man's band intro under him, piano for
-  the last man. Votes: pace P1/P2, band music yes/no. Copyright answered on the page:
-  band songs are in the review draft only; for posting they go in through
-  Instagram's own music ("Add to mix"), which is licensed.
+- Round 13 page "Reel B Round 13" (2026-11-26, waits for his look) acts on his
+  Round 12 notes (R13-1..3): his pick P2 ("Faster is better"), band music yes,
+  Instagram's own music for posting "Sounds good". New: each song starts on a
+  strong beat as each man starts; music rises in the pauses; Hetfield's song is
+  Enter Sandman; a short band-video shot of each man (none of Sixx: no clear
+  face). One vote: A = 0.7 s riff break before each man (1:08), B = none (1:06).
+  Five cuts flagged for his ear. Files: `celeb-reels/code/*13.py`, `out13/`.
 - Earlier: outro music "does not really add anything, i think. I think it could
   in some scenarios"; he wants to see 10 real videos that use it (R11-2).
 - Music M2-M5 are Kevin MacLeod, CC BY 4.0: the post needs a credit line.
@@ -54,13 +54,14 @@ celeb talking about something, and us showing something different over it." In t
 pipeline after Reel B; nothing built. Which reel: `~/research/competitors/README.md`.
 
 **Track 2, Outvoted** (about 1:40, the blocks film)
-- Round 2 built (2026-11-26, page "Night Reels Round 2", waits for his look):
-  quest scroll kept plus an alarm clock on the table; 0:23 swap gone (hanging
-  blocks continue from the opening, strings simulated; fallback B re-cuts old
-  clips); the final block reads YOUR ONE THING, not weed; full reel
-  `trunk-n24/b9/out/Outvoted-best3.mp4`. His filmed end line goes after the clip.
-- A way to judge how long things stay on screen (his ask): `trunk-n24/b9/DWELL.md`
-  and `dwell_check.py` (Claude, proposed, partly judgement).
+- Round 3 page "Outvoted Round 3" (2026-11-26, waits for his look) acts on
+  NR2-1..3: he 👍 the opening (quest scroll + alarm clock) and the YOUR ONE
+  THING end, both kept as they were. Strings rebuilt on his pick B (thinner, one
+  shared point above, each line fades out once its block lands); the quest stand
+  at 1:18 now comes down from above instead of rising out of the floor. Full reel
+  `trunk-n24/b10/out/Outvoted-best4.mp4`.
+- How long things stay on screen: "Hard to make a rule for it, it depends on the
+  animation" (NR2-3). No rule; `b9/dwell_check.py` is a rough hint at most.
 - Still open: hands through the blankets in the bed scene; the three tower
   landings at 34.9-36.3 s ("dunk dunk dunk" risk; only the new voice moves them).
 - Next: he records the voice (page "Outvoted Voice Script", take 9 "on screen"
@@ -70,14 +71,14 @@ pipeline after Reel B; nothing built. Which reel: `~/research/competitors/README
 
 **Track 2, Same Night** (reel R7: why beliefs decide how quitting feels)
 - He records the voice himself, "a little faster" (C2).
-- 25 beliefs page done; he 👍 15 (page "25 Beliefs for Same Night"). His new idea:
-  four addictions (nicotine, porn, weed, alcohol) with the same number of
-  general and specific beliefs each, shown faster. Claude's proposal (12 beliefs,
-  about 44 s): `reel-beliefs/script-v2/PROPOSAL.md`; waits for his answers on the
-  page "Night Reels Round 2". Porn has no liked line yet.
-- "Belief" pops on the page (clip built with a placeholder circle for his face,
-  no captions): `reel-beliefs/best2/`. The page text is still the old five
-  lines; rebuilt after his pattern pick. "So I tested it" is unanswered.
+- Round 3 page "Same Night Round 3" (2026-11-26, waits for his look) acts on
+  NR2-4/5: four beliefs per addiction (his general one plus three specific);
+  porn beliefs researched anew (lonely, can't sleep without it, every guy does
+  it; research in `~/research/content/porn-beliefs-2026-11-26.md`); weed's second
+  belief replaced. The "current vs new" labels are gone; three ways to make the
+  new belief pop (A arrow, B strike-through + underline, Claude's pick, C marker).
+  Length question: a new belief for all 16 is about 65 s; a new belief for the 4
+  general ones only is about 50 s (Claude's pick). Script `reel-beliefs/script-v3/`.
 - The site has 12 lies for nicotine only (weed 4, porn 5, alcohol 5), so the
   script must not say "twelve for each".
 - Folder: `~/.cache/daygame-research/content/reel-beliefs/`.
