@@ -4,6 +4,10 @@ Read `docs/product/content_creation.md` first. Quotes are his words. The code
 after a quote (R3-6, RS-Q3…) finds it in `~/research/content/notes-history.md`.
 Lines marked **(Claude)** are Claude's method; drop one if he says it is wrong.
 
+## Step 0 (Claude)
+
+First step of any content design: read the content research master file, `~/research/content-experts/00-master.md` (private, outside the repo). Read its top tips and contradictions before designing a piece, and name the tips the piece uses.
+
 ## The one thing to get right
 
 "you tend to drift away from what i want, and then make fixed rules that actually

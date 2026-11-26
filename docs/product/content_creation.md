@@ -5,6 +5,8 @@ Read this first for any content work, then `docs/product/content_creation_proces
 changes, delete it when it is done. His notes go word for word into
 `~/research/content/notes-history.md` (private).
 
+**(Claude)** Content design starts from the content research master file, `~/research/content-experts/00-master.md` (private, outside the repo). Read its top tips and contradictions before designing a piece, and name the tips the piece uses.
+
 ## First step, every content session
 
 Read the new notes and 👍 on the live pages listed in
