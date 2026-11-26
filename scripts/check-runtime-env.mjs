@@ -62,7 +62,7 @@ export const IMPLICIT = {
   ANTHROPIC_API_KEY: {
     kind: "optional",
     readBy: "@ai-sdk/anthropic",
-    why: "every Claude feature (Q&A, scenarios, articles); read by the SDK's default `anthropic` provider",
+    why: "every Claude feature (Q&A, scenarios); read by the SDK's default `anthropic` provider",
   },
   NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: {
     kind: "required",

@@ -3,6 +3,12 @@
 Plans leave this folder when they are finished, replaced or parked. Code comments still name some of them.
 To read one: `git show <commit>:Plans/<file>` (or `docs/plans/<file>` for the oldest ones).
 
+## Article-writing lab, removed 2026-11-26: read it at `d82eedfb`
+
+The February lab (`/test/articles`, its `/api/test/*` routes, `docs/articles/`, `src/articles/articlesService.ts`)
+was removed with his yes. His writing notes from it live in `docs/product/content_creation_process.md`.
+The hidden `/articles` page stays.
+
 ## Cleanup round 2 of 2026-11-26: read them at `18efdb10`
 
 Folded into one short doc each (the doc names its old sources):

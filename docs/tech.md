@@ -71,7 +71,7 @@ The data is about sex life, addiction, health and mood: special-category data un
 
 True now (checked 2026-11-26):
 - RLS is on for all 98 public tables in the production schema copy (`tests/db/baseline.sql`, 10 Nov), and in every newer migration that makes a table.
-- AI spend per user: only the Scenarios chat checks a cap (20 cents, `src/api_ai/config.ts`). Q&A, openers and articles call Claude with no per-user cap.
+- AI spend per user: only the Scenarios chat checks a cap (20 cents, `src/api_ai/config.ts`). Q&A and openers call Claude with no per-user cap.
 - One migration has waited for his yes since 2026-09-23: `supabase/pending-owner-approval/` (deleting or correcting a finished workout in one step; it adds two permissions).
 
 ## 5. Backups

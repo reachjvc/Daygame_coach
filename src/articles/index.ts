@@ -9,14 +9,7 @@ export type {
   ArticleStatus,
   ArticleTier,
   ContentPillar,
-  // Feedback types
-  FeedbackType,
-  FeedbackTypeConfig,
-  ArticleFeedbackFlag,
 } from "./types"
-
-// Feedback type config & enum utilities
-export { FEEDBACK_TYPES, FEEDBACK_TYPE_VALUES } from "./types"
 
 // Config
 export {

@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Clock, Drama, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle, Telescope, Signpost, FileSearch, Waypoints, Clapperboard, Waves, Archive, Aperture, Type } from "lucide-react"
+import { ArrowLeft, Beaker, Clock, Drama, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare, CreditCard, Target, HelpCircle, Telescope, Signpost, FileSearch, Waypoints, Clapperboard, Waves, Archive, Aperture, Type } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ROUTES } from "@/src/shared/routes"
 import { QUIT_VICE_ARCHIVE } from "./archive/quit-vice/routes"
@@ -43,12 +43,6 @@ const testPages = [
     href: "/test/values-curation",
     description: "Values curation flow testing",
     icon: Sparkles,
-  },
-  {
-    name: "Articles",
-    href: "/test/articles",
-    description: "Articles system testing",
-    icon: BookOpen,
   },
   {
     name: "Evaluator Calibration",

@@ -1,7 +1,7 @@
 {
   "_comment": "Lint errors that already existed, by file and rule. May only shrink. Regenerate with: node scripts/lint-ratchet.mjs --update (add --accept-new to bless a new one, deliberately).",
   "_format": "eslint-findings-v1",
-  "total": 290,
+  "total": 287,
   "files": {
     "app/api/goals/[id]/route.ts": {
       "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 1
@@ -13,11 +13,6 @@
       "@typescript-eslint/no-unused-vars: 'Play' is defined but never used.": 1,
       "@typescript-eslint/no-unused-vars: 'useCallback' is defined but never used.": 1,
       "react-hooks/rules-of-hooks: React Hook \"useCountUp\" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function.": 1
-    },
-    "app/test/articles/page.tsx": {
-      "@typescript-eslint/no-unused-vars: 'i' is defined but never used.": 1,
-      "@typescript-eslint/no-unused-vars: 'renderHighlightedText' is assigned a value but never used.": 1,
-      "prefer-const: 'idx' is never reassigned. Use 'const' instead.": 1
     },
     "app/test/curve-customization/_components/VariantCyberpunk.tsx": {
       "@typescript-eslint/no-unused-vars: 'config' is assigned a value but never used.": 1
