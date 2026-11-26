@@ -227,6 +227,16 @@ No 👍 given.
 - V2, Candles ending (0:37): "i could see the different sized blocks working, but theyre only on screen for a few seconds"
 - Chat, 2026-11-26: "i looked at the night reels now. I gess the next thing is to record my voice. Can you send me an artifact of the script you'd like me to say"
 
+### Same Night Trunks page, his notes (page MQyc4F…, 2026-11-24 11:53-11:55 UTC, read 2026-11-26) [Track 2] [his words, verbatim]
+
+- 👍 on C1 (full clip).
+- C2 (0:10, bigger writing): "Probably use this, and we can just start with thw subtitle "belief" in a more popping color or size, it is better if i record it and it is a little faster"
+- page (0:29): "Too much stuff to read that is not relevant for me, it is relevant to look at a few things, or answer a few things in each round, but not possible to do this much"
+
+### Best cut of each night reel (page H7dxAr…, 2026-11-26) [Track 2, Claude's proposal]
+
+Asked in chat: "give me your best video, and then make a short selection of the different points in each video where we're not fully decided". Outvoted best = V1 Tremor + the shadow-man (different-sized blocks) from V2 (spec `trunk-n24/b8/spec-best.json`, out `trunk-n24/best/`). Same Night best = clip C2 with "belief" words large in amber (`reel-beliefs/best/`); one clip, not the whole reel. Three open points per reel on the page.
+
 ### Reel B round 10, his chat note (page AFFAAs…, 2026-11-26) [Track 1] [his words, verbatim]
 
 No 👍 or notes on the page.
