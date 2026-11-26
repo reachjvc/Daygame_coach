@@ -47,6 +47,12 @@ Focus: get **one finished piece out** (2026-11-22).
 - Music M2-M5 are Kevin MacLeod, CC BY 4.0: the post needs a credit line.
 - Folder: `~/.cache/daygame-research/celeb-reels/`.
 
+**Track 1, new format: a celebrity talks, we show something else** (his, 2026-11-26,
+from a quit coach's reel at 200x that coach's usual views): "We steal [a famous comedian]
+speaking, and we make an entirely different video. We steal the format too, of a
+celeb talking about something, and us showing something different over it." In the
+pipeline after Reel B; nothing built. Which reel: `~/research/competitors/README.md`.
+
 **Track 2, Outvoted** (about 1:40, the blocks film)
 - Round 2 built (2026-11-26, page "Night Reels Round 2", waits for his look):
   quest scroll kept plus an alarm clock on the table; 0:23 swap gone (hanging
@@ -81,6 +87,19 @@ from: `Plans/track3-creator-list.md` (Claude's proposal, waits for his answers).
 Reading works through his free Apify account. Posting through Meta's route is
 blocked (2026-11-23). His verdict on the first try: "Your text reel work is not
 usable, because your method was looking at 1 second of youtube video".
+Next Track 3 piece: copy competitor #1's tier-list reel (one still picture, 1.1M views
+on a 308-follower account, A/B tested by them). His: "We should definitely try to
+imitate this one very soon, the view to follower count is crazy"; idea "top reasons
+why youre GOONMAXXING". Nothing built. Breakdown: `~/research/competitors/restart.md`.
+Daily Instagram tracker (free, 46 accounts): page "Instagram Tracker". His ask for the
+next version: likes and comments against the account's average, views per follower,
+and the KPIs the content experts use (outliers 3x+ usual, followers gained per view,
+cover image for DM shares; shares, saves and watch time are not public).
+Viral quit reels (his ask "more of the super viral reels"): page "Viral Quit Reels", 14
+reels from a search of 172 (300K+ views, all addictions), grouped by format: tiny
+quit-app accounts, celebrity clip with a picture on top, one-shot jokes, short lists
+on a plain video, explained with a drawing, a man in his car with a free tool. Data
+and videos: `~/.cache/daygame-research/quit-reels/viral/` (rank.py, page/build.py).
 
 **Track 4, selling: nothing made.** His idea: a bar chart of quit success rates
 with "my coaching" on top and a money-back line, e.g. "quit your addiction 100%
@@ -89,6 +108,12 @@ and costs is his. His view: competitors don't show their basis, so why should we
 Claude's flag, unchecked: a bare "100% success" claim may break advertising
 rules. His call. Also his (2026-11-20): study one competitor's sales funnel and
 copy it to some degree (Claude's record; notes file, "Quit Top Contenders").
+
+**Competitors to beat** (his picks, 2026-11-26): #1 a quit-porn app, #2 a porn-quit
+creator, #3 a men's identity coach whose website tools he tried ("there's something
+real in the way this guy approaches it"). His rule: post at least as many videos a
+week as they do, in better quality. Files and the weekly post count:
+`~/research/competitors/` (private).
 
 **Video 01, "The one thing"**: script v4 "decently approved" (2026-11-19), not
 touched since. File: `~/.cache/daygame-research/content/video-01-one-thing.md`.
