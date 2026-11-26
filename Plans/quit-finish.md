@@ -58,6 +58,10 @@ https://10kdaysclub.com/quit/nicotine/<id>. Checked 2026-11-26: the 13 load; "la
   - "beliefs are really about more than just nicotine or weed or addictions, but about life in general": the user
     picks an area (quitting, daygame, productivity, ...) and sees the beliefs for it; "i want to redesign part
     of my website" for this;
+  - 2026-11-26, after marking the first beliefs: some beliefs exist for every addiction ("X calms me", "X is very
+    hard to quit"). "This is very good to know, because then we have some foundational pillars, and we just move
+    things around slightly depending on the type of addiction." So our tool is built on shared pillar beliefs,
+    with per-addiction wording on top. A 👍 on a wording also means he likes the replies under it.
   - tool r2's explainer page "is worth gold"; tool r4's guide and its guide to distortions: "take their words and things, then change things
     around strategically, then create a menu where everything seemlessly goes together".
 - How to work (2026-11-19): "just work independently, or give me the very worst contenders here in text".
@@ -90,6 +94,9 @@ word for word). On 2026-11-26 he asked for everything open in one long list, so 
 - 2026-11-26: you found that version too hard to work with (one Cut hit several beliefs; competitor lines mixed).
   You asked for: the belief as Easyway words it, their reply, addiction copies shown once, then the cousins from
   other tools. Claude built that as the Belief Map. Your old strikes show there as "You struck this before".
+- 2026-11-26, round 1 on the all-open list: you went through the first 65 beliefs (Allen Carr's 10 and most of
+  EasyPeasy's) and kept 57. They are moved off the page; the record is `v5/round1-decisions.md` in the belief study.
+  527 beliefs left; the page now marks beliefs seen in 3+ addictions as "Pillar".
 - No marks yet on the round-3 tools on the look page. Next: you mark Keep, Cut, 👍 or notes on the Belief List, all open and mark the look
   page. Then Claude designs our tool: start from the copy you liked best and turn each change into one plain
   question (Keep / Change). Then build, check, and you say done.
