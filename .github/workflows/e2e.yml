@@ -478,7 +478,13 @@ jobs:
   # job, the Time Log guard and the screen photos count (all run on every push).
   # ===========================================================================
   e2e-passed:
-    name: E2E passed
+    # ONLY A FULL RUN MAY CARRY THE NAME MAIN REQUIRES. Branch protection matches
+    # the check by name, on the commit, wherever it ran. A plain branch push skips
+    # the lanes, and a dispatch with `grep` runs only the matching tests; named
+    # "E2E passed" too, either one let that exact commit onto main without the
+    # full suite (and scripts/ship.mjs read such a light pass as a full one,
+    # 2026-11-27). Light runs are named "E2E quick passed" instead.
+    name: ${{ (github.event_name != 'push' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/beta' || startsWith(github.ref, 'refs/heads/ship-')) && !inputs.grep && 'E2E passed' || 'E2E quick passed' }}
     needs: [e2e-fast, lanes, timelog-guard, timelog-photos]
     if: ${{ always() && github.event_name != 'schedule' }}
     runs-on: ubuntu-24.04

@@ -11,6 +11,7 @@ There is one way: `node scripts/ship.mjs`, run from your own branch.
 - It puts your commits on top of the newest main, on a `ship-*` branch, and waits for "CI passed" and "E2E passed".
 - Both green: main moves to exactly that commit, and Vercel puts main live. Red: main stays as it was.
 - GitHub refuses every other push to main, his account included. Never loosen that.
+- Only a full run is named "E2E passed" (main, beta, ship-*, a dispatch without `grep`). A plain branch push is named "E2E quick passed", so it can never stand in for the full suite (hole closed 2026-11-27).
 - A red test is fixed, or its change is reverted. Never skipped.
 - Ship without asking. Commit everything you write in the same turn, plans too ("everything should be committed, always", 2026-11-20).
 - Before shipping: `node scripts/typecheck-ratchet.mjs` and `npm run lint:ratchet`. The pre-commit hook runs the related unit tests and lints the staged files.

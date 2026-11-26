@@ -50,7 +50,23 @@ describe("commit-checks: main takes a commit only when both gates passed", () =>
     const e2e = readFileSync(".github/workflows/e2e.yml", "utf8")
     expect(REQUIRED_CHECKS).toEqual(["CI passed", "E2E passed"])
     expect(ci).toMatch(/^ {2}ci-passed:\n {4}name: CI passed\n {4}needs: \[static, unit, database\]\n {4}if: \$\{\{ always\(\) \}\}$/m)
-    expect(e2e).toMatch(/^ {2}e2e-passed:\n {4}name: E2E passed\n {4}needs: \[e2e-fast, lanes, timelog-guard, timelog-photos\]$/m)
+    expect(e2e).toMatch(/^ {2}e2e-passed:\n(?: {4}#.*\n)* {4}name: \$\{\{ \(github\.event_name != 'push' \|\| github\.ref == 'refs\/heads\/main' \|\| github\.ref == 'refs\/heads\/beta' \|\| startsWith\(github\.ref, 'refs\/heads\/ship-'\)\) && !inputs\.grep && 'E2E passed' \|\| 'E2E quick passed' \}\}\n {4}needs: \[e2e-fast, lanes, timelog-guard, timelog-photos\]$/m)
+  })
+
+  test("a light E2E run (a plain branch push, or a dispatch filtered by grep) is not named like the full gate", () => {
+    // Branch protection matches "E2E passed" by name on the commit. A light run under that
+    // name let its commit onto main without the lanes.
+    const e2e = readFileSync(".github/workflows/e2e.yml", "utf8")
+    const gate = e2e.match(/^ {2}e2e-passed:\n(?: {4}#.*\n)* {4}name: (.*)$/m)?.[1] ?? ""
+    expect(gate).toContain("'E2E quick passed'")
+    expect(gate).toContain("!inputs.grep")
+    expect(gate).toContain("startsWith(github.ref, 'refs/heads/ship-')")
+  })
+
+  test("a queued rerun counts as the newest run, so an older pass cannot stand in for it", () => {
+    const old = { ...run("E2E passed", "completed", "success"), started_at: "2026-11-27T00:00:00Z" }
+    const queued = { name: "E2E passed", status: "queued", conclusion: null } // no started_at yet, as GitHub sends it
+    expect(judge([run("CI passed", "completed", "success"), old, queued]).state).toBe("pending")
   })
 
   test("Vercel does not deploy the ship-* test branches", () => {

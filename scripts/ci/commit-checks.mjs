@@ -29,9 +29,11 @@ export function judge(runs) {
   let state = "success"
   for (const name of REQUIRED_CHECKS) {
     // A rerun adds a new check run with the same name: the newest one counts.
+    // One not started yet (no `started_at`) is the newest of all: sorted last, it
+    // let an older pass on the same commit stand in for a run still queued.
     const mine = runs
       .filter((r) => r && r.name === name)
-      .sort((a, b) => String(b.started_at ?? "").localeCompare(String(a.started_at ?? "")))
+      .sort((a, b) => String(b.started_at ?? "\uffff").localeCompare(String(a.started_at ?? "\uffff")))
     const run = mine[0]
     if (!run) {
       lines.push(`${name}: not started`)
