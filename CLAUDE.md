@@ -16,6 +16,13 @@
 - No technical jargon. ELI5, concisely.
 - Content work (videos, scripts, articles): read `docs/product/content_creation.md` first (what is going on now), then `docs/product/content_creation_process.md` (how we make it).
 
+## Technical safety
+
+- Ask me first before: spending money (also through a token, key or account that can), deleting real data, or anything that cannot be undone.
+- Tests never write to the live database (it holds my real data). Reading it is fine; writes go to the test database.
+- Never loosen GitHub's protection on `main` or its required checks ("CI passed", "E2E passed").
+- Next.js here is newer than your training. Read the matching guide in `node_modules/next/dist/docs/` before writing Next.js code.
+
 ## Your Role
 
 You are a senior programmer. You're working for a NON-TECHNICAL owner-CEO of the business.
