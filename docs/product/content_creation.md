@@ -55,13 +55,21 @@ Focus (owner, 2026-11-22): get **one finished piece out** first.
   "record my voice".
 - Page "Outvoted Voice Script" (9 takes) waits for his recording. The new voice
   re-times the film in one command.
+- Best cut so far (Claude's proposal, 2026-11-26, page "Best cut"): V1 Tremor
+  plus the shadow-man with different-sized blocks from V2
+  (`trunk-n24/b8/spec-best.json`, out `trunk-n24/best/`). Three open points
+  on the page.
 - Still open: bed physics (hands through blankets).
 - Private folder: `~/.cache/daygame-research/content/reel-outvoted/film/trunk-n24/`
   (start with TRUNK.md).
 
 **Track 2, Same Night** (reel R7, "why beliefs decide how quitting feels").
-- Page "Same Night Trunks": three orders of the story. Claude proposes T2;
-  his pick is open. Only clip C is built; nothing more until he picks.
+- His notes on "Same Night Trunks" (read 2026-11-26): 👍 on C1; C2 (bigger
+  writing): "Probably use this", start with the word "belief" in a more popping
+  colour or size, and he records it a little faster. His pick of story order
+  (T1-T3) is still open.
+- Best cut (Claude's proposal, page "Best cut"): clip C2 with the "belief" words
+  large in amber (`reel-beliefs/best/`), one clip, not the whole reel.
 - Fact: the site has 12 lies for nicotine only (weed 4, porn 5, alcohol 5), so
   "twelve for each" is not true.
 - Private folder: `~/.cache/daygame-research/content/reel-beliefs/`.
