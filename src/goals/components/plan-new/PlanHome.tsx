@@ -23,7 +23,7 @@ import { goalsCopy } from "@/src/goals/planSteps/copy/goals"
 import { directionNotes, goalNotes, seasonNotes, type EarlierNote } from "@/src/goals/planSteps/earlierNotes"
 import { goalsOfTier, protectedId, weeklyItems } from "@/src/goals/planSteps/planFacts"
 import { accountOf, buildStepsOf, dailyScreensOf, deepenItems, nextUp, stepSummary } from "@/src/goals/planSteps/planHome"
-import { planNumbers } from "@/src/goals/planSteps/planNumbers"
+import { numbersFor } from "@/src/goals/planSteps/planNumbers"
 import { homeHref, weekHref } from "@/src/goals/planSteps/planRoutes"
 import { screenRoute, screensForStep, sequenceOfPlan, type Sequence } from "@/src/goals/planSteps/planSequences"
 import { SECTION_TITLES } from "@/src/goals/planSteps/sectionTitles"
@@ -60,7 +60,7 @@ const earlierTopics = { ...directionCopy.earlier_notes, ...seasonCopy.earlier_no
 export function PlanHome() {
   const { plan, today } = usePlanNew()
   const seq: Sequence = sequenceOfPlan(plan)
-  const numbers = planNumbers(plan, accountOf(plan), today)
+  const numbers = numbersFor(!!seq.whole, plan, accountOf(plan), today)
   const next = nextUp(seq, plan, numbers, today)
   const steps = buildStepsOf(seq)
   const daily = dailyScreensOf(seq)
@@ -202,7 +202,7 @@ export function PlanHome() {
 
 function StepRow({ n, step, seq }: { n: number; step: NorthStarTabId; seq: Sequence }) {
   const { plan, today } = usePlanNew()
-  const numbers = planNumbers(plan, accountOf(plan), today)
+  const numbers = numbersFor(!!seq.whole, plan, accountOf(plan), today)
   const s = numbers.steps[step]
   const screens = screensForStep(seq, step)
   const scored = SCORED_TABS.includes(step)

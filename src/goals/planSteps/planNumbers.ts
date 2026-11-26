@@ -238,3 +238,27 @@ export function planNumbers(plan: NsPlan, account: NsAccount = NO_ACCOUNT, today
 function unscored(tab: NorthStarTabId): StepNumbers {
   return { step: tab, state: "empty", fraction: 0, parts: [], boxes: [], chips: [] }
 }
+
+/**
+ * TODAY'S NUMBERS, in this file's shape: what `/plan` itself shows (`northStarService`'s percentages, rings and chips).
+ * The Old version on `/plan/new` uses these, so it reads exactly as today's plan does, disagreements included; the
+ * other versions use `planNumbers`.
+ */
+export function todayNumbers(plan: NsPlan, account: NsAccount = NO_ACCOUNT): PlanNumbers {
+  const progress = ns.planProgress(plan, account)
+  const states = ns.stepStates(plan, account)
+  const done = ns.nsProgress(plan, account).done as Record<NorthStarTabId, boolean>
+  const chips: PlanChip[] = ns.planTodos(plan).map((t) => ({ id: t.id, text: t.text, tab: t.tab }))
+  const steps = Object.fromEntries(
+    TAB_ORDER.map((tab): [NorthStarTabId, StepNumbers] => {
+      const p = (progress.steps as Partial<Record<NorthStarTabId, { fraction: number; parts: ns.NsStepPart[] }>>)[tab]
+      return [tab, { step: tab, state: states[tab], fraction: p?.fraction ?? 0, parts: p?.parts ?? [], boxes: [], chips: chips.filter((c) => c.tab === tab) }]
+    }),
+  ) as Record<NorthStarTabId, StepNumbers>
+  return { progress, states, steps, chips, done }
+}
+
+/** The numbers a version shows: today's on the Old version (every page whole), the one rule above on the others. */
+export function numbersFor(whole: boolean, plan: NsPlan, account: NsAccount = NO_ACCOUNT, today: string = ns.todayISO()): PlanNumbers {
+  return whole ? todayNumbers(plan, account) : planNumbers(plan, account, today)
+}

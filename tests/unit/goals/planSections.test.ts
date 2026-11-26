@@ -24,6 +24,11 @@ describe("planSections", () => {
     for (const seq of SEQUENCES) {
       for (const step of SPLIT_STEPS) {
         expect(TAB_ORDER).toContain(step)
+        // The Old version draws each split step as one whole page instead.
+        if (seq.whole) {
+          expect(screensForStep(seq, step).map((s) => s.section)).toEqual([""])
+          continue
+        }
         const ids = screensForStep(seq, step).map((s) => s.section)
         expect([...ids].sort()).toEqual([...STEP_SECTIONS[step]].sort())
         expect(new Set(ids).size).toBe(ids.length)

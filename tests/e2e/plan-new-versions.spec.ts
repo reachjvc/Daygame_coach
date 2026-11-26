@@ -65,7 +65,7 @@ async function openDeepen(page: Page, seq: Sequence) {
   }
 }
 
-for (const id of ["v1", "v2", "v3"]) {
+for (const id of ["old", "v1", "v2", "v3"]) {
   const seq = sequenceById(id)
   test.describe(`${id.toUpperCase()}: walked end to end`, () => {
     test("as a new user: Next walks the whole path; the Deepen list and its screens open", async ({ page, account }) => {

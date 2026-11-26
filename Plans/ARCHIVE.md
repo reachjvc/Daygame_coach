@@ -10,7 +10,7 @@ To read one: `git show <commit>:Plans/<file>` (or `docs/plans/<file>` for the ol
 | Plan | What was still open |
 |---|---|
 | rebrand-10kdaysclub.md, rebrand-round-2.md | Front-page words round; privacy fix on branch `privacy-r2` |
-| plan-in-steps.md, plan-new-from-real.md | New /plan on the copy space: phases 7–8, questions Q1 and Q8 |
+| plan-in-steps.md | New /plan on the copy space: phases 7–8, questions Q1 and Q8 (plan-new-from-real.md is back in Plans/ since 2026-11-26) |
 | site-navigation-build.md, site-navigation.md | Phases 5–6, waiting for his sign-off |
 | energy-audit.md, perfect-week.md | Live; his phone test and first use pending |
 | role-models.md, role-models-candidates.md | Phase 0b |

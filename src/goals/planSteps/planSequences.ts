@@ -19,7 +19,7 @@ import { ROUTES } from "@/src/shared/routes"
 import { TAB_LABELS, TAB_ORDER, USE_STEPS } from "@/src/goals/data/northStar"
 import type { NorthStarTabId, NsPlan } from "@/src/goals/types"
 import { SEQUENCE_KEY } from "@/src/goals/planSteps/planFacts"
-import { STEP_SECTIONS } from "@/src/goals/planSteps/planSections"
+import { STEP_SECTIONS, stepOfSection } from "@/src/goals/planSteps/planSections"
 import { SECTION_SHORT } from "@/src/goals/planSteps/sectionTitles"
 
 export interface Screen {
@@ -46,6 +46,11 @@ export interface Sequence {
   optionalSteps?: NorthStarTabId[]
   /** V3: show the short "go deeper" cards in place, for the areas in the season. */
   prompts?: boolean
+  /**
+   * Old: every page whole, as `/plan` draws it. No step is split, and the area sheet and goal card show every part at
+   * once (no section chips). An address that names a section lands on its whole step.
+   */
+  whole?: boolean
 }
 
 /** The screens of one step: one per section when the step is split (Phase 6.2), else one for the whole step. */
@@ -54,6 +59,18 @@ export function screensOfStep(step: NorthStarTabId): Screen[] {
   const sections = (STEP_SECTIONS as Partial<Record<NorthStarTabId, readonly string[]>>)[step]
   if (!sections) return [{ id: step, step, section: "", kind }]
   return sections.map((section): Screen => ({ id: section, step, section, kind }))
+}
+
+/**
+ * OLD: exactly today's `/plan` on the copy. The twelve steps in today's order, one whole page each, so the owner can
+ * compare the new versions against what he uses now (his ask, 2026-11-26).
+ */
+const OLD: Sequence = {
+  id: "old",
+  label: "Old",
+  blurb: "Exactly today's plan: the same steps in the same order, every page whole",
+  screens: TAB_ORDER.map((step): Screen => ({ id: step, step, section: "", kind: USE_STEPS.includes(step) ? "daily" : "build" })),
+  whole: true,
 }
 
 /** V1: today's twelve steps in the real tool's order, long steps split into short screens by topic. */
@@ -96,7 +113,7 @@ const V3: Sequence = {
   prompts: true,
 }
 
-export const SEQUENCES: readonly Sequence[] = [V1, V2, V3]
+export const SEQUENCES: readonly Sequence[] = [OLD, V1, V2, V3]
 export const DEFAULT_SEQUENCE_ID = V1.id
 
 /** The sequence an id names; an unknown or missing id gives V1. */
@@ -126,10 +143,18 @@ export const onPath = (seq: Sequence, sectionOrStep: string): boolean => seq.scr
  */
 export const screenById = (seq: Sequence, screenId: string): Screen | null =>
   allScreens(seq).find((s) => s.id === screenId) ??
-  (TAB_ORDER.includes(screenId as NorthStarTabId) ? allScreens(seq).find((s) => s.step === screenId) ?? null : null)
+  (TAB_ORDER.includes(screenId as NorthStarTabId) ? allScreens(seq).find((s) => s.step === screenId) ?? null : null) ??
+  (seq.whole ? wholeStepOf(seq, screenId) : null)
+
+/** On a whole-page version, a section id (`star.self`, a saved link) names the whole page of its step. */
+function wholeStepOf(seq: Sequence, section: string): Screen | null {
+  const step = stepOfSection(section)
+  return step ? allScreens(seq).find((s) => s.step === step) ?? null : null
+}
 
 /** The screen that draws a section, or null when the sequence has none (an area or goal section, or one left out). */
-export const screenForSection = (seq: Sequence, section: string): Screen | null => allScreens(seq).find((s) => s.section === section) ?? null
+export const screenForSection = (seq: Sequence, section: string): Screen | null =>
+  allScreens(seq).find((s) => s.section === section) ?? (seq.whole ? wholeStepOf(seq, section) : null)
 
 /** The screens of a step in this sequence, in order. */
 export const screensForStep = (seq: Sequence, step: NorthStarTabId): Screen[] => allScreens(seq).filter((s) => s.step === step)

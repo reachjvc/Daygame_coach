@@ -35,7 +35,7 @@ import { AreaDialog } from "@/src/goals/components/north-star/AreaDialog"
 import { AreaGoalsDialog } from "@/src/goals/components/north-star/AreaGoalsDialog"
 import { ROUTES } from "@/src/shared/routes"
 import { realStepRoute } from "@/src/goals/planSteps/realStepRoutes"
-import { planNumbers, type PlanNumbers } from "@/src/goals/planSteps/planNumbers"
+import { numbersFor, type PlanNumbers } from "@/src/goals/planSteps/planNumbers"
 import { screenForSection, sequenceOfPlan, stepRoute, type Screen, type Sequence } from "@/src/goals/planSteps/planSequences"
 import { deeperKey } from "@/src/goals/planSteps/planFacts"
 import { addLineOn, moveLineTo, sorterOfPlan, sortLines, type Half } from "@/src/goals/planSteps/planSorter"
@@ -315,7 +315,8 @@ export function RealStepHost({
   const openRoutineId = q.routine
 
   /* ---- sections: which part of a split step, sheet or card is drawn (Phase 6.2) ---- */
-  const split = !!screen
+  // The Old version draws every page whole: no step sections, and the area sheet and goal card show every part.
+  const split = !!screen && !sequence?.whole
   const seeAll = split && search.get("all") === "1"
   const section = split && !seeAll && screen?.section ? screen.section : undefined
   const partParam = search.get("part")
@@ -516,8 +517,10 @@ export function RealStepHost({
   /* ---- the one thing, progress, Due now ---- */
   const nsAccount = useMemo<NsAccount>(() => ({ hasOneThing: !!oneThing.current }), [oneThing.current])
   const oneThingBody = oneThing.current?.body ?? null
-  // One rule for every percentage, ring and chip on this page (Phase 6.5); `/plan` keeps the service's own.
-  const numbers = useMemo(() => planNumbers(plan, nsAccount, day), [plan, nsAccount, day])
+  // One rule for every percentage, ring and chip on this page (Phase 6.5); `/plan`, and the Old version here, keep the
+  // service's own.
+  const whole = !!sequence?.whole
+  const numbers = useMemo(() => numbersFor(whole, plan, nsAccount, day), [whole, plan, nsAccount, day])
   const planPct = numbers.progress
 
   const [hiddenDue, setHiddenDue] = useState<ReadonlySet<string>>(new Set())
@@ -610,7 +613,8 @@ export function RealStepHost({
     onDueGo,
     onHideDue,
     reviewPeriod: search.get("period"),
-    framed,
+    // The Old version keeps each step's own "Now … →" button, as `/plan` has it, beside the step bar.
+    framed: framed && !whole,
     router,
     screen,
     section,

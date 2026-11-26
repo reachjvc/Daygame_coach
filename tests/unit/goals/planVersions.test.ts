@@ -2,6 +2,7 @@
 import { describe, it, expect } from "vitest"
 import { SEQUENCES, allScreens, navLabel, stepOrder, walkPartsOf, isDeepen, nextScreen, onPath, prevScreen, screenById, screenForSection, screenForStep, sequenceById, sequenceOfPlan, type Sequence } from "@/src/goals/planSteps/planSequences"
 import { ALL_SECTION_IDS, AREA_SECTIONS, GOAL_SECTIONS } from "@/src/goals/planSteps/planSections"
+import { TAB_ORDER } from "@/src/goals/data/northStar"
 import { SEQUENCE_KEY, SORTER_KEY, deeperKey } from "@/src/goals/planSteps/planFacts"
 import { accountOf, buildStepsOf, deepenItems, nextUp } from "@/src/goals/planSteps/planHome"
 import { planNumbers } from "@/src/goals/planSteps/planNumbers"
@@ -13,11 +14,34 @@ import { fullPlan } from "@/tests/support/fullLifePlan"
 const V1 = sequenceById("v1")
 
 describe("every version keeps every part (Phase 7: nothing removed)", () => {
-  it("has V1, V2 and V3, in that order", () => {
-    expect(SEQUENCES.map((s) => s.id)).toEqual(["v1", "v2", "v3"])
+  it("has Old, V1, V2 and V3, in that order", () => {
+    expect(SEQUENCES.map((s) => s.id)).toEqual(["old", "v1", "v2", "v3"])
   })
 
-  for (const seq of SEQUENCES) {
+  it("Old is today's plan: the twelve steps in today's order, each page whole, no Deepen list or cards", () => {
+    const old = sequenceById("old")
+    expect(old.whole).toBe(true)
+    expect(old.screens.map((s) => s.step)).toEqual(TAB_ORDER)
+    for (const s of old.screens) {
+      expect(s.id).toBe(s.step)
+      expect(s.section).toBe("")
+      expect(s.kind).toBe(V1.screens.find((x) => x.step === s.step)?.kind)
+    }
+    expect(old.deepen).toBeUndefined()
+    expect(old.prompts).toBeFalsy()
+  })
+
+  it("Old: an address or link that names a section lands on that step's whole page", () => {
+    const old = sequenceById("old")
+    expect(screenById(old, "star.self")?.id).toBe("star")
+    expect(screenById(old, "season.who")?.id).toBe("focus")
+    expect(screenForSection(old, "star.vision")?.id).toBe("star")
+    expect(screenById(old, "nope")).toBeNull()
+    // The split versions are unchanged: a section id is not a whole step there.
+    expect(screenById(V1, "star.self")?.section).toBe("star.self")
+  })
+
+  for (const seq of SEQUENCES.filter((s) => !s.whole)) {
     it(`${seq.id}: every screen of V1 is on the path or on the Deepen list, exactly once`, () => {
       const here = [...seq.screens, ...(seq.deepen ?? [])].map((s) => s.id)
       expect(new Set(here).size).toBe(here.length)
@@ -62,7 +86,7 @@ describe("every version keeps every part (Phase 7: nothing removed)", () => {
   }
 
   it("V2 and V3 share one path and one Deepen list; only V3 turns the go-deeper cards on", () => {
-    const [, v2, v3] = SEQUENCES
+    const [v2, v3] = [sequenceById("v2"), sequenceById("v3")]
     expect(v3.screens).toEqual(v2.screens)
     expect(v3.deepen).toEqual(v2.deepen)
     expect(v2.prompts).toBeFalsy()
