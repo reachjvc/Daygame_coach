@@ -10,7 +10,7 @@
  * calls, so the real limit is the number of instances times this one. That is
  * a deliberate, stated limitation, not an oversight — a shared limit needs a
  * shared store (Postgres or Redis), which is the right change the day a second
- * instance exists. It is written down in docs/runbooks/timetrack.md.
+ * instance exists. It is written down in docs/tech.md (The live site).
  */
 
 const buckets = new Map<string, number[]>()

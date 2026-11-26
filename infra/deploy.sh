@@ -8,7 +8,7 @@
 #   infra/deploy.sh --retry-failed <ref>       deploy a digest marked failed, on purpose
 #   infra/deploy.sh --restart <ref>            start the running image again with the
 #                                              machine's current settings, e.g. after a
-#                                              secret was rotated (infra/RUNBOOK.md)
+#                                              secret was rotated (git show 18efdb10:infra/RUNBOOK.md)
 #
 # What it does, one log line per step:
 #   1. refuses any other kind of reference: a tag can point at different code

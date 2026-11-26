@@ -3,7 +3,7 @@
  *
  * Stage 09 chunks reaching the ingest step have only passed the 06h hard gate
  * (`quality_gate.blocked=false`). That is necessary but NOT sufficient — several
- * quality issues slip through (see docs/pipeline/learnings.md "Pre-Ingest Quality
+ * quality issues slip through (see git show 18efdb10:docs/pipeline/learnings.md, "Pre-Ingest Quality
  * Screen"). This module derives per-video verdicts from already-produced artifacts
  * (06 video-type, 06h confidence report, 09 chunks) — no LLM cost — and the ingest
  * script refuses to auto-ingest anything worse than PASS/ADVISORY (fail-closed).

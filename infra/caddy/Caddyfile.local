@@ -40,7 +40,7 @@
 
 	# Caddy's own CA, because there is no public DNS name yet and ACME cannot
 	# issue for `localhost`. The root has to be trusted once by hand — see
-	# infra/README.md. Caddyfile.production uses Let's Encrypt instead.
+	# git show 18efdb10:infra/README.md. Caddyfile.production uses Let's Encrypt instead.
 	local_certs
 }
 

@@ -15,6 +15,14 @@
 - Assumptions are the enemy. Go deeper.
 - No technical jargon. ELI5, concisely.
 - Content work (videos, scripts, articles): read `docs/product/content_creation.md` first (what is going on now), then `docs/product/content_creation_process.md` (how we make it).
+- Clean up after yourself, but only where nothing can be lost. When a plan or other .md you wrote has done its job, delete it (git keeps every old version) and leave 1-3 lines in the matching doc below. Remove the worktrees, branches, servers and temporary files you made: only yours, only once their commits are on main, nothing is unsaved and no other session uses them. Files outside git that hold my words, my marks or results we may need are moved to a backup folder, never deleted.
+
+## Docs
+
+Keep these few docs short and true; edit a line when it changes.
+- Tech (building, tests, shipping, database, backups, the app plan): `docs/tech.md`.
+- Quit tools: `Plans/quit-finish.md`. Video pipeline: `docs/video-pipeline.md`. Brand and look: `docs/product/look.md`.
+- A plan for a big job lives in `Plans/` only while the job runs.
 
 ## Technical safety
 

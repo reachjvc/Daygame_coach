@@ -3,7 +3,7 @@
  * A backup you cannot restore is not a backup.
  *
  * The round trip against a real database is proved by hand (the procedure is in
- * docs/runbooks/timetrack.md, and it was run: an entry was created, backed up,
+ * git show 18efdb10:docs/runbooks/timetrack.md, and it was run: an entry was created, backed up,
  * genuinely deleted, and recovered). These cover the part that decides whether
  * a file is safe to restore at all — the check that stands between a good file
  * and a half-written one being written over live data.

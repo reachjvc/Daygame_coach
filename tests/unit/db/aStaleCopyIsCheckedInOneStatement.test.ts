@@ -11,7 +11,7 @@
  *
  * What this pins is the repo's half of that contract. The function itself is
  * SQL, verified against Postgres (see the migration's header and
- * docs/runbooks/timetrack.md); a fake here could only say the fake agrees.
+ * git show 18efdb10:docs/runbooks/timetrack.md); a fake here could only say the fake agrees.
  */
 
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest"

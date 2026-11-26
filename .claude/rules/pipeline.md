@@ -7,10 +7,7 @@ paths:
 
 # Pipeline
 
-- Read `docs/pipeline/learnings.md` before changing a stage; add to it when you learn something.
-- Run stages with `.venv/bin/python -u scripts/training-data/<stage>`. Never system python.
-- Open a stage and count its artifacts; don't trust its docstring.
-- Count by YouTube ID from the manifest, not by source folder — folders mix batches.
-- One entrypoint: fold new automation into the existing top-level command.
-- Fail closed: an empty LLM stage result is a BLOCK, never a pass.
-- The quality signal is 06h confidence, not 06b flag count. The real ingest gate is the pre-ingest QA in `10.EXT.ingest-test.ts`.
+- Read `docs/video-pipeline.md` first. The live pipeline is private, in `~/.cache/daygame-research/capture/` and `whole10/`; `scripts/training-data/` is the old pipeline (last run 2026-08-05).
+- Old stages: `.venv/bin/python -u scripts/training-data/<stage>`, never system python; LLM runs inside `( unset CLAUDECODE; ... )`. One entrypoint (`batch/batch-pipeline.sh`): fold new automation into it.
+- Fail closed: an empty LLM result is a BLOCK, never a pass. Count from the files on disk by YouTube ID, never from docstrings, logs or "COMPLETE" lines.
+- Never delete `~/.cache/daygame-research/capture/prod/PAUSE_CLAUDE` (his pause). Every GPU job goes through `~/.cache/daygame-research/tools/gpu_gate.py`.

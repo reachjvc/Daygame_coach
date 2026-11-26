@@ -200,7 +200,7 @@ click from every page. Every note the owner has given is now a numbered rule in
 `RULEBOOK.md`, and `board/build_v3.py` refuses to build when a rule a machine
 can check is broken (severity tag on every number, one drug per page, word
 limits, no screening or cheering, what-helps numbers per 100 people, no forum
-text in a public file). Content lives in `08-v3/` (`SCHEMA.md` there): a menu of
+text in a public file). Content lives in `08-v3/` (old schema notes: `git show 18efdb10:docs/research/addiction-one-pagers/08-v3/SCHEMA.md`): a menu of
 21 number kinds (`kinds.json`), one file per pilot (`pages/`), the general
 numbers (`general.json`), the decisions shown on the review page
 (`decisions.json`), and the felt-difficulty curves (`felt/`). Each curve comes
@@ -212,5 +212,5 @@ belief proof was written by one agent and passed by a separate one that fetched
 the source again (`drafts/` keeps the trail). Rebuild with
 `python3 board/finalize_v3.py` then
 `python3 board/build_v3.py <out.html> <belief-test-url>`; it also writes
-`<out>-exercise.html`. `08-v3/daily-log-proposal.md` proposes how the app
+`<out>-exercise.html`. `git show 18efdb10:docs/research/addiction-one-pagers/08-v3/daily-log-proposal.md` proposed how the app
 could later collect real daily scores instead of forum posts.

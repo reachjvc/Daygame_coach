@@ -3,6 +3,19 @@
 Plans leave this folder when they are finished, replaced or parked. Code comments still name some of them.
 To read one: `git show <commit>:Plans/<file>` (or `docs/plans/<file>` for the oldest ones).
 
+## Cleanup round 2 of 2026-11-26: read them at `18efdb10`
+
+Folded into one short doc each (the doc names its old sources):
+- `Plans/quit-finish.md` (cut from 2,040 lines) took in beliefs-rethink-r3.md.
+- `docs/tech.md` took in time-log-safety-nets.md, platform.md, `docs/testing_behavior.md`, `docs/runbooks/`,
+  `infra/RUNBOOK.md` and `infra/README.md`. database-backups.md stays while its build runs.
+- `docs/video-pipeline.md` took in video-capture-bakeoff.md, transcript-quality.md, gold-videos.md, labels-layer.md,
+  conversation-map-social-stoic.md and `docs/pipeline/*.md`.
+- `docs/product/look.md` took in `docs/product/brand.md`.
+
+Dropped by the owner ("thats you that have created it ... i didnt fully vibe with what you wrote"): first-1000.md,
+find-the-men.md.
+
 ## Cleanup of 2026-11-26, commit `4c210f65`
 
 **Parked with work still open** (bring one back when its turn comes):

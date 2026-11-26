@@ -356,7 +356,7 @@ actions_key_hash() {
 running_ref() { vm "docker inspect -f '{{.Config.Image}}' dg-app"; }
 as_deploy() { vm "su -s /bin/bash deploy"; } # the commands come on stdin
 
-# Rotating a secret, the way infra/RUNBOOK.md says: here the Server Actions key.
+# Rotating a secret, the way the old runbook says (git show 18efdb10:infra/RUNBOOK.md): here the Server Actions key.
 cmd_rotate() {
   local before ref
   before="$(actions_key_hash)" ref="$(running_ref)"
@@ -371,7 +371,7 @@ cmd_rotate() {
   say "healthz now: $(healthz_on_vm)"
 }
 
-# Rolling back by hand to a named digest, the way infra/RUNBOOK.md says.
+# Rolling back by hand to a named digest, the way the old runbook says (git show 18efdb10:infra/RUNBOOK.md).
 cmd_pin() {
   [ $# -eq 1 ] && [[ "$1" =~ ^sha256:[0-9a-f]{64}$ ]] || die "usage: $0 pin sha256:<an older digest of ${WATCH%:*}>"
   local current older="${WATCH%:*}@$1"

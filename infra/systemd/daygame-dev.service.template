@@ -3,7 +3,7 @@
 # and belongs to no terminal and no Claude session: closing an editor or a
 # session no longer takes it down, and a WSL restart brings it back.
 #
-# Installed by hand on this machine (infra/README.md has the commands):
+# Installed by hand on this machine (commands: git show 18efdb10:infra/README.md):
 #   @@REPO@@      the checkout
 #   @@NODE_BIN@@  Node 24's bin directory (nvm, by path: no nvm in systemd)
 #

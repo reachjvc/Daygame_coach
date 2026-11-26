@@ -1,99 +1,93 @@
 # Content creation: what is going on now
 
-Read this first for any content work (reels, videos, scripts, posts). Then read
-`docs/product/content_creation_process.md`: how we make it, step by step.
-
-Keep this file short. It holds only what is true now. When something changes,
-edit its line here. Finished or dropped things leave the file (git keeps them).
-His notes, word for word, go in his private notes file (see "Where things are").
+Read this first for any content work, then `docs/product/content_creation_process.md`
+(how we make it). This file holds only what is true now: edit a line when it
+changes, delete it when it is done. His notes go word for word into
+`~/research/content/notes-history.md` (private).
 
 ## First step, every content session
 
-Read the new notes and 👍 on every page listed in
-`~/.cache/daygame-research/content/video-01/notes-seen.md`. Act on them, add a
-"read <date>" line there, and copy his notes word for word into his notes file.
-He should never have to say "I left notes" (owner, 2026-11-18).
+Read the new notes and 👍 on the live pages listed in
+`~/.cache/daygame-research/content/video-01/notes-seen.md`. Act on them, mark them
+read there, and copy his notes into his notes file. He should never have to say
+"I left notes" (2026-11-18). When a page is replaced, delete its line.
 
-## Who it is for
+## Tracks
 
-A man of about 25-35 (see CLAUDE.md). The tone is calm, confident and
-premium: a well-made explainer, not a teenage TikTok (owner, 2026-11-14).
-Content is about quitting and the viewer's problem. It points to the free quit
-tools, and it sells only a small share of the time (Track 4).
-
-## The four tracks
-
-The shares and what each track is for are his words (2026-11-22); the track
-names and numbers are Claude's. Every piece of content work names its track.
+His (2026-11-22): what each track is for, and the shares of Tracks 1 and 4.
+Claude's: the track names and "the rest" for Track 2.
 
 | Track | What | Share of posts |
 |---|---|---|
-| 1. Celebrity reels | Real celebrity quit clips, re-cut and made ours | 10-20% |
-| 2. Our own films | Animated reels that tell his story and core ideas (Outvoted, Same Night) | most of the rest |
-| 3. Text reels | Short, easy, mostly text; also still pictures and carousels | not set |
-| 4. Direct selling | Reels that sell his coaching | 2-10% at most |
+| 1. Celebrity reels | Real celebrity quit clips, re-cut and made ours: entertainment that draws people in | 10-20% |
+| 2. Our own films | Animated reels with his story and core ideas | the rest |
+| 3. Text reels | Short, mostly text; also pictures and carousels | not set |
+| 4. Selling | Reels that sell his coaching | 2-10% at most |
 
-He can appear in any reel: a closing line to camera, his voice over a picture,
-a whole part on camera. Ask him to film a line rather than end on a weak quote.
+Until the quit tools are finished, don't point posts at them: "my tools are not
+really finished, so lets not point it to anything right now, but i should try to
+finish them today because potentially it really should point to it" (2026-11-23).
 
 ## Now
 
-Focus (owner, 2026-11-22): get **one finished piece out** first.
+Focus: get **one finished piece out** (2026-11-22).
 
-**Track 1, Reel B** ("how five superstars quit drinking or drugs").
-- He agreed to finish version F5 (top text T2, ending E5), with variants of
-  music and ending (2026-11-25).
-- Round 11 page "Reel B Round 11" (2026-11-26) carries out his layout note
-  R10-1 and shows music and endings as short clips only. Waits for his look.
-- Waiting on him: his filmed ending line (on video). When the file lands, run
-  the newest `add_owner*.sh` in `celeb-reels/code/`.
+**Track 1, Reel B** (five superstars who quit drinking or drugs)
+- Page "Reel B Final": the reel with the text-only ending he 👍'd (E5d). His notes
+  there (2026-11-26 13:06-13:08, not yet in his notes file): a cut chops a word at
+  0:15 ("You need to get clearer on the cuts"); music under only one man is
+  "weird"; make it "a little more snappy"; "i would prefer having some of their
+  real music playing, and then with the last actor, we could just start some
+  online outro music"; and "would i really get copyright striken for played a few
+  seconds of music from these bands?" (answer with the risk).
+- Earlier: outro music "does not really add anything, i think. I think it could
+  in some scenarios"; he wants to see 10 real videos that use it (R11-2).
 - Music M2-M5 are Kevin MacLeod, CC BY 4.0: the post needs a credit line.
-- Private folder: `~/.cache/daygame-research/celeb-reels/` (r11/, code/).
+- Folder: `~/.cache/daygame-research/celeb-reels/`.
 
-**Track 2, Outvoted** (about 1:40, the blocks film).
-- His look 2026-11-26: Tremor ending "about 90% done". Next step, his words:
-  "record my voice".
-- Page "Outvoted Voice Script" (9 takes) waits for his recording. The new voice
-  re-times the film in one command.
-- Best cut so far (Claude's proposal, 2026-11-26, page "Best cut"): V1 Tremor
-  plus the shadow-man with different-sized blocks from V2
-  (`trunk-n24/b8/spec-best.json`, out `trunk-n24/best/`). Three open points
-  on the page.
-- Still open: bed physics (hands through blankets).
-- Private folder: `~/.cache/daygame-research/content/reel-outvoted/film/trunk-n24/`
+**Track 2, Outvoted** (about 1:40, the blocks film)
+- The best-cut round worked: "much higher quality" (2026-11-26).
+- Before moving on: "we need to develop some way for you to understand how long
+  different things need to be on screen, before we can move on" (o-shadow). The
+  swap at 0:23 does not work yet: remove it or try another way.
+- Keep the quest-scroll opening: "very clean". Maybe add more (an hour clock)
+  without crowding it (o-open).
+- Open: the blocks on strings don't look like real physics; hands go through the
+  blankets in the bed scene; "weed" should not be on the final block.
+- Next: he records the voice (page "Outvoted Voice Script"), and the end line
+  again "with video too" (o-line). The new voice re-times the film in one command.
+- Folder: `~/.cache/daygame-research/content/reel-outvoted/film/trunk-n24/`
   (start with TRUNK.md).
 
-**Track 2, Same Night** (reel R7, "why beliefs decide how quitting feels").
-- His notes on "Same Night Trunks" (read 2026-11-26): 👍 on C1; C2 (bigger
-  writing): "Probably use this", start with the word "belief" in a more popping
-  colour or size, and he records it a little faster. His pick of story order
-  (T1-T3) is still open.
-- Best cut (Claude's proposal, page "Best cut"): clip C2 with the "belief" words
-  large in amber (`reel-beliefs/best/`), one clip, not the whole reel.
-- Fact: the site has 12 lies for nicotine only (weed 4, porn 5, alcohol 5), so
-  "twelve for each" is not true.
-- Private folder: `~/.cache/daygame-research/content/reel-beliefs/`.
+**Track 2, Same Night** (reel R7: why beliefs decide how quitting feels)
+- Best cut: clip C2. He records that line himself, "a little faster" (C2).
+- Next: Claude reads the belief tools in the quit tools and proposes 25 beliefs
+  with reframes, as explicit as possible; he picks 4-5.
+- "Belief" should pop on the page they write on; maybe no captions; maybe his
+  face in a circle in the top corner. The "So I tested it" line is unanswered.
+- The site has 12 lies for nicotine only (weed 4, porn 5, alcohol 5), so the
+  script must not say "twelve for each".
+- Folder: `~/.cache/daygame-research/content/reel-beliefs/`.
 
-**Track 3, text reels: parked.** He cannot add his phone number to the Meta
-account, so the Instagram route is closed (2026-11-23). Claude's first text-reel
-list was not usable. Claude cannot read Instagram: it needs his words or a
-recording of any example.
+**Track 3, text reels.** Finding about 15 text-first Instagram accounts to learn
+from: `Plans/track3-creator-list.md` (Claude's proposal, waits for his answers).
+Reading works through his free Apify account. Posting through Meta's route is
+blocked (2026-11-23). His verdict on the first try: "Your text reel work is not
+usable, because your method was looking at 1 second of youtube video".
 
-**Track 4, direct selling: nothing made yet.** His idea: a bar chart of quit
-success rates with "my coaching" on top and a money-back line. What "my
-coaching" is and costs is his to give. Claude's flag: a bare "100% success"
-claim can bring advertising or consumer-law trouble (unchecked, from memory).
-His view: competitors don't show their basis, so why would we have to. "Results or your money
-back", with plain terms, says nearly the same.
+**Track 4, selling: nothing made.** His idea: a bar chart of quit success rates
+with "my coaching" on top and a money-back line, e.g. "quit your addiction 100%
+easily, or get your money back". He will give the offer; what "my coaching" is
+and costs is his. His view: competitors don't show their basis, so why should we.
+Claude's flag, unchecked: a bare "100% success" claim may break advertising
+rules. His call. Also his (2026-11-20): study one competitor's sales funnel and
+copy it to some degree (Claude's record; notes file, "Quit Top Contenders").
 
-**Video 01, "The one thing"** (a 2-minute reel plus a YouTube version). Script
-v4 "decently approved" (2026-11-19). Not touched since then.
-Private file: `~/.cache/daygame-research/content/video-01-one-thing.md`.
+**Video 01, "The one thing"**: script v4 "decently approved" (2026-11-19), not
+touched since. File: `~/.cache/daygame-research/content/video-01-one-thing.md`.
 
 ## Where things are
 
-- His notes, word for word, all rounds: `~/research/content/notes-history.md`
-  (private; it used to be `docs/product/content_creation_history.md`).
+- His notes, word for word: `~/research/content/notes-history.md`.
 - Approved scripts: `~/.cache/daygame-research/content/approved/`.
-- Brand name and campaign line: `docs/product/brand.md`.
-- Anything published uses the name 10K Days Club.
+- Name and look: `docs/product/look.md`. Anything published says 10K Days Club.

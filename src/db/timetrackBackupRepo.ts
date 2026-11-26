@@ -15,7 +15,7 @@
  * the check that stands between a half-written file and live data. Nothing
  * automated calls `exportTimetrack` or `restoreTimetrack` — they are imported
  * only by the two scripts. The round trip was proved BY HAND once, and the
- * procedure for redoing it is in `docs/runbooks/timetrack.md`.
+ * procedure for redoing it is in `docs/tech.md` (Backups).
  *
  * The sentence that used to be here said "there is a test that runs the whole
  * round trip against a real Postgres". There is not, and on 2026-09-26 that
