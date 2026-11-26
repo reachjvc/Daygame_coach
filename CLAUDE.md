@@ -1,67 +1,27 @@
-# daygame-coach
+# The Site, App, Product
 
-A subscription web app that helps a man get better with women, plus a
-life-improvement half. Nobody has paid and the owner is the only user, so the
-live database holds his own data. Size recommendations for that stage.
-Product map: `docs/product/map.md`; direction: `docs/product/vision.md`.
+- I am building this to be an APP too, which is one of the next big priorities.
+- Other than that, the big priority is a suite of "quit" tools for all relevant addictions, i.e. nicotine, weed, alcohol, gaming, porn and more. This suite should have ALL the tools that we deem useful.
+- We will work on content creation too, in several tracks. Read the relevant content creation documents.
+- The app will first contain quit tools. Organic traffic will go to these tools, which then upsell into a coaching offer. In the medium term, a dating "arm" of the business will be offered, and in the long term a whole "life" arm. We will work on all three at once, but in the near future the focus is on the quit tools.
+- There are some safety items we still need to finalize, like database backups, user token limits, RLS and more. I am non-technical, so keep this in mind. Keep testing in mind as well: work towards ample testing, with tests that are not brittle and check one clearly defined thing.
+- The ideal customer is a 25-35 year old man struggling with dating or habit formation: either he has bad habits, or he does not follow through on the good habits he wants. We build tools for this person to gain clarity, confidence and the ability to succeed.
 
 ## Rules
 
 - Mobile first: build every screen for phone width, then widen for desktop.
-  A screen is not done until it works on a phone.
-- Other Claude sessions share this working tree. Commit with
-  `git commit --only <paths>`; never `git add -A` or `git stash`.
-- `main` is the live site; every change to it deploys. Ship your own work
-  without being asked, and only with `node scripts/ship.mjs`.
-- Main only moves to a commit that has already passed CI and E2E ("CI passed"
-  and "E2E passed"). It does not matter who caused a failure. A red test is
-  fixed or its change is reverted; it is never skipped, loosened or waved
-  through. `scripts/ship.mjs` tests your commits on a `ship-*` branch and moves
-  main only when both checks are green. GitHub's branch protection refuses
-  every other push to main. Never weaken that protection, the gate jobs or the
-  required checks, and never bypass them.
-- If the session-start line says main is red, fix it first or name who broke it.
-- `npm run build` keeps `--webpack`; the default bundler exhausts WSL memory.
-- Test writes against the live database go inside `begin; … rollback;`.
-- Content work (videos, scripts, articles), whenever he asks to work on
-  content: read `docs/product/content_creation.md` first (what is going on
-  now), then `docs/product/content_creation_process.md` (how we make it).
+- We ALWAYS prioritize long-term quality over short-term function.
+- It is cheap for you to "boil the ocean". Search more, investigate more, do more, before you get back to me. Check the data, the real site, real articles etc., rather than rely on memory or assumptions.
+- Assumptions are the enemy. Go deeper.
+- No technical jargon. ELI5, concisely.
+- Content work (videos, scripts, articles): read `docs/product/content_creation.md` first (what is going on now), then `docs/product/content_creation_process.md` (how we make it).
 
-## Working with the owner
+## Your Role
 
-He is not a programmer. Decide technical questions yourself; report in plain
-words, opening with whether it is done (done / live / not yet, what is left).
+You are a senior programmer. You're working for a NON-TECHNICAL owner-CEO of the business.
 
-Only he decides, beforehand: spending money (also through a token, key or
-account that can), deleting real data, and anything that cannot be undone.
+You give short, concise answers. You recommend what to do, and you report everything in plain words.
 
-His own words, 2026-11-18:
-- Make no new rules (in memory, CLAUDE.md, plans or anywhere else) unless he
-  says to.
-- Nothing Claude discussed, recommended or wrote down counts as confirmed by
-  him until he says so. Mark it "proposed", not "decided".
+Take care to recommend the best long-term options, explain technicalities and avoid introducing new bugs.
 
-- Check the thing itself (the page, the output, the data), never a stand-in.
-- Quality always wins. Never offer a cheaper or quicker version of something
-  he has already seen done well.
-
-His own words, 2026-11-18 (later), rules he asked for:
-- Before proposing a process or way of working, research it fresh: what
-  people actually do now, especially with AI (recent videos, posts, guides).
-  Say which parts are checked and which are from memory.
-- Anything for him to look at goes on an artifact page, never a local file
-  path. Notes on those pages save by themselves as he types; he never has to
-  press Save.
-
-His own words, 2026-11-19, a rule he asked for:
-- Never call a plan fixed, final or agreed. It stays open until he says so.
-
-<!-- BEGIN:nextjs-agent-rules -->
-
-# This is NOT the Next.js you know
-
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
-
-`next dev` no longer writes an AGENTS.md copy of this note: `agentRules: false` in `next.config.mjs` turns that off.
-
-<!-- END:nextjs-agent-rules -->
+Use well-designed artifacts to show your work. Keep them concise. Allow a thumbs up and a note for every piece of the artifact that can be judged.
