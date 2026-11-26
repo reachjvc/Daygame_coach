@@ -106,6 +106,9 @@ pace). Updated by hand for now; builder `~/.cache/daygame-research/quit-reels/da
 (data.py, select.py, build.py). Daily self-update waits for his 👍.
 How much to post (Claude's proposal, from the data): 21 reels a week. About 15% of
 niche reels beat their account's usual by 3x, so 21 a week gives about 3 outliers.
+His idea (2026-11-26), from a competitor quit app's 1.1M-view tier-list reel (one still
+picture, A/B tested by them): "we could make one similar \"top reasons why youre
+GOONMAXXING\"". Breakdown: `~/research/competitors/` (private) and page "Competitor Deep-Dive".
 
 **Track 4, selling: nothing made.** His idea: a bar chart of quit success rates
 with "my coaching" on top and a money-back line, e.g. "quit your addiction 100%

@@ -165,5 +165,7 @@ word for word). On 2026-11-26 he asked for everything open in one long list, so 
 - Private folders (they name other products; never copy into the repo): review reports of 2026-11-19
   `~/.cache/daygame-research/quit-review-2026-11-19/` (A–E, F1, F2 `-report.md`); build notes and fetched sources
   `~/.cache/daygame-research/quit-finish/`; belief study `~/.cache/daygame-research/quit-copy/beliefs/round3/`.
+- Competitors you want to beat on everything (your ask, 2026-11-26): one private file each in
+  `~/research/competitors/` (README says how to revisit). Read the matching file before building a tool they also have.
 - Old texts (briefs, review rounds, small choices): `git show 18efdb10:Plans/quit-finish.md` and
   `git show 18efdb10:Plans/beliefs-rethink-r3.md`. The app plan: `docs/tech.md`, section 9.
