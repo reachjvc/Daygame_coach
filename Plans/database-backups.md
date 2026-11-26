@@ -1,9 +1,9 @@
 # Database backups: nightly, off-site, restore-tested
 
-Status: **proposed**, round 3, rewritten 2026-11-24 (Opus 5.5) after the
-2026-11-22 check (findings C1, H1-H5, M1-M15, L1-L4; its page had no notes or
-likes from the owner). Not built. Nothing here is decided until the owner says
-so in his own words, and the plan stays open until he does.
+Status: **building**. Approved 2026-11-26 in his words: "lets go ahead with the
+entire plan" (read as yes to every recommendation in D1-D8). Phases 1, 3.1-3.3
+and 6.3 done; waiting for him: Phase 0 looks and Phase 2 (the key). When the
+build is done: delete this plan, leave 2-3 lines in `docs/tech.md` section 5.
 
 The owner's answers so far: delete nothing, keep every copy; a failure must
 reach him on his phone or somewhere he really sees; two-factor sign-in is on
@@ -16,7 +16,7 @@ for his GitHub account.
 - **What can still go wrong:** up to about a day of changes can be lost, because the copy is once a day. During the nightly job GitHub's machine holds the data unlocked. A program running on this PC as you could delete the copies here and on GitHub; an alarm fires, and only a USB copy is out of reach. If you lose both the passphrase and the key file, no copy opens. Uploaded files (none yet), the four vault secrets and the login settings are not in the copy; after a restore they are set again by hand.
 - **What you do yourself (about 30 minutes):** say yes or no to stopping the old automatic deletion (before 19 December); make the new key with one script and save its passphrase in your password manager; run one script that makes the backup login; look at two settings pages (GitHub billing, OneDrive plan); confirm the test alarm reached your phone; open one test copy with your passphrase.
 
-## Owner decisions (all proposed; he decides)
+## Owner decisions (all approved 2026-11-26 as recommended)
 
 | # | Question | Recommendation (proposed) | If he says no |
 |---|---|---|---|
@@ -132,14 +132,7 @@ runs on a fresh **Opus 5.5, effort high** session that did not build anything.
 D1-D8, the billing look, the OneDrive look. D1 can be done at once if he says
 yes (Phase 6 step 3), before anything else. **Model:** none.
 
-### Phase 1: public-repo files (Sonnet 5.5, high; depends on nothing)
-
-1. Copy from the drafts, byte for byte: `scripts/backup/owner/{make-master-key,set-reader-login,open-test-copy}.sh`, `scripts/backup/mirror-backups.sh`, `scripts/backup/systemd/full-mirror.{service,timer}`. `chmod +x` the four scripts (the timer runs the mirror directly, as it does `plan-backup.sh`). Check each owner script and the mirror against the sha256 in "Reference files"; a mismatch stops the build. **[tested on a copy]**
-2. `.gitignore`: add `*.sql`, `*.dump`, `*.gpg`, `*.tar.gz.gpg`, then allow back `!supabase/migrations/**`, `!supabase/pending-owner-approval/*.sql`, `!tests/db/*.sql` (the only tracked `.sql` folders today; `git ls-files '*.sql'`). Check with `git check-ignore -v` that every tracked `.sql` file is still not ignored. (M6) **[from memory, untested]**
-3. Add to `~/.config/daygame-backup/config` (outside the repo): `ONEDRIVE_DIR=<the OneDrive daygame-backups folder already in BACKUP_DIRS>`. Paths only, no secrets.
-4. Commit with `git commit --only <paths>`, ship with `node scripts/ship.mjs`.
-
-Acceptance: the four hashes match on `main`; `git log -p` of the commit shows no secret, no dump, no private path beyond `~`-relative ones.
+### Phase 1: public-repo files: DONE 2026-11-26 (a7ee20e7; four hashes match on main, 136 tracked .sql files not ignored, ONEDRIVE_DIR in config)
 
 ### Phase 2: the new master key (owner)
 
@@ -159,9 +152,7 @@ Old-style key preferences, so copies open in GnuPG 2.2 too **[tested on a copy]*
 
 ### Phase 3: the private backups repo (Sonnet 5.5, high; depends on 1, 2)
 
-1. `gh repo create reachjvc/daygame-backups --private` (no `--clone`). Clone over SSH to `~/.cache/daygame-research/backups/daygame-backups`, outside the public repo. Never run `gh auth refresh` or `gh auth login`; the HTTPS token has no `workflow` scope (M15). [docs](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps); SSH push of workflow files **[from memory, untested]**.
-2. First commit: `README.md` only. Push. Its sha is `ANCHOR_SHA`: every release tag points there, because GitHub's token may refuse to tag a commit that changes workflow files. [docs](https://docs.github.com/en/rest/releases/releases#create-a-release), untested here.
-3. `gh api -X PUT repos/reachjvc/daygame-backups/immutable-releases`, then `GET` must answer 200 (M5). [docs](https://docs.github.com/en/rest/repos/repos#enable-immutable-releases); Free-plan private repo: likely, not stated outright.
+1-3. DONE 2026-11-26: repo private, cloned over SSH to `~/.cache/daygame-research/backups/daygame-backups`; first commit README only, `ANCHOR_SHA=39d0527d097f450e22c774a35570c6e811940bb6`; immutable releases on (PUT 204; the first read-back said false, true 5 s later, so retry once before calling it a failure).
 4. Second commit: the drafts' `bin/`, `local/config.toml`, `.github/workflows/nightly.yml` **without its two `schedule:` lines** (so no nightly run, and no alarm, fires before Phase 7 turns it on), and `keys/master-public.asc` copied from `<ONEDRIVE_DIR>/keys/master-public.asc` (the PUBLIC file only). Fill the four `FILL-IN-AT-BUILD` values: `MASTER_FPR` and `MASTER_SUBKEY` exactly as the owner pasted them; `ANCHOR_SHA`; `SUPABASE_PUBLIC_KEY` from `grep -m1 '^NEXT_PUBLIC_SUPABASE_ANON_KEY=' .env.local | cut -d= -f2-` (never open `.env.local`: it also holds service keys). Check `gpg --show-keys` of the public file prints `MASTER_FPR`. Push over SSH.
 5. `actionlint` on the pushed workflow; `grep -c FILL-IN-AT-BUILD` = 0.
 
@@ -198,7 +189,7 @@ All by `gh workflow run nightly.yml -R reachjvc/daygame-backups -f mode=<m> -f a
 
 1. Config additions (`~/.config/daygame-backup/config`): `MIRROR_DIRS="$HOME/dg-backups/full-nightly <ONEDRIVE_DIR>/full-nightly"`, `MASTER_KEY_FILE=<ONEDRIVE_DIR>/keys/master-SECRET-<date>.asc`, `MASTER_KEY_SHA256=<the owner's SECRET_FILE_SHA256 line>`, `ONEDRIVE_LIMIT_MB` (4000 for the free 5 GB plan; set from his answer), `MIRROR_LOG=$HOME/dg-backups/full-nightly/mirror.log`. Install the two systemd units, `systemctl --user enable --now full-mirror.timer`, then `systemctl --user start full-mirror.service` once: log says `ok`, `gh variable get PC_STATUS -R reachjvc/daygame-backups` says `ok <today> copies=<n>`. **[tested on a copy]** (fake `gh`, fake folders); real OneDrive path **[from memory, untested]**.
 2. Lock new life-plan copies to the new key: `gpg --import <ONEDRIVE_DIR>/keys/master-public.asc` (public only) and set `BACKUP_KEY_FPR=<MASTER_FPR>` in the config. Next morning: `gpg --list-packets` of the new nightly file shows `MASTER_SUBKEY` (exit code 2 without the secret key is expected). Old files stay as they are.
-3. **Only after D1 yes:** delete lines 80-94 of `scripts/backup/plan-backup.sh` (the `# Retention:` comment and its Python block; the `done` and the final `echo` stay). Run `bash -n`; commit `--only`, ship. Deletes no file.
+3. DONE 2026-11-26 (a7ee20e7): retention block removed from `scripts/backup/plan-backup.sh`; the main checkout, which the timer runs, has 0 `os.remove` lines.
 4. **Only after D5 yes:** for each plain item in `~/dg-backups` (`live-2026-11-21/`, `alpha-live-test-account-2026-11-09/`, plain `*.json`), `tar | gzip | gpg -r <MASTER_FPR> -r <a throwaway key made for this>`; prove each opens with the throwaway key and matches; delete the throwaway key; never delete the plain originals (that is his separate yes).
 
 ### Phase 7: the alarm reaches him (Sonnet 5.5, medium + owner; depends on 6)
@@ -234,7 +225,7 @@ setup and the checks below. Until it passes, the report says "built, not yet att
 
 ### Phase 10: write it down (Sonnet 5.5, medium; depends on 9)
 
-- `docs/runbooks/backups.md` (public): the restore steps from the backups README, without key locations; what a copy does not hold; that everyone is logged out after a restore. Marked "draft" until Phase 9 passes.
+- `docs/tech.md` section 5 (public; no separate runbook file, per the few-docs rule): the restore steps from the backups README, without key locations; what a copy does not hold; that everyone is logged out after a restore. Marked "draft" until Phase 9 passes.
 - Memory notes `live-db-backup-method` and `infra-decision-2026-11-21`: point to this plan and the new repo.
 - Stop rule in the runbook: before making any repo of his private, re-check this plan's minute budget (M12).
 
@@ -354,6 +345,9 @@ something use temp folders or test switches, never the real copies.
 ## Status log
 
 - 2026-11-24: round 3 written (Opus 5.5). Drafts tested on throwaway copies (see "Reference files"). Nothing built; nothing written to live.
+- 2026-11-26: approved ("lets go ahead with the entire plan"). Immutable releases first proven on another private repo of this account (on, read back true, off again).
+- 2026-11-26: Phase 1 + Phase 6 step 3 shipped (a7ee20e7, Sonnet 5.5 build, hashes re-checked by Opus). Phase 3 steps 1-3 done. Next: the owner's Phase 0 looks and Phase 2 key.
+- 2026-11-26: Supabase CLI 3.4.0 (`--linked` became `--remote`; `db query` needs `--read-only` or `--yes`) does not affect this build: `plan-backup.sh` and `set-reader-login.sh` call the installed `~/.local/bin/supabase` 2.120.0, and the runner downloads 2.120.0. Do not upgrade that binary before both scripts are updated, or the nightly life-plan export fails.
 
 (The build session appends one dated line per phase: done / blocked, and why.)
 
