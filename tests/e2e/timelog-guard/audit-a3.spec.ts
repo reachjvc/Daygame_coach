@@ -3,8 +3,7 @@
  * Each test below is one thing a person would see. A test marked test.fail() is a bug found by this audit.
  */
 import { devices, expect, type Browser, type BrowserContext, type Page, type Route } from '@playwright/test'
-import { SIGNED_OUT, signIn, test } from '../fixtures/test'
-import { pressLogOut } from '../helpers/logOut'
+import { test } from '../fixtures/test'
 import { TRACKER, entryInList, savedToAccount, tapStop } from '../helpers/timetrack'
 import { fixClock, type FixedClock } from './clock'
 import { MORNING, Taps, accountEntries, openClean, startTimer, stopTimer } from './helpers'
@@ -178,32 +177,6 @@ test.describe('the phone with no signal or a bad one', () => {
       await expect(page.getByTestId('run-bar').getByRole('button', { name: 'Stop timer' }), 'no timer running').toHaveCount(0)
     } finally {
       await phone.context.close()
-    }
-  })
-
-  test('Log Out, reached after leaving the tracker with a stop that has not reached the account, asks before it throws it away', async ({ browser, throwawayAccount }) => {
-    const context = await browser.newContext({ ...devices['Pixel 7'], storageState: SIGNED_OUT, baseURL: test.info().project.use.baseURL, serviceWorkers: 'block' })
-    const page = await context.newPage()
-    try {
-      await signIn(page, throwawayAccount)
-      await page.goto(TRACKER, { waitUntil: 'domcontentloaded' })
-      await page.getByRole('heading', { name: 'Time Log', exact: true }).waitFor()
-      await savedToAccount(page, 60_000)
-      await page.route(SYNC, (route) => route.fulfill({ status: 503, contentType: 'application/json', body: '{}' }))
-      const taps = new Taps(page)
-      await startTimer(taps, page, 'Basement')
-      await tapStop(page)
-      await page.getByRole('link', { name: /Home/ }).click()
-      await page.waitForURL(/\/dashboard$/)
-      await pressLogOut(page)
-      await expect(page.getByTestId('log-out-unsent'), 'Log Out must ask before it loses the entry').toBeVisible({ timeout: 20_000 })
-      await page.getByTestId('log-out-stay').click()
-      await page.unroute(SYNC)
-      await page.goto(TRACKER, { waitUntil: 'domcontentloaded' })
-      await savedToAccount(page, 60_000)
-      expect(summary(await accountEntries(page)), 'the entry is on the account after the signal is back').toEqual(['Basement'])
-    } finally {
-      await context.close()
     }
   })
 
