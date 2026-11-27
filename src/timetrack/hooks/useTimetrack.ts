@@ -301,7 +301,23 @@ export function useTimetrack({ account }: { account?: string } = {}) {
     setNowSec(Math.floor(serverNow() / 1000))
     const everyMs = ticksEverySecond ? 1000 : IDLE_TICK_MS
     const timer = window.setInterval(() => setNowSec(Math.floor(serverNow() / 1000)), everyMs)
-    return () => window.clearInterval(timer)
+    /**
+     * A page coming back may have had its timers paused for hours: read "now"
+     * again at once instead of waiting for the next tick.
+     */
+    const onReturn = () => {
+      if (document.visibilityState === "hidden") return
+      setNowSec(Math.floor(serverNow() / 1000))
+    }
+    document.addEventListener("visibilitychange", onReturn)
+    window.addEventListener("pageshow", onReturn)
+    window.addEventListener("focus", onReturn)
+    return () => {
+      window.clearInterval(timer)
+      document.removeEventListener("visibilitychange", onReturn)
+      window.removeEventListener("pageshow", onReturn)
+      window.removeEventListener("focus", onReturn)
+    }
   }, [ticksEverySecond])
 
   const setState = useCallback((updater: (current: TimetrackState) => TimetrackState) => {
@@ -973,6 +989,10 @@ export function useTimetrack({ account }: { account?: string } = {}) {
         const moved = moveLegacyIdleDefault(next).state
         newest.current = moved
         setStateRaw(moved)
+        // Rows from another device just arrived: read "now" again. An entry that
+        // device finished seconds ago starts after a "now" up to ten seconds old
+        // and would be drawn as planned.
+        setNowSec(Math.floor(serverNow() / 1000))
       },
     }),
     [announceDisplacement, pushToast, setState, state],
