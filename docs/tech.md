@@ -21,6 +21,7 @@ There is one way: `node scripts/ship.mjs`, run from your own branch.
 Working in the shared folder:
 - Several sessions use the same checkout at once. Build on a branch in a git worktree (`git worktree add -b <b> <dir> main`, then symlink `node_modules`).
 - In the shared folder commit with `git commit --only <paths>`. Never `git add -A`, never `git stash`.
+- A doc other chats are also editing is never a reason to skip a change he asked for. Add your own lines (next to theirs in the shared folder, or from your own worktree); never remove or rewrite another chat's lines.
 - Models: "make sure that you end up using lesser models for the execution, and big models for the planning phase itself" (his, 2026-11-18). Claude's mapping: the big model plans and reviews, Sonnet builds, Haiku does mechanical checks.
 
 ## 2. Traps that cost real time before
