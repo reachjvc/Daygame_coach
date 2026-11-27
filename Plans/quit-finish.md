@@ -97,9 +97,14 @@ word for word). On 2026-11-26 he asked for everything open in one long list, so 
 - 2026-11-26, round 1 on the all-open list: you went through the first 65 beliefs (Allen Carr's 10 and most of
   EasyPeasy's) and kept 57. They are moved off the page; the record is `v5/round1-decisions.md` in the belief study.
   527 beliefs left; the page now marks beliefs seen in 3+ addictions as "Pillar".
-- No marks yet on the round-3 tools on the look page. Next: you mark Keep, Cut, 👍 or notes on the Belief List, all open and mark the look
-  page. Then Claude designs our tool: start from the copy you liked best and turn each change into one plain
-  question (Keep / Change). Then build, check, and you say done.
+- 2026-11-27, round 2: you went through every addiction section (102 more beliefs, 72 kept; record `v5/round2.json`).
+  130 kept in all. Left on the list: 425 life beliefs and 163 non-beliefs, no addiction beliefs.
+- 2026-11-27: the **Belief Picker** groups the 130 kept beliefs into 59 common beliefs (25 pillars across addictions,
+  7 thinking traps, porn-only, gambling-only, ideas, later). Per belief you pick the best words and the best answer,
+  and switch addictions on or off. Grouping is `v6/groups.json`. Your notes say the free open-source thought diary
+  was the copy that explained thinking traps best.
+- Next: you pick words and answers on the Belief Picker. Then Claude designs our tool from the picks and the copy you
+  liked best, each change as one plain question (Keep / Change). Then build, check, and you say done.
 - The 12 lies test stays as it is until you decide (see question 7).
 
 ## How a tool gets to "done"
@@ -151,7 +156,8 @@ word for word). On 2026-11-26 he asked for everything open in one long list, so 
   `~/.cache/daygame-research/one-pagers-v2/rulebook-private.md`. Source data: `docs/research/addiction-one-pagers/08-v3/`.
 - Your pages: daily page https://claude.ai/artifact/FJPtUMkjkJnEtwvn5J6M1t; quit notes board
   https://claude.ai/artifact/E2ThcB2qrCmcbCyJVhVdDJ (source `~/.cache/daygame-research/quit-finish/board/`);
-  belief tools look page https://claude.ai/artifact/AdANNvEXV3dMFoZsC3WrtF; Belief List, all open https://claude.ai/artifact/PmCDKP6rqMKBgnVkMsv6TX
+  belief tools look page https://claude.ai/artifact/AdANNvEXV3dMFoZsC3WrtF; Belief Picker https://claude.ai/artifact/VKfBXHKWF9nzGNH8sHT176
+  (`build6.py`, tests `test8.cjs`); Belief List, all open https://claude.ai/artifact/PmCDKP6rqMKBgnVkMsv6TX
   (`build5.py` on top of `build4.py`, tests `test7.cjs`); Belief Map
   https://claude.ai/artifact/55QSbJEd4RUizQfr9AwoWn (built by `round3/beliefs/page/build4.py`, tests `test6.cjs`, in
   the belief study); older belief list https://claude.ai/artifact/JZf7qwpmp45tzpVRhastfx (`build3.py`).
