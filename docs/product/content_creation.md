@@ -53,21 +53,17 @@ speaking, and we make an entirely different video. We steal the format too, of a
 celeb talking about something, and us showing something different over it." In the
 pipeline after Reel B; nothing built. Which reel: `~/research/competitors/README.md`.
 
-**Track 2, Outvoted** (about 1:40, the blocks film)
-- Round 3 page "Outvoted Round 3" (2026-11-26, waits for his look) acts on
-  NR2-1..3: he 👍 the opening (quest scroll + alarm clock) and the YOUR ONE
-  THING end, both kept as they were. Strings rebuilt on his pick B (thinner, one
-  shared point above, each line fades out once its block lands); the quest stand
-  at 1:18 now comes down from above instead of rising out of the floor. Full reel
-  `trunk-n24/b10/out/Outvoted-best4.mp4`.
-- How long things stay on screen: "Hard to make a rule for it, it depends on the
-  animation" (NR2-3). No rule; `b9/dwell_check.py` is a rough hint at most.
-- Still open: hands through the blankets in the bed scene; the three tower
-  landings at 34.9-36.3 s ("dunk dunk dunk" risk; only the new voice moves them).
-- Next: he records the voice (page "Outvoted Voice Script", take 9 "on screen"
-  line is now out of date) and the end line again "with video too".
+**Track 2, Outvoted** (now about 1:07, the blocks film)
+- Round 4 page "Outvoted Round 4" (2026-11-27, waits for his look) acts on OR3-1..3:
+  script v5 (301 to 209 words, old line vs new line, `reel-outvoted/script-v5/`),
+  O4 blocks sink out of the dark with no strings (b11s X1; a physically right string
+  needs ~3 s per block), STILL VAPING: four looks, pick = room dark + beam + push-in
+  (b11v), whole reel re-timed to a placeholder voice (b11t, two fresh-review rounds).
+- Open for him: script approval, then he records voice + video (pause ~0.5 s after
+  "Still vaping."); face circle covers NO WOMEN at 40-46 s; stronger vaping push.
+- His real take re-times in one command: `trunk-n24/b11t/retime.sh` (see its REPORT.md).
 - Folder: `~/.cache/daygame-research/content/reel-outvoted/film/trunk-n24/`
-  (start with TRUNK.md).
+  (TRUNK.md, then b11t/REPORT.md and REVIEW.md).
 
 **Track 2, Same Night** (reel R7: why beliefs decide how quitting feels)
 - He records the voice himself, "a little faster" (C2).
