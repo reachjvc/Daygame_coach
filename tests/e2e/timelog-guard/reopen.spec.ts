@@ -535,7 +535,10 @@ async function runCell(browser: Browser, storageState: string, cell: Cell) {
     if (navigations.length) info.annotations.push({ type: 'reload', description: `the page navigated on waking: ${navigations.join(', ')}` })
 
     try {
-      await expectPhoneMatchesServer(phone, api, { info })
+      // After its clock jumps hours ahead, the phone has truly not checked the account for hours by
+      // its own clock, and the badge says so (amber) until the wake's check lands: the right words,
+      // not a wrong screen. That check took up to ~9 s beside the other cells, so these cells wait 15 s.
+      await expectPhoneMatchesServer(phone, api, { info, within: cell.clockJumpMs ? 15_000 : 5_000 })
     } catch (error) {
       // the HTML report keeps the attachment; a terminal run needs it printed
       console.log(`PHONE-SYNC-REQUESTS (${info.title})\n${syncLog.join('\n') || '(none)'}`)
