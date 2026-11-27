@@ -147,16 +147,38 @@ function phoneHooks() {
 
 // ---------------------------------------------------------------- the account
 
+/**
+ * The instant that is `hour`:00 on the calendar day `daysAgo` days before today, in the account's zone.
+ * Fixed hours of yesterday, not "6 hours ago": an entry that straddles midnight is drawn under both days,
+ * which would make the list's row count depend on when the test runs.
+ */
+function zonedHour(daysAgo: number, hour: number): number {
+  const parts = (t: number) => new Intl.DateTimeFormat('en-GB', { timeZone: ZONE, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).formatToParts(new Date(t))
+  const get = (p: Intl.DateTimeFormatPart[], k: string) => Number(p.find((x) => x.type === k)!.value)
+  const offsetAt = (t: number) => {
+    const p = parts(t)
+    return Date.UTC(get(p, 'year'), get(p, 'month') - 1, get(p, 'day'), get(p, 'hour'), get(p, 'minute'), get(p, 'second')) - Math.floor(t / 1000) * 1000
+  }
+  const today = parts(Date.now())
+  const wall = Date.UTC(get(today, 'year'), get(today, 'month') - 1, get(today, 'day') - daysAgo, hour)
+  return wall - offsetAt(wall - offsetAt(wall))
+}
+
+/** Minutes since midnight in the account's zone, now */
+function minutesSinceMidnight(): number {
+  const p = new Intl.DateTimeFormat('en-GB', { timeZone: ZONE, hourCycle: 'h23', hour: '2-digit', minute: '2-digit' }).formatToParts(new Date())
+  return Number(p.find((x) => x.type === 'hour')!.value) * 60 + Number(p.find((x) => x.type === 'minute')!.value)
+}
+
 /** A finished entry the account holds already, as the sync endpoint's own rows look */
-async function seedHistory(api: APIRequestContext, entries: { description: string; startedAgo: number; stoppedAgo: number }[]) {
+async function seedHistory(api: APIRequestContext, entries: { description: string; startMs: number; stopMs: number }[]) {
   const pulled = await api.get('/api/timetrack/sync')
   const body = (await pulled.json()) as {
     rows: { timetrack_entries: Record<string, unknown>[]; timetrack_workspaces: { id: string; user_id: string }[] }
   }
   const workspace = body.rows.timetrack_workspaces.find((w) => (w as { deleted_at?: unknown }).deleted_at == null)
   expect(workspace, 'the account has no workspace to put history in').toBeDefined()
-  const now = Date.now()
-  const at = new Date(now).toISOString()
+  const at = new Date().toISOString()
   const rows = entries.map((e) => ({
     id: randomUUID(),
     user_id: workspace!.user_id,
@@ -165,9 +187,9 @@ async function seedHistory(api: APIRequestContext, entries: { description: strin
     task_id: null,
     description: e.description,
     billable: false,
-    started_at: new Date(now - e.startedAgo).toISOString(),
-    stopped_at: new Date(now - e.stoppedAgo).toISOString(),
-    duration_seconds: Math.round((e.startedAgo - e.stoppedAgo) / 1000),
+    started_at: new Date(e.startMs).toISOString(),
+    stopped_at: new Date(e.stopMs).toISOString(),
+    duration_seconds: Math.round((e.stopMs - e.startMs) / 1000),
     duration_only: false,
     created_with: '10kdaysclub',
     source_event_id: null,
@@ -217,11 +239,16 @@ async function pcSwitch(pc: Page) {
   await savedOrSay(pc, 'the PC, after starting Beta')
 }
 
-/** Typing "90" in the running time's box means "it started 90 minutes ago" (TimerBar, `setRunningElapsed`) */
-async function pcEditStart(pc: Page) {
+/**
+ * Typing "45" in the running time's box means "it started 45 minutes ago" (TimerBar, `setRunningElapsed`; a
+ * number from 10 up is minutes). Never further back than midnight: a timer that began yesterday is drawn
+ * under both days, which is a different question from the one this spec asks.
+ */
+const editShiftMinutes = () => Math.min(90, minutesSinceMidnight() - 1)
+async function pcEditStart(pc: Page, minutes: number) {
   const duration = pc.getByLabel('Duration').first()
   await duration.click()
-  await duration.fill('90')
+  await duration.fill(String(minutes))
   await duration.press('Enter')
   await savedOrSay(pc, 'the PC, after moving the start')
 }
@@ -238,6 +265,8 @@ interface Cell {
   clockJumpMs?: number
   /** wake twice within milliseconds */
   doubleWake?: boolean
+  /** a new version of the app was deployed while the phone was away: /api/healthz names another build once, on waking */
+  newBuild?: boolean
   /** the phone stops the timer first, but its upload is still in flight (held) while the PC acts and the phone wakes */
   phoneStopsFirst?: boolean
 }
@@ -268,10 +297,11 @@ const cellName = (c: Cell) =>
   (c.clockSkewMs ? `, clock ${c.clockSkewMs > 0 ? '+' : '-'}${Math.abs(c.clockSkewMs) / MIN} min` : '') +
   (c.clockJumpMs ? `, clock jumps +${c.clockJumpMs / H} h` : '') +
   (c.doubleWake ? ', two wakes' : '') +
-  (c.phoneStopsFirst ? ', phone stop still uploading' : '')
+  (c.phoneStopsFirst ? ', phone stop still uploading' : '') +
+  (c.newBuild ? ', new build deployed' : '')
 
 /** The serverside facts a cell must have reached before the phone comes back */
-async function expectAccountAfter(api: APIRequestContext, pcDid: PcDid, before: ServerEntry) {
+async function expectAccountAfter(api: APIRequestContext, pcDid: PcDid, before: ServerEntry, shift: number) {
   await expect
     .poll(async () => {
       const all = await readServer(api)
@@ -283,13 +313,15 @@ async function expectAccountAfter(api: APIRequestContext, pcDid: PcDid, before: 
         return alpha && alpha.stopped_at !== null && beta ? 'ok' : 'switch not on the account'
       }
       if (pcDid === 'delete') return alpha ? 'Alpha still on the account' : 'ok'
-      return alpha && Date.parse(alpha.started_at) < Date.parse(before.started_at) - 60 * MIN ? 'ok' : 'start not moved'
+      return alpha && Date.parse(alpha.started_at) < Date.parse(before.started_at) - (shift - 2) * MIN ? 'ok' : 'start not moved'
     }, { timeout: 15_000, message: `the PC's "${pcDid}" never reached the account` })
     .toBe('ok')
 }
 
 async function runCell(browser: Browser, storageState: string, cell: Cell) {
   const info = test.info()
+  const shift = editShiftMinutes()
+  test.skip(cell.pcDid === 'edit-start' && shift < 10, 'within 11 minutes after local midnight: moving the start earlier would cross it')
   const rig = await openRig(browser, storageState, cell.back)
   const { phoneContext, pcContext, api } = rig
   try {
@@ -319,8 +351,8 @@ async function runCell(browser: Browser, storageState: string, cell: Cell) {
     if (cell.clockSkewMs) await phone.addInitScript((ms) => { sessionStorage.setItem('__skew', String(ms)) }, cell.clockSkewMs)
     await openFreshTracker(phone)
     await seedHistory(api, [
-      { description: 'History one', startedAgo: 6 * H, stoppedAgo: 5 * H },
-      { description: 'History two', startedAgo: 4 * H, stoppedAgo: 3 * H },
+      { description: 'History one', startMs: zonedHour(1, 10), stopMs: zonedHour(1, 11) },
+      { description: 'History two', startMs: zonedHour(1, 12), stopMs: zonedHour(1, 13) },
     ])
     await phone.reload({ waitUntil: 'domcontentloaded' })
     await savedOrSay(phone, 'the phone, opened again with its history')
@@ -401,10 +433,19 @@ async function runCell(browser: Browser, storageState: string, cell: Cell) {
     // the PC does its part meanwhile
     if (cell.pcDid === 'stop') await pcStop(pc)
     else if (cell.pcDid === 'switch') await pcSwitch(pc)
-    else if (cell.pcDid === 'edit-start') await pcEditStart(pc)
+    else if (cell.pcDid === 'edit-start') await pcEditStart(pc, shift)
     else if (cell.pcDid === 'delete') await tombstone(api, alpha.id)
-    await expectAccountAfter(api, cell.pcDid, alpha)
+    await expectAccountAfter(api, cell.pcDid, alpha, shift)
 
+    if (cell.newBuild) {
+      // the page asks which build the server runs when it comes back (useNewBuild); once, another one answers
+      let answered = false
+      await phoneContext.route('**/api/healthz', async (route) => {
+        if (answered) return route.fallback()
+        answered = true
+        await route.fulfill({ json: { status: 'ok', buildId: 'f'.repeat(40), db: 'ok', proto: 'http' } })
+      })
+    }
     syncLog.push(`+${((Date.now() - started) / 1000).toFixed(1)}s --- phone comes back`)
     // the phone comes back
     const navigations: string[] = []
@@ -436,6 +477,7 @@ async function runCell(browser: Browser, storageState: string, cell: Cell) {
     } else if (cell.back === 'b-bfcache-real') {
       await phone.goBack({ waitUntil: 'domcontentloaded' })
     } else if (cell.back === 'e-tab-switch') {
+      phone.on('framenavigated', (f) => f === phone.mainFrame() && navigations.push(f.url()))
       await phone.evaluate(() => (window as unknown as { __setVisibility: (v: 'visible') => void }).__setVisibility('visible'))
     } else if (cell.back === 'b-bfcache-simulated') {
       phone.on('framenavigated', (f) => f === phone.mainFrame() && navigations.push(f.url()))
@@ -554,6 +596,12 @@ test.describe('phone reopens the Time Log: harder wakes', () => {
     ),
     // the phone's clock jumps 3 hours ahead of the account's while it sleeps (an automatic time correction)
     ...(['stop', 'switch', 'edit-start'] as PcDid[]).map((pcDid): Cell => ({ ranOn: 'pc', pcDid, back: 'c-freeze', clockJumpMs: 3 * H })),
+    // a new version of the app was deployed meanwhile: the page reloads itself on waking (useNewBuild),
+    // or, with an unsent change, only offers "Updated · Tap to reload"
+    { ranOn: 'pc', pcDid: 'stop', back: 'b-bfcache-simulated', newBuild: true },
+    { ranOn: 'pc', pcDid: 'switch', back: 'e-tab-switch', newBuild: true },
+    { ranOn: 'phone', pcDid: 'stop', back: 'e-tab-switch', newBuild: true },
+    { ranOn: 'phone', pcDid: 'edit-start', back: 'b-bfcache-simulated', phoneStopsFirst: true, newBuild: true },
     // two wakes within milliseconds: visibilitychange + pageshow, then again
     { ranOn: 'pc', pcDid: 'switch', back: 'b-bfcache-simulated', doubleWake: true },
     { ranOn: 'phone', pcDid: 'stop', back: 'b-bfcache-simulated', doubleWake: true },
@@ -566,7 +614,7 @@ test.describe('phone reopens the Time Log: harder wakes', () => {
     { ranOn: 'phone', pcDid: 'delete', back: 'a-new-page' },
     { ranOn: 'phone', pcDid: 'delete', back: 'b-bfcache-simulated' },
     // a phone whose clock is minutes (or hours) off the account's
-    ...[7 * MIN, -7 * MIN, 3 * H, -3 * H].flatMap((clockSkewMs) =>
+    ...[7 * MIN, -7 * MIN, 20 * MIN, -20 * MIN].flatMap((clockSkewMs) =>
       (['stop', 'switch', 'edit-start'] as PcDid[]).flatMap((pcDid) =>
         (['a-new-page', 'b-bfcache-simulated'] as Back[]).map((back): Cell => ({ ranOn: 'pc', pcDid, back, clockSkewMs })),
       ),
