@@ -97,21 +97,21 @@ page "Backup Plan Check, Round 3" https://claude.ai/artifact/FEU5eytturiPhW5oa8B
 
 ## 6. Time Log safety nets
 
-Claude's proposal, 2026-11-19. Step 3 is built (not yet checked by him): `tests/e2e/timelog-guard/`, run on every push by the CI job `timelog-guard` (projects `timelog-guard-phone` and `timelog-guard-desktop`; `E2E passed` waits for it). Rest not started. Full plan: `git show 18efdb10:Plans/time-log-safety-nets.md`.
+Built 2026-11-27 from Claude's plan (`git show 18efdb10:Plans/time-log-safety-nets.md`). Report page: https://claude.ai/artifact/7EqXmUoW66a2nLuW5kD3hN. His questions page (no answers yet): https://claude.ai/artifact/2N94W1DoweJ3JYw9yS6Rcf.
 - His goal: the Time Log stops getting worse without him knowing.
-- His bug: he opens the Time Log on his phone after a timer ran (on the phone or the PC), and sometimes it shows the wrong thing. No crash is logged for it.
+- His bug: he opens the Time Log on his phone after a timer ran (on the phone or the PC), and sometimes it shows the wrong thing. No crash is logged for it. What he sees is still unknown (B1).
 - His Time Log rule (2026-11-14): nothing changes on the PC unless it makes the PC better or more like the phone. Claude's way to keep it: phone changes in shared files behind `isMobile`/`sm:`, PC screenshots before and after.
 - His decision (2026-11-14): pulling an entry's edge away leaves a gap; the neighbour does not stretch (PC too).
 - His phone/PC split (2026-11-14): the phone hides Week view, the money and team reports, Billable, the empty bell, the row ⋮ menu, Team and the footer.
-- Open bugs (as of 2026-11-19): Back from "Stop at…" leaves the tracker; Pomodoro has no Stop; a past entry that overlaps the running timer counts twice; the home-screen app was never tested.
-Next steps, in order:
-1. Ask him what exactly he sees on reopen, how often, and in the browser or the home-screen app. A screenshot next time.
-2. Reproduce it with a two-device browser test, repeated 30 times. Commit the failing test, then the fix.
-3. His 10 everyday Time Log tasks as tests at phone and PC size (he checks the list).
-4. Clock traps with a fake clock: midnight, summer/winter time, timers over 24 hours.
-Screen photos (built, not yet checked by him): `tests/e2e/timelog-guard/photos/`, six screens at phone and PC size, run on every push by the CI job `timelog-photos` (`E2E passed` waits for it). Run them with `bash scripts/timelog-photos.sh` (needs `E2E_STACK_ENV` and `PW_BASE_URL`, header of the script): only inside its pinned Docker image, never `npx playwright test` directly (the spec throws).
-Rule: when a photo must change on purpose, show him the old and the new on an artifact page and update it (`--update-snapshots`) only after his yes. Never raise the 1% tolerance to get past a red run.
-Claude's doubt: screen-photo tests and the test lock cost the most; do them last. "Hold the live site back when the Time Log check fails" is mostly true already: since 20 Nov main takes only commits that passed E2E.
+What guards it now, on every push, inside "E2E passed" (so a red one keeps the change off main and off the live site):
+- `tests/e2e/timelog-guard/`: `stories.spec.ts` (his 10 everyday tasks, Claude's list until he checks it), `phone-pc-differences.spec.ts`, `reopen.spec.ts` (the phone coming back after a timer ran elsewhere), `audit-a1/a2/a3.spec.ts`. CI job `timelog-guard`, projects `timelog-guard-phone` and `timelog-guard-desktop` (specs that make their own phone and PC run in the desktop project only).
+- `tests/e2e/timelog-guard/photos/`: six screens at phone and PC size, job `timelog-photos`. Run them with `bash scripts/timelog-photos.sh` (needs `E2E_STACK_ENV` and `PW_BASE_URL`, header of the script), only inside its pinned Docker image, never `npx playwright test` directly (the spec throws).
+- Rule: when a photo must change on purpose, show him the old and the new on an artifact page and update it (`--update-snapshots`) only after his yes. Never raise the 1% tolerance to get past a red run.
+- `tests/unit/timetrack/clock-traps/`: midnight, the clock-change nights, timers over 24 h, a phone changing zone.
+- Fixed 2026-11-27 (fc94550f): after the phone came back, an entry the other device had just finished showed as "planned" and was missing for up to 10 s.
+- Open bugs, each a `test.fail` (delete that line when its bug is fixed; the test then guards the fix): 11 in `audit-a*.spec.ts` (Undo of a delete overwrites the other device's stop or rename; an open phone sheet drops the PC's tag; a tag unticked before the first upload stays; Undo right after waking does nothing; "Saved" shown on a stale offline phone; three lost-answer cases; the Undo bar vanishes while saving fails; one 429/408 stops all retries) and 1 in clock-traps (an end typed in the second 02:00-03:00 of the October night). Older ones (2026-11-19): Back from "Stop at…" leaves the tracker; Pomodoro has no Stop; a past entry that overlaps the running timer counts twice; the home-screen app was never tested.
+- Not built, waiting for his yes: Q2 (a hook plus a CI line that refuse changes to these tests without an `Owner-approved:` line) and Q3 (a Vercel deployment check). "E2E passed" already holds main back.
+- Known flaky test elsewhere: `tests/e2e/audit-ping.spec.ts` F12 (Log Out inside the Undo time) seeds an answer 1 h back on the real clock, so it fails between 00:00 and 01:00 UTC and blocks every ship in that hour.
 
 ## 7. The live site
 

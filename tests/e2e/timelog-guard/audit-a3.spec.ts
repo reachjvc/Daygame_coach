@@ -125,6 +125,8 @@ const summary = (entries: { description: string; stopped_at: string | null }[]) 
 const live = (entries: Awaited<ReturnType<typeof accountEntries>>) => entries.filter((e) => e.deleted_at === null)
 
 test.describe('the phone with no signal or a bad one', () => {
+  // makes its own phone and PC; runs once, in the desktop project (as reopen.spec.ts does)
+  test.skip(({ isMobile }) => isMobile, 'makes its own phone and PC; runs once, in timelog-guard-desktop')
   test.setTimeout(120_000)
 
   test('start, stop, rename, continue and delete with no signal all reach the account once the signal is back', async ({ browser, account }) => {
