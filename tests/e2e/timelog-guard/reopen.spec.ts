@@ -551,6 +551,10 @@ async function runCell(browser: Browser, storageState: string, cell: Cell) {
 
 // ---------------------------------------------------------------- the matrix
 
+// Every cell makes its own phone and its own PC, so the project's device means nothing here: run it once
+// (CI runs both guard projects), in the one that is not a phone.
+test.skip(({ isMobile }) => isMobile, 'makes its own phone and PC; runs once, in timelog-guard-desktop')
+
 test.describe('phone reopens the Time Log after a timer ran', () => {
   test.setTimeout(120_000)
   const ranOn: RanOn[] = ['phone', 'pc']

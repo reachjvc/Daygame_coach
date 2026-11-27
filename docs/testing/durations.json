@@ -26,7 +26,7 @@
     { "workflow": "e2e.yml", "job": "timing-phone 1/1", "seconds": 272 },
     { "workflow": "e2e.yml", "job": "sweep-android 1/1", "seconds": 300 },
     { "workflow": "e2e.yml", "job": "timelog-guard-phone 1/1", "seconds": 420 },
-    { "workflow": "e2e.yml", "job": "timelog-guard-desktop 1/1", "seconds": 420 },
+    { "workflow": "e2e.yml", "job": "timelog-guard-desktop 1/1", "seconds": 780 },
     { "workflow": "e2e.yml", "job": "timelog-photos-phone 1/1", "seconds": 420 },
     { "workflow": "e2e.yml", "job": "timelog-photos-desktop 1/1", "seconds": 420 },
     { "workflow": "e2e.yml", "job": "sweep-phone 1/1", "seconds": 348 },

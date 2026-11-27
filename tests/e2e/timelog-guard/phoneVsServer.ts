@@ -171,10 +171,13 @@ export async function expectPhoneMatchesServer(
   } finally {
     if (last && info) await info.attach('phone-vs-server.txt', { body: last, contentType: 'text/plain' })
   }
-  const until = Date.now() + hold
-  while (Date.now() < until) {
-    const diff = await look()
-    expect(diff, `the phone showed the account's time, then stopped showing it within ${hold} ms`).toBe('')
-    await page.waitForTimeout(300)
-  }
+  // it must keep matching for `hold` ms: poll for a mismatch, and none turning up within `hold` is the pass
+  const flipped = await expect
+    .poll(look, { timeout: hold, intervals: [300] })
+    .not.toBe('')
+    .then(
+      () => true,
+      () => false,
+    )
+  expect(flipped, `the phone showed the account's time, then stopped showing it within ${hold} ms\n${last}`).toBe(false)
 }

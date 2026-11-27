@@ -45,6 +45,10 @@ const KNOWN_SKIPS: Record<string, string> = {
     "a finger can be dragged only through Chromium's DevTools protocol; Playwright's WebKit (the iPhone lane) can only tap. The owner's phone is Android (Chrome), which the android lane, and the desktop lane under touch emulation, cover",
   "tests/e2e/role-models.spec.ts › the first screen transfers under 300 KB":
     "under `next dev` scripts are unminified and unsplit, so the weight means nothing; CI measures a production build",
+  "tests/e2e/timelog-guard/reopen.spec.ts › (file)":
+    "the spec makes its own phone and PC, so it runs once, in timelog-guard-desktop; the phone project skips it and runs the stories instead",
+  "tests/e2e/timelog-guard/reopen.spec.ts › describe: phone opens the Time Log with no signal, then signal returns":
+    "a service worker registers only in a production build; under `next dev` there is none to test (PW_PROD=1)",
   "tests/e2e/life-plan-tour.spec.ts › describe: life plan tour":
     "not a test: photographs every /plan step for the owner to look at, and runs only when given a plan and a folder (TOUR_PLAN, TOUR_DIR)",
 }
