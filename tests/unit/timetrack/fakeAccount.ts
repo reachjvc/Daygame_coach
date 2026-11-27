@@ -20,7 +20,7 @@
  *    does for a caller that sends none — and what every client did before Phase 2.
  *    `strict` turns that off, for a test about a server that only versions.
  *
- * The OTHER device is played by calling `stop`, `remove`, `edit` and `untag`
+ * The OTHER device is played by calling `add`, `stop`, `remove`, `edit` and `untag`
  * directly, which is what its writes amount to here.
  *
  * Stamps look like Postgres's own (`…12:00:01.000456+00:00`), microseconds and
@@ -221,6 +221,10 @@ export function fakeAccount(initial: TimetrackRows, options: FakeAccountOptions 
     },
 
     // --- the other device ---------------------------------------------------
+    /** The other device writes a row that did not exist: a whole entry it started and stopped */
+    add(table: Table, newRow: AnyRow) {
+      put(table, { ...newRow, updated_at: stamp() })
+    },
     stop(entryId: string, at: string) {
       const current = row("timetrack_entries", entryId)!
       const started = Date.parse(String(current.started_at))
