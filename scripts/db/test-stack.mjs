@@ -4,6 +4,7 @@
  *
  *   node scripts/db/test-stack.mjs up     start it (or reuse it), print its env
  *   node scripts/db/test-stack.mjs env    print the env of the running stack
+ *   node scripts/db/test-stack.mjs plan   list the repo migrations built on top of the baseline (touches nothing)
  *   node scripts/db/test-stack.mjs down   stop it and throw its data away
  *
  * WHY NOT supabase/migrations/ DIRECTLY: they cannot build the schema from
@@ -16,8 +17,9 @@
  *      scripts/db/baseline.sh;
  *   3. tests/db/shim.sql — the auth.users trigger a public-schema dump cannot
  *      carry;
- *   4. every repo migration newer than the baseline's stamp. So a migration
- *      nobody has applied to production yet is already in the tests.
+ *   4. every repo migration newer than the baseline's stamp, plus the ones in
+ *      OLDER_NOT_YET_LIVE below. So a migration nobody has applied to
+ *      production yet is already in the tests.
  *
  * Every test makes its own user here, so nothing is ever truncated and nothing
  * touches production. Plan: Plans/tests-worth-their-keep.md, Phase 7.
@@ -50,6 +52,17 @@ const REPO_MIGRATIONS = path.join(ROOT, "supabase/migrations")
  */
 export const SUPABASE_CLI_VERSION = "2.120.0"
 
+/**
+ * MIGRATIONS OLDER THAN THE BASELINE'S STAMP THAT PRODUCTION DOES NOT HAVE.
+ *
+ * The stack applies "newer than the stamp". A migration written long ago and
+ * approved only now is older than the stamp, so that rule would skip it and no
+ * test could see it. List it here until it is live and a refreshed baseline
+ * holds it (`scripts/db/baseline.sh`); then the line may go. Leaving it in
+ * does no harm: these files are written to run twice.
+ */
+export const OLDER_NOT_YET_LIVE = ["20260923150000_delete_and_revise_program_workout.sql"]
+
 // Services this suite never uses. Starting them costs memory and minutes.
 const EXCLUDED = [
   "realtime", "storage-api", "imgproxy", "studio", "edge-runtime",
@@ -71,16 +84,20 @@ function versionOf(file) {
   return BigInt(m[1].padEnd(14, "0"))
 }
 
+/** Which repo migrations go on top of the baseline, oldest first. Pure: the files and the stamp come in. */
+export function migrationsOnTop(files, stamp, olderNotYetLive = OLDER_NOT_YET_LIVE) {
+  return files
+    .filter((f) => f.endsWith(".sql") && (versionOf(f) > BigInt(stamp) || olderNotYetLive.includes(f)))
+    .sort((a, b) => (versionOf(a) < versionOf(b) ? -1 : 1))
+}
+
 /** The migrations the stack is built from, in order, and a hash of their names and contents. */
 function plan() {
   const first = fs.readFileSync(BASELINE, "utf8").split("\n", 1)[0]
   const m = /^-- baseline-stamp: (\d+)$/.exec(first)
   if (!m) throw new Error(`${BASELINE} has no "-- baseline-stamp:" line. Re-run scripts/db/baseline.sh.`)
-  const stamp = BigInt(m[1])
 
-  const newer = fs.readdirSync(REPO_MIGRATIONS)
-    .filter((f) => f.endsWith(".sql") && versionOf(f) > stamp)
-    .sort((a, b) => (versionOf(a) < versionOf(b) ? -1 : 1))
+  const newer = migrationsOnTop(fs.readdirSync(REPO_MIGRATIONS), m[1])
 
   // The order is the point: see the header. Before-baseline must run first, or
   // the baseline's objects are created under the local stack's wide defaults.
@@ -223,8 +240,14 @@ function up() {
   return readEnv()
 }
 
-const command = process.argv[2]
-if (command === "up") {
+// Real paths on both sides: a symlinked checkout must not turn a real `up` into a silent no-op.
+const isMain = process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url))
+const command = isMain ? process.argv[2] : "imported"
+if (command === "imported") {
+  // Loaded by a test for its exports: do nothing.
+} else if (command === "plan") {
+  console.log(plan().newer.join("\n"))
+} else if (command === "up") {
   console.log(JSON.stringify(up()))
 } else if (command === "env") {
   console.log(JSON.stringify(readEnv()))
@@ -232,6 +255,6 @@ if (command === "up") {
   supabase(["stop", "--no-backup"])
   fs.rmSync(STAMP_FILE, { force: true })
 } else {
-  console.error("usage: node scripts/db/test-stack.mjs up | env | down")
+  console.error("usage: node scripts/db/test-stack.mjs up | env | plan | down")
   process.exit(2)
 }

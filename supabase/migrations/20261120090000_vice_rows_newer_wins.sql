@@ -1,8 +1,10 @@
 -- ============================================================================
 -- THE BLACK BOX ACCOUNT KEEPS THE NEWER COPY OF A ROW, AND WRITES BOTH TABLES TOGETHER.
 --
--- NOT APPLIED. Needs the owner's yes before it touches the live database
--- (Plans/quit-finish.md, blocker B3). Tested on the local test stack only.
+-- APPROVED BY THE OWNER 2026-11-28; apply it only after `supabase migration list --remote`, and note its stamp is
+-- older than production's newest migration, so `db push` needs `--include-all`. Tested on the local test stack
+-- (tests/integration/db/viceRowsNewerWins.integration.test.ts); undo file in `supabase/migrations/rollback/`.
+-- Until `writeViceRows` calls `vice_write_rows` only the triggers act: they guard the app's existing upserts.
 --
 -- Today `writeViceRows` reads the stamps of the rows it is about to write, drops the older ones and upserts the
 -- rest: two requests that cross each other (two devices, two tabs, a slow phone) can still both pass the check

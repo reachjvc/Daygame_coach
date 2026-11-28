@@ -129,8 +129,9 @@ word for word). On 2026-11-26 he asked for everything open in one long list, so 
    table in the live database)? Asked 2026-11-19, no answer yet. Recommendation: yes, it is your data rule.
 2. **B4, database fix.** Apply the tested fix that stops two phones overwriting each other's Black Box rows
    (`supabase/migrations/20261120090000_vice_rows_newer_wins.sql`, undo file in `supabase/migrations/rollback/`)?
-   It changes no existing row. Checked 2026-11-26, read-only: not applied, and it is the only repo migration missing
-   on live; `db push --remote` needs `--include-all` for it. Recommendation: yes.
+   It changes no existing row. Approved 2026-11-28, tested on the local test stack (`tests/integration/db/viceRowsNewerWins.integration.test.ts`).
+   Checked 2026-11-28, read-only: not applied on live (one other approved migration, the workout delete/correct
+   functions, is also missing); `db push --remote` needs `--include-all`.
 3. **B3, coaching.** `src/quit/data/offer.json` holds $200 for 30 days and "If you're not nicotine-free in 30
    days, I keep working with you free until you are." You said "yes all of these are fine" (2026-11-18), then
    "not sure about the prices"; you were also weighing a $1.99-2.99/month membership (undecided). Keep, change or

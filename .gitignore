@@ -124,7 +124,6 @@ infra/caddy/local-root-ca.crt
 *.gpg
 *.tar.gz.gpg
 !supabase/migrations/**
-!supabase/pending-owner-approval/*.sql
 !tests/db/*.sql
 
 # The Time Log's approved screen photos are tests, not output (docs/tech.md section 6)

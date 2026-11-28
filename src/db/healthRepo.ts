@@ -292,7 +292,7 @@ export async function getWorkoutLogs(
  *
  * NULLS LAST, and that is what keeps this safe. A session written up
  * afterwards has no `completed_at`, and every correction currently nulls it
- * (see the migration parked in `supabase/pending-owner-approval/`), so those
+ * (see `supabase/migrations/20260927120000_corrections_keep_set_order.sql`), so those
  * rows fall through to exactly the old keys and are ordered exactly as
  * before. Only a workout that still knows when its sets were ticked changes,
  * and it changes to the truth.
