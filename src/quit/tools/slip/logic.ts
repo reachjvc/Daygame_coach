@@ -163,21 +163,25 @@ export function decide(input: { runs: ViceAttempt[]; reports: ViceReport[]; quit
   return { kase: "C", startOn: null, steps: ["where", "voice"], min: null, slipId: null }
 }
 
-/** Does the saved slip report still describe the latest slip: it is there, it ended a run, and no other run lives except the day 1 run this visit started. */
-export function describesLatest(s: SlipState, runs: ViceAttempt[], reports: ViceReport[]): boolean {
+/**
+ * Does the saved slip report still describe the latest slip: it is there, it ended a run, and no other run lives except
+ * the day 1 run this visit started. That run counts only on the day it started: on a later day the result is old, and
+ * its "Tomorrow" must never reach the run that holds the days since.
+ */
+export function describesLatest(s: SlipState, runs: ViceAttempt[], reports: ViceReport[], today: string): boolean {
   if (!s.slipId) return false
   if (!reports.some((r) => r.id === s.slipId)) return false
   const ended = runs.find((r) => r.endedByReportId === s.slipId)
   if (!ended) return false
   const liveRun = runs.find((r) => r.endedOn === null)
-  if (liveRun) return s.day1 === "today" && s.day1On === liveRun.startedOn
+  if (liveRun) return s.day1 === "today" && s.day1On === liveRun.startedOn && liveRun.startedOn === today
   return latestEnded(runs)?.id === ended.id
 }
 
 /** Whether the saved answers carry into this visit: a result only while it still describes the latest slip, half-answers for an hour. */
-export function keepsState(s: SlipState, plan: Plan, runs: ViceAttempt[], reports: ViceReport[], now: number): boolean {
+export function keepsState(s: SlipState, plan: Plan, runs: ViceAttempt[], reports: ViceReport[], now: number, today: string): boolean {
   if (s.kase === null || plan.startOn !== null) return false
-  if (s.slipId) return describesLatest(s, runs, reports)
+  if (s.slipId) return describesLatest(s, runs, reports, today)
   if (s.kase !== plan.kase) return false
   const fresh = s.touched !== null && now >= s.touched && now - s.touched <= VISIT_MS
   // Case C has no run to be stale against: its finished result stays. Case A with no slip filed starts again.

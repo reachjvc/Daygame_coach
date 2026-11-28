@@ -101,7 +101,7 @@ function Screens({ addiction, beliefs, moments, swaps, needs, signedIn, bb }: In
     let plan = decide(input)
     if (plan.startOn && !bb.startRun(plan.startOn)) plan = decide({ ...input, quitDate: null })
     let now = state
-    if (!keepsState(state, plan, bb.runs, bb.reports, Date.now())) {
+    if (!keepsState(state, plan, bb.runs, bb.reports, Date.now(), today)) {
       now = { ...EMPTY_SLIP, kase: plan.kase, steps: plan.steps, min: plan.min, slipId: plan.slipId, touched: Date.now() }
       save(() => now)
     }
@@ -208,7 +208,8 @@ function Screens({ addiction, beliefs, moments, swaps, needs, signedIn, bb }: In
   const redate = (next: SlipState, day: string): { id: string | null } | null => {
     const old = state.slipId
     if (!old) return null
-    const fresh = state.day1 === "today" ? bb.runs.find((r) => r.endedOn === null && r.startedOn === state.day1On) : undefined
+    // Only a run started today is "a moment ago": a run from an earlier day holds real days and stays.
+    const fresh = state.day1 === "today" && state.day1On === today ? bb.runs.find((r) => r.endedOn === null && r.startedOn === state.day1On) : undefined
     if (fresh && !bb.removeRun(fresh.id)) return null
     if (!bb.undo(old)) {
       if (fresh) bb.startRun(fresh.startedOn)
@@ -401,7 +402,8 @@ function Screens({ addiction, beliefs, moments, swaps, needs, signedIn, bb }: In
     setSwitchRefused(false)
     setStartRefused(false)
     // Leaving Today takes the run started a moment ago back out again.
-    if (state.day1 === "today") {
+    // Only a run started today: one from an earlier day holds clean days and is never taken back out.
+    if (state.day1 === "today" && state.day1On === todayIso()) {
       const run = bb.runs.find((r) => r.endedOn === null && r.startedOn === state.day1On)
       if (run && !bb.removeRun(run.id)) {
         setSwitchRefused(true)
@@ -421,7 +423,7 @@ function Screens({ addiction, beliefs, moments, swaps, needs, signedIn, bb }: In
   const undo = () => {
     if (!state.slipId || state.kase !== "A") return
     // The new run first (it blocks the old run coming back), then the slip, then the quit date as it was.
-    const fresh = state.day1 === "today" ? bb.runs.find((r) => r.endedOn === null && r.startedOn === state.day1On) : undefined
+    const fresh = state.day1 === "today" && state.day1On === today ? bb.runs.find((r) => r.endedOn === null && r.startedOn === state.day1On) : undefined
     if (fresh && !bb.removeRun(fresh.id)) return
     if (!bb.undo(state.slipId)) return
     if (state.quitBefore) {

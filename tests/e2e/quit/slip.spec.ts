@@ -266,6 +266,26 @@ test.describe("slipped, signed out @phone", () => {
     await shot(page, "p-6-result-day1-tomorrow")
   })
 
+  test("2b a week later the old result is gone: the slip tool asks When was it, and the days since stay", async ({ page }) => {
+    await open(page, RUN20())
+    await toResult(page)
+    await expect.poll(async () => (await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([
+      [day(-20), day(-1)],
+      [day(0), null],
+    ])
+    // eight days on, the same browser reopens the tool
+    await page.clock.setSystemTime(new Date(NOW.getTime() + 8 * 86_400_000))
+    await page.goto(URL)
+    await expect(page.getByTestId("result")).toHaveCount(0)
+    await expect(step(page)).toHaveAttribute("data-step", "1")
+    await expect(page.getByRole("heading", { name: t.whenQuestion })).toBeVisible()
+    // nothing was taken out of the record
+    expect((await liveRuns(page)).map((a) => [a.startedOn, a.endedOn])).toEqual([
+      [day(-20), day(-1)],
+      [day(0), null],
+    ])
+  })
+
   test("3 Undo takes the slip out, the old run lives again, the new run is gone, the quit date is back", async ({ page }) => {
     await open(page, RUN20())
     await toResult(page, { where: "coffee", told: CALMS.id })
