@@ -11,7 +11,7 @@ To read one: `git show <commit>:Plans/<file>` (or `docs/plans/<file>` for the ol
 ## Article-writing lab, removed 2026-11-26: read it at `d82eedfb`
 
 The February lab (`/test/articles`, its `/api/test/*` routes, `docs/articles/`, `src/articles/articlesService.ts`)
-was removed with his yes. His writing notes from it live in `docs/product/content_creation_process.md`.
+was removed with his yes. His writing notes from it live in `docs/content/process.md`.
 The hidden `/articles` page stays.
 
 ## Cleanup round 2 of 2026-11-26: read them at `18efdb10`
@@ -43,7 +43,7 @@ find-the-men.md.
 
 **Replaced:** quit-tool.md and quit-copy.md (by quit-finish.md); outvoted-animation-round.md, reel-outvoted.md,
 celeb-clip-reels.md, clip-reels-toolbox.md, night-process.md, quit-reels-study.md (their lessons are now in
-`docs/product/content_creation_process.md`).
+`docs/content/process.md`).
 
 **Finished:** alpha-test-week-audit-time.md, tests-green-and-fast.md, program-builder.md, site-structure.md,
 life-plan-review-reads-back.md, and all of `docs/plans/` (17 plans from August to October).

@@ -1,6 +1,6 @@
-# Content creation: how we make it
+# Content: how we make a piece (all tracks)
 
-Read `docs/product/content_creation.md` first. Quotes are his words. The code
+Read `README.md` in this folder first. Quotes are his words. The code
 after a quote (R3-6, RS-Q3…) finds it in `~/research/content/notes-history.md`.
 Lines marked **(Claude)** are Claude's method; drop one if he says it is wrong.
 
@@ -21,6 +21,27 @@ serve to make future versions drift too" (R3-6).
 - "maintain dynamism to maximize creativity", and have "a way of knowing when
   we're getting closer to target" (RS-P1).
 - Say which claims are checked and which come from memory (ten ways, 2026-11-20).
+
+## Why rounds repeat (Reel B, 16 rounds, counted 2026-11-27)
+
+"we're still in a pretty bad process in terms of all this" (R16-10). His notes
+by topic: caption and source placement 8 rounds, music 8, cuts inside words 4,
+"show me, don't ask me" 4 (R10-2, R13-2, R16-8, R16-9), misread notes 3 (R4-6,
+R3-5, R16-1). (Claude) The causes, and the fix for each:
+- **No fixed look.** Each round re-decided captions, sources and music from a
+  few reels, so a new round broke what the last one got right. Fix: one style
+  sheet per track, chosen by him once from a big study ("then we decide once
+  and for all", R16-4). A round never changes it unless his note does.
+- **Over-fixing.** One note changed the whole format (R15 square picture: "This
+  is not what i meant", R16-1). Fix: the smallest change that answers the note;
+  anything bigger only as an extra choice beside it.
+- **Asking instead of showing.** Fix: every open point is short clips of the
+  same moment to pick from, never a question in words (R16-8, R16-9). Every cut
+  Claude can't judge by ear is a 3-second clip with a 👍.
+- **Whole reels to compare small things.** Fix: clips differ in one thing only,
+  20 s at most (R10-2).
+- **Misreads found late.** Fix: the page opens with his notes, one line each,
+  and what changed for each, so a wrong reading shows in seconds.
 
 ## A round
 
@@ -76,58 +97,17 @@ better (RS-M5). He can't show drafts to people: compare with published videos.
   for reasons only you can decide" (E1_full, R6-B).
 - Captions short and sharp (R5-O11). Text over moving pictures, not dark word
   cards (round 2). His line comes WITH the text, if both are there (E4).
+- Endings: his face pops up in a circle while he says the comment line. "It works well
+  with the pop up of me in a circle, so we should note this as a method that we can use
+  always. Perhaps i film X ways of them commenting all at once, that we just always use"
+  (SN r5, 2026-11-27).
 - He appears in many reels, in ways that are easy to film: a closing line, his
   voice, a short moment, or animated into the story (RS-Q6, loop 3). Real people
   beat an AI narrator; an AI voice is fine as a placeholder (R3-1, chg-0).
   Breathing cut out of his voice, "if that is possible" (2026-11-20; method vC of
   the breath test was "probably the best").
 
-**Celebrity reels (Track 1)**
-- Length "somewhere in 45-85 sec for MOST videos", no fixed number (RS-Q2).
-- Framing: do what strong reels do: "i guess they are framed, so we just do as
-  they do" (R5-rd-RS-U4).
-- The source tag names the source on screen right now (R3-2, R4-3), bottom-left,
-  all the way at the bottom. Captions near the middle, never on a face. Names
-  anywhere (R10-1, R11-1). Name each person, long enough to read (B, E1_full).
-  Put the top line over the competitor's logo spot (R5-V1).
-- Cuts: no cut may start or end inside a word, not even a word that runs on
-  ("You need to get clearer on the cuts", R12-1). Check every cut on the sound
-  itself, not only on word timings. Pace: "I wonder if we can do something to
-  make it a little more snappy" (R12-2). (Claude, round 12, he judges) try
-  trimming pauses over ~0.3 s inside one speaker.
-- Inserts long enough to make sense (R3-4). Hunt wide for footage: "tangentially
-  relevant, like some1 saying the same thing" (RS-U2). Tools he liked: a quick
-  compilation of people saying the same thing (R5-S11), another camera angle,
-  pictures framing the interview, kept short (R5 reference reels), animations
-  (RS-U6). A toolbox, then several versions (R4-1).
-- No same people in reels released close together (R6-page).
-- "steal like an artist, not just steal" (R6-page). Under 50% from one reel is
-  fine, and vary the accounts we semi-copy from (2026-11-22); measure it with
-  `copyscore.py`.
-- Risk: "if t he biggest risk is a copyright claim, then we can just learn from
-  it. But you should notice me about the risk of various projects" (RS-Q4).
-  (Claude, from the Instagram and YouTube rules, checked 2026-11-20) The bigger
-  risk is being treated as a repost account. Credits, borders, mirroring or speed
-  changes don't make a reel ours.
-
-**Our own films (Track 2)**
-- Not "that we always use wooden blocks". What works: "short clips, multiple
-  variants, larger creativity" (type-reading).
-- "graphically looking awesome ... super coherent, rather than a bunch of screens
-  that change" (2026-11-19).
-- "We dont nedd a hundred things or 1 thing, we need a few things that work well"
-  (First 30 Seconds C). "I didnt mean stop having almost any new animations, i
-  meant let things breathe" (A).
-- No bouncing blocks ("dunk dunk dunk"); zooms only when they mean something
-  (q1-v2b, q1-calm, Outvoted Morning). Not too much writing on screen; words on
-  the objects; show meaning in the picture, not in labels (Outvoted Morning,
-  q1-calm).
-- Tone for Video 01 (2026-11-14, summary): calm, confident and premium, like a
-  well-made explainer.
-- Never AI still paintings with a slow zoom or pan (his rule, 2026-11-21). No
-  paid AI tools.
-- Cost: "that is not as important as finding the right thing", though he asks
-  whether the same result could be found more cheaply (S8b).
+Track-specific asks live in each track file (`tracks/`).
 
 **Articles** (his notes on the February article; artN =
 `git show 18efdb10:docs/articles/01-8020-rule/feedbackN.json`). (Claude) Use as tools for other text too.
@@ -145,7 +125,22 @@ better (RS-M5). He can't show drafts to people: compare with published videos.
 - Pauses at cuts: about 0.15-0.3 s inside one speaker, 0.35-0.5 s between
   speakers. Clips within about 1 LU of loudness. Never run loudnorm after apad or
   atrim. He never judged these numbers.
+- His voice: never raise it into a 16-bit file. Keep it float until the last step, then
+  low cut, de-esser, soft compression, and one look-ahead limiter
+  (`reel-beliefs/r6/voice/polish.py`, `mix.py`). Round 5 chopped ~1,100 peaks and stacked
+  a soft clip + limiter + loudnorm; he heard sharp "s" sounds (2026-11-27). Reel B's
+  closing line (r15) had the same chop: redone in round 16 (`celeb-reels/r16/code/voice16.py`: this chain plus a gentle shelf for his low rumble).
+- A pencil sound must have no low whoosh: he hears it as breathing (SN r5).
 - `barscheck.py` finds black edges in a render.
+- Music under talking (round 14, 7 strong reels measured): 19-38 dB under the
+  voice, or none (3 of 7), and mostly bass so the voice range stays free. It
+  rises toward the end or when a career clip comes on. Even out each song's
+  level over time, or its own build (drums coming in) jumps under a word.
+  Round 15, the 12 most-viewed posts of Reel B's own five clips: most use no
+  music under talking; when used, a flat bed 13-18 dB under; a rise only on the
+  last line. Full screen leaves no face-free steady caption spot in close-ups;
+  a square picture in a black frame does (measured on every frame).
+- Cut picture pieces on frame numbers, not seconds, or lip-sync drifts.
 
 ## Nights and the GPU
 

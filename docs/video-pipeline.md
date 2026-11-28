@@ -43,7 +43,7 @@ Check pages
 - "When i tell you that ive made notes, you need to next time tell me the sequence of steps" (2026-11-21).
 
 Machine
-- His pause: "just pause it until i say so. It is fine that we transcribe etc., everything that is only GPU" (2026-11-20). The file `~/.cache/daygame-research/capture/prod/PAUSE_CLAUDE` is that pause (in place since 2026-11-20 21:00). Never delete it yourself; only he lifts it.
+- His pause: "just pause it until i say so. It is fine that we transcribe etc., everything that is only GPU" (2026-11-20). The file `~/.cache/daygame-research/capture/prod/PAUSE_CLAUDE` is that pause (in place 2026-11-20 21:00 to 2026-11-27 17:50; he lifted it in chat on 2026-11-27, the old file is kept as `PAUSE_CLAUDE.lifted-2026-11-27`). Never create or delete it yourself; only he sets or lifts it.
 - Every GPU job goes through `~/.cache/daygame-research/tools/gpu_gate.py` (his rule, 2026-11-21; details in memory note machine-limits).
 
 Later tracks (his asks, not started)
@@ -56,7 +56,7 @@ Later tracks (his asks, not started)
 
 - Method, proven 2026-11-18/19: per stretch of video, download the original-language audio; on the GPU run 5 word machines (one joint words+speakers model as the skeleton), 5 speaker machines, 2 voice prints, a man/woman voice reading and a two-voice split; two Sonnet judges write the lines with doubt marks; a fixed rule step (settler v8) settles disagreements; Opus judges word differences. Driver: `capture/code/run_set.py`.
 - Proof: big test of 1,289 lines. Of 23 lines he checked, every "sure" line was right; the errors were who speaks in crosstalk and dropped one-word replies. His verdict: "mostly very high quality ... the test has been concluded" (2026-11-18). The lean recipe then matched 24 of his 25 answers. Settler v8 passed the frozen test (`capture/code/settle_test.py`).
-- Production: 148 sets from 7 coaches in `capture/prod/sets_all.tsv`. 78 finished: coach A 60 of 60, coach B 16 of 31, the other 5 coaches 2 of 57. 70 unfinished since the batch stopped on 2026-11-21: 7 never downloaded (YouTube sign-in check), 63 downloaded, 22 through the GPU machines, 17 through the judges. Their remaining Claude steps wait on PAUSE_CLAUDE.
+- Production: 148 sets from 7 coaches in `capture/prod/sets_all.tsv`. 78 finished: coach A 60 of 60, coach B 16 of 31, the other 5 coaches 2 of 57. 70 unfinished since the batch stopped on 2026-11-21: 7 never downloaded (YouTube sign-in check), 63 downloaded, 22 through the GPU machines, 17 through the judges. On 2026-11-27 coach B's 8 GPU-ready sets were finished (coach B now 24 of 31). The other 5 coaches' 55 sets stopped before the GPU re-listen step; they resume from their files on disk.
 - Whole videos (his ask, 2026-11-23): 2 videos done from start to end, 17 conversations. Finished sets and the stretches between them (W1-W8) are joined; who is fixed by Opus reading the whole video plus Sonnet reading frames; one Opus labeller uses guide v13 (his 5 stages and 21 tags). A third video (W9-W11) is only partly run.
 - His read of the words: "the text was pretty much spot on" (one set, 2026-11-23). On video 1: "only a few, mostly insignificant mistakes in the transcript itself, but definitely a totally wrong understanding of when investment has happened" (2026-11-23).
 - Older labels: 10 sets labelled twice (v1, v1.1) and 61 sets labelled unchecked (`labels/runs/v11u`, old 6-stage scheme). He never checked them. Do not use them.
@@ -68,12 +68,21 @@ Later tracks (his asks, not started)
 - Set start and end times come from `capture/prod/sets_all.tsv` and were never checked against the video. Set B52 is cut wrong at both ends. A machine hint (unchecked): 10 of 70 sets don't start at the open, 17 end mid-talk. Whole videos avoid this.
 - Read check of 62 sets (2026-11-20, text only, no audio): about 3.5-4% of lines misleading. Most often talk to camera mid-set labelled as the coach talking to her; also a new woman or a friend labelled "her", and mishears that flip the meaning.
 - The 78 finished sets still use the old who labels (him, her, vo, other): no "student N", no "commentary". His approved fixes run only in the whole-video run. No voice catalog exists yet.
-- Guide v13 allows one stage per line; his "two phases simultaneously" is missing.
 - Labels on video 1 (his notes, 2026-11-23): invest called too early, lines without a tag, "laughs" mixed up with "plays along", "assumption" used after she had already said it.
 - The Canary speech model crashes on pieces of about 130 s ("CUDA driver error: device not ready"); 4 whole-video pieces have 6 of 7 machines.
 - Age-limited videos need a signed-in YouTube cookie, which is not used, so they are skipped.
 
 ## Next steps, in order
+
+Status 2026-11-27 (his verdict on the Whole Video Check: words "95-99% correct ... good enough"; tags need another round). He said: start with coach A, everything not yet done. Run that evening, all stopped at 21:01 by his order ("make sure no jobs randomly just start again"; he tests the process first). Nothing restarts until he says so:
+- Coach A whole videos: 79 gap pieces of 25 videos queued on the GPU (`whole10/gaps-ss.tsv`, log `gaps-ss.log`), smallest gaps first; the GPU gate puts it behind the film renders. At 20:35, 0 of 79 were finished (the first 4 pieces had 6 of their GPU machines). Then per video `whole10/code/who_video.sh <vid> --redo` and labels.
+- Who fix (commentary, student N): done on all 25 coach A videos with what was finished then (17:49-18:10; each has `out/<vid>.who.json`). A watcher (`whole10/code/who_watch.py`, from 20:36, log in `whole10/session-2026-11-27-who.md`) re-runs it per video once all of that video's gaps are finished, 2 videos at once.
+- Downloads: done. All 47 known coach A videos are on disk (20 fetched 17:48-19:02, 1 of them a new upload). The whole-video GPU run of those 20 (`whole10/gaps-ss2.tsv`) is queued; the same watcher runs their first who fix when it finishes.
+- Guide v14 (`labels/guide-v14.md`, `label_set14.py`) from his notes; videos 1 and 2 re-labelled. Video 1 taught the guide; video 2 is the fair test.
+- His test (his words 21:00: "You can do a few of them for me to test"): 3 coach A videos run through every step overnight (`whole10/gaps-test.tsv`, then `whole10/code/fresh_chain.sh`: who fix + v14 labels on those 3 only). No other pipeline job runs.
+- **Go Check** https://claude.ai/artifact/MFDd6fLPVS1zuTgb2gxDvZ (same link that held Tag Check v14, unmarked then; source `capture/page/2026-11-28/go/`, `build.py`, `test.cjs`). One card game: his 16 tag notes, video 2 tags, who said it on 22 lines from 17 unseen videos (`who_sample.json`), the fresh run, 8 yes/no questions (go or not, skip 3 talk-only videos, keep machines' answer when unsure, the 4 old tag questions, one-pagers). db `marks/<key>` {v: right|wrong|skip}, `flags/<line key>`, `notes/<id>` {item, text}. Read all of it before any run.
+
+Older status:
 
 Newest page: **Whole Video Check** https://claude.ai/artifact/QYuwTDBdkLBHR8TAHyRRLp (db `marks`, `notes`, `likes`; source `capture/page/2026-11-23/ten/build.py`). Read 2026-11-26, nothing written: video 1 (11 conversations, 23 parts) has 15 parts tapped Done (23-24 Nov), 33 notes and 1 like; open are conversations 2-5 and 8 and 3 talk-to-camera parts. He tapped no Words/Who/Stage/Tag/Gap chip; all his feedback is in notes. Video 2 (6 conversations) is untouched. Daily tasks whole-1 to whole-4 (26-29 Nov) still plan all of it, video 1 first.
 1. He finishes the page: video 2 and the open parts of video 1.
@@ -103,7 +112,6 @@ Newest page: **Whole Video Check** https://claude.ai/artifact/QYuwTDBdkLBHR8TAHy
 
 ## Open questions for him (Claude's recommendation after each)
 
-- Lift PAUSE_CLAUDE (on since 2026-11-20) for the 70 unfinished sets and the who fix? Recommend: yes, after the Whole Video Check round, within his weekly allowance.
 - Whole videos (every conversation plus talk to camera) as the unit from now on, instead of cut sets? Recommend: yes; it removes the wrong set ends.
 - Bring back a second stage per line, as he asked on 2026-11-10 and 2026-11-11? Recommend: yes, as an optional second stage.
 - A third label layer (stage, what happens in it, technique), from his 2026-11-23 note? Recommend: not yet; first get 5 stages and 21 tags right.
