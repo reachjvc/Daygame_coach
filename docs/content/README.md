@@ -32,7 +32,7 @@ for next week, should be to optimize the production process" (M28-3).
 
 ## Tracks
 
-His (2026-11-22): what each track is for, and the shares of Tracks 1 and 4. Track 5 is his (2026-11-26).
+His (2026-11-22): what each track is for, and the shares of Tracks 1 and 4. Track 5 is his (2026-11-26, confirmed 2026-11-28).
 Claude's: the track names and "the rest" for Track 2.
 
 | Track | What | Share of posts | File |

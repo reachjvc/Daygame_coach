@@ -4,6 +4,7 @@ A short still or list reel: what happens day by day after quitting, one per addi
 His words (2026-11-26, on a 7 s "alcohol leaves your body on this timeline" list reel, page "Viral Quit Reels"):
 "Yes, lets copy this for all addictions. Should be easy enough. Feels like a different track of content, like a
 number 5 or so". On a cartoon timeline reel about porn: "also a decent format".
+Confirmed 2026-11-28: "it is its own track yes".
 Folders under `~/.cache/daygame-research/content/`.
 
 ## Now
