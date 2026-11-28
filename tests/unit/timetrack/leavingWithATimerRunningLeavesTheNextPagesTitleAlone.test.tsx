@@ -10,7 +10,7 @@
  * the tracker's clean-up; the test does the same two steps in that order.
  */
 
-import { cleanup, render, screen } from "@testing-library/react"
+import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, expect, test, vi } from "vitest"
 
 import { TogglLab } from "@/src/timetrack/components/TogglLab"
@@ -41,15 +41,23 @@ afterEach(() => {
   window.localStorage.clear()
 })
 
+/**
+ * The clock reaches the tab once the account has answered: until then the
+ * timer is the old copy's and the tab says only "Time Log" (`useTabTitle`,
+ * owner 2026-11-28). Here the answer is 401, a browser with no account.
+ */
+const clockInTab = () => waitFor(() => expect(document.title).toBe("1:00:00 · writing"))
+
 test("the tab shows the running clock while you are in the tracker", async () => {
   render(<TogglLab />)
   await screen.findAllByLabelText("Stop timer")
-  expect(document.title).toBe("1:00:00 · writing")
+  await clockInTab()
 })
 
 test("the page you go to keeps its own title", async () => {
   const view = render(<TogglLab />)
   await screen.findAllByLabelText("Stop timer")
+  await clockInTab()
 
   document.title = "Dashboard"
   view.unmount()

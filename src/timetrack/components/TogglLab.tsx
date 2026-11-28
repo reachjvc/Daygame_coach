@@ -42,6 +42,7 @@ import { OfflineShell } from "@/src/shared/components/OfflineShell"
 import { SendWaitingTimerStops } from "./RunningTimerSetting"
 import { ErrorBoundary } from "@/src/shared/components/ErrorBoundary"
 import { useTimetrack } from "../hooks/useTimetrack"
+import { useTabTitle } from "../hooks/useTabTitle"
 import { defaultReportConfig, decodeReportConfig, followRounding, followWeekStart } from "../reportsService"
 import { dateKey, formatClock, formatWhen } from "../timetrackFormatService"
 import { newId } from "../idService"
@@ -72,6 +73,7 @@ import { SettingsView, type SettingsTab } from "./SettingsView"
 import { FavoritesBar, RunningPill, TimerBar, type TimerMode } from "./TimerBar"
 import { Modal } from "./primitives"
 import { BACK_LINK_CLASS, TrackerLoading } from "./TrackerLoading"
+import { TimerUnsureContext } from "./timerUnsure"
 import { PhoneTracker } from "./phone/PhoneTracker"
 import { AlertsBell } from "./AlertsBell"
 import { SignedOutBanner } from "./SignedOutBanner"
@@ -567,6 +569,13 @@ export function TogglLab({
     [holding, sync],
   )
   /**
+   * The running timer is drawn as "Checking…" until the account confirms it
+   * (`CheckState.unsure`, `TimerUnsureContext`). Only where there is an account
+   * to ask: a browser that keeps its time to itself has nothing to wait for.
+   */
+  const timerUnsure = Boolean(sync.check.unsure) && sync.status !== "local-only" && sync.status !== "signed-out"
+  useTabTitle(running, runningSeconds, timerUnsure)
+  /**
    * Stop is for the entry on the screen when it was pressed, never for one the
    * other device started a moment ago and this screen has not drawn yet (Phase 8
    * two-devices audit; `stopSeen`). The bar, the header pill, S and the
@@ -1039,8 +1048,9 @@ export function TogglLab({
   )
 
   return (
-    // The theme's --input equals the card background, which makes bordered
-    // fields invisible on cards; give every field in the sandbox real contrast
+    <TimerUnsureContext.Provider value={timerUnsure}>
+    {/* The theme's --input equals the card background, which makes bordered
+        fields invisible on cards; give every field in the sandbox real contrast */}
     <div className="min-h-screen bg-background [&_input[data-slot=input]]:border-border [&_input[data-slot=input]]:bg-background/60 [&_select]:bg-background/60">
       {/* header */}
       <OfflineShell />
@@ -1523,5 +1533,6 @@ export function TogglLab({
         })}
       </div>
     </div>
+    </TimerUnsureContext.Provider>
   )
 }

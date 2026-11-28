@@ -98,6 +98,7 @@ import { timerList } from "../timerListService"
 import type { DayGroup, EntryRow, Id, IsoDate, IsoDateTime, SaveViolation, TimeEntry, TimetrackState } from "../types"
 import { BillableToggle, ProjectPicker, TagPicker } from "./pickers"
 import { ColorDot, DayPicker, Dropdown, EmptyState, plannedStripes, touchRow, touchTarget } from "./primitives"
+import { CHECKING_TIMER, useTimerUnsure } from "./timerUnsure"
 import { serverNow, serverNowIso } from "../serverClock"
 import { layOnto } from "../tabMergeService"
 import { AfterCheckContext } from "./afterCheck"
@@ -578,6 +579,8 @@ function EntryFields({
 }) {
   const seconds = row ? row.totalSeconds : entrySeconds(entry, nowSec)
   const running = isRunning(entry)
+  /** the old copy's running entry, not confirmed by the account yet (`TimerUnsureContext`) */
+  const unsure = useTimerUnsure() && running
   /**
    * On a day the entry reached from an earlier one (`continuedDays`): "from the
    * day before", and its end measured from THIS day — on a night's second
@@ -1163,7 +1166,15 @@ function EntryFields({
    * is still right through a resize, in the frame before the media-query
    * listener has reported it.
    */
-  return isMobile ? phoneRow : pointerRow
+  const shown = isMobile ? phoneRow : pointerRow
+  if (!unsure) return shown
+  // the row keeps its height; its contents wait unseen under "Checking…"
+  return (
+    <div className="relative">
+      <span className="pointer-events-none absolute inset-0 flex items-center px-3 text-sm text-muted-foreground">{CHECKING_TIMER}</span>
+      <div className="invisible">{shown}</div>
+    </div>
+  )
 }
 
 /** Per-entry action menu, shared by the phone and pointer layouts */

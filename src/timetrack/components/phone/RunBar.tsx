@@ -23,6 +23,7 @@ import { formatClock, formatTimeOfDay } from "../../timetrackFormatService"
 import { clientById, entrySeconds, projectById } from "../../timetrackService"
 import type { EntryDraft, TimeEntry, TimetrackState } from "../../types"
 import { ColorDot } from "../primitives"
+import { CHECKING_TIMER, useTimerUnsure } from "../timerUnsure"
 
 /** Toggl's placeholders, with the typographic apostrophe the rest of the slice uses */
 export const WORKING_ON = "I’m working on…"
@@ -74,6 +75,7 @@ export function RunBar({
    * it, a tap on ■ or ▶ is ignored.
    */
   const settled = useRef(0)
+  const unsure = useTimerUnsure()
   const runningId = running?.id ?? null
   const firstId = useRef(runningId)
   useEffect(() => {
@@ -86,6 +88,29 @@ export function RunBar({
     if (performance.now() < settled.current) return
     settled.current = performance.now() + TAP_SETTLE_MS
     act()
+  }
+  if (running && unsure) {
+    // the old copy's timer, not confirmed yet: its name and clock wait for the account (`TimerUnsureContext`);
+    // the same three lines tall, so nothing moves when they arrive
+    return (
+      <div className="flex items-center gap-2 px-3 py-2">
+        {/* still opens the entry's sheet, as it does while running (D2 holds what is done there) */}
+        <button type="button" onClick={onOpenRunning} aria-label="Edit the running time entry" className="min-w-0 flex-1 text-left">
+          <span className="block text-lg font-semibold leading-tight text-muted-foreground">{CHECKING_TIMER}</span>
+          <span className="block text-sm leading-snug">&nbsp;</span>
+          <span className="block min-h-4" />
+        </button>
+        {/* still Stop, held until the check answers (D2); quiet until it is known what it stops */}
+        <button
+          type="button"
+          onClick={once(onStop)}
+          aria-label="Stop timer"
+          className="flex size-14 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground active:scale-95"
+        >
+          <IconStop className="size-5 fill-current" />
+        </button>
+      </div>
+    )
   }
   if (running) {
     return (

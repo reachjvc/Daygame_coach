@@ -62,6 +62,7 @@ import { useMomentActions } from "./useMomentActions"
 import { RunningTimeBox } from "./RunningTimeBox"
 import { BillableToggle, DescriptionField, ProjectPicker, TagPicker } from "./pickers"
 import { ColorDot, DayPicker, Dropdown, touchRow, touchTarget } from "./primitives"
+import { CHECKING_TIMER, useTimerUnsure } from "./timerUnsure"
 
 /**
  * Said whenever a duration typed into a running timer ended it, with the other
@@ -304,6 +305,12 @@ export function TimerBar({
   next: nextFromTracker,
   setNext: setNextInTracker,
 }: TimerBarProps) {
+  /**
+   * The old copy's running timer, not confirmed by the account yet
+   * (`TimerUnsureContext`): the bar keeps its shape, its contents wait unseen
+   * under "Checking…", and Stop stays (held until the check answers, D2).
+   */
+  const unsure = useTimerUnsure() && running !== null && mode === "timer"
   /**
    * The freshest state and draft, for the description commit that runs on a
    * timer: by the time it fires, the props this render closed over are old.
@@ -737,8 +744,13 @@ export function TimerBar({
   }
 
   return (
-    <div className="rounded-lg border border-border bg-card">
-      <div className="flex flex-col gap-2 p-3 lg:flex-row lg:items-center">
+    <div className="relative rounded-lg border border-border bg-card">
+      {unsure && (
+        <span className="pointer-events-none absolute inset-x-3 top-3 flex h-9 items-center justify-center text-sm text-muted-foreground">
+          {CHECKING_TIMER}
+        </span>
+      )}
+      <div className={cn("flex flex-col gap-2 p-3 lg:flex-row lg:items-center", unsure && "invisible")}>
         <DescriptionField
           state={state}
           value={draft.description}
@@ -978,7 +990,9 @@ export function TimerBar({
           ) : running ? (
             <Button
               size="sm"
-              className="ml-auto min-w-[104px] flex-1 sm:flex-none"
+              // the one part of an unsure bar that shows: quiet until it is known what it stops
+              variant={unsure ? "outline" : undefined}
+              className={cn("ml-auto min-w-[104px] flex-1 sm:flex-none", unsure && "visible text-muted-foreground")}
               onClick={onStop}
               aria-label="Stop timer"
               title="Stop time entry (S)"
@@ -1257,16 +1271,29 @@ export function RunningPill({
   nowSec: number
   onStop: () => void
 }) {
+  const unsure = useTimerUnsure()
   const running = state.entries.find((e) => e.duration < 0 && !e.serverDeletedAt)
   if (!running) return null
   const project = state.projects.find((p) => p.id === running.projectId)
   return (
-    <div className="flex min-w-0 shrink items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-2 py-1 text-xs sm:px-3">
-      <span className="size-2 animate-pulse rounded-full bg-primary" />
-      {/* the description would crowd out the workspace name on a phone */}
-      <span className="hidden max-w-[160px] truncate sm:inline">{running.description || "(no description)"}</span>
-      {project && <ColorDot color={project.color} />}
-      <span className="tabular-nums">{formatClock(entrySeconds(running, nowSec))}</span>
+    <div
+      className={cn(
+        "flex min-w-0 shrink items-center gap-2 rounded-full border px-2 py-1 text-xs sm:px-3",
+        unsure ? "border-border text-muted-foreground" : "border-primary/40 bg-primary/10",
+      )}
+    >
+      {unsure ? (
+        // not confirmed yet (`TimerUnsureContext`): no name, no clock from the old copy
+        <span>{CHECKING_TIMER}</span>
+      ) : (
+        <>
+          <span className="size-2 animate-pulse rounded-full bg-primary" />
+          {/* the description would crowd out the workspace name on a phone */}
+          <span className="hidden max-w-[160px] truncate sm:inline">{running.description || "(no description)"}</span>
+          {project && <ColorDot color={project.color} />}
+          <span className="tabular-nums">{formatClock(entrySeconds(running, nowSec))}</span>
+        </>
+      )}
       {/* A 12px icon is not a clickable target; give it a real hit area.
           It was given 36px, which is not the real hit area either — this slice's
           floor is 44 and this is the only way to stop a timer from five of the

@@ -58,6 +58,7 @@ import { EmptyState, plannedStripes } from "../primitives"
 import { type SetState } from "./landOnCurrent"
 import { UndoContext, type OfferUndo } from "./undoContext"
 import { ProjectLine, TAP_SETTLE_MS } from "./RunBar"
+import { CHECKING_TIMER, useTimerUnsure } from "../timerUnsure"
 
 /** the list's last ▶ or swipe-continue: shared by every row, since the rows move under the finger */
 const continueSettled = { at: 0 }
@@ -663,6 +664,14 @@ const PhoneRow = memo(function PhoneRow({
  * Stop stays on the bar. Alone in the list, it says what to do next.
  */
 function RunningRow({ entry, state, nowSec, onOpen, alone }: { entry: TimeEntry; state: TimetrackState; nowSec: number; onOpen: () => void; alone: boolean }) {
+  if (useTimerUnsure()) {
+    // not confirmed yet (`TimerUnsureContext`): the row's place, without the old copy's name and clock
+    return (
+      <div className="mb-1 flex min-h-14 w-full items-center rounded-lg border border-border px-3 py-1 text-sm text-muted-foreground">
+        {CHECKING_TIMER}
+      </div>
+    )
+  }
   return (
     <div className="mb-1">
       <button

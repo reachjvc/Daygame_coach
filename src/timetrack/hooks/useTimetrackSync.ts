@@ -23,6 +23,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { flushSync } from "react-dom"
 
 import { createBrowserSupabaseClient } from "@/src/db/supabase-client"
 
@@ -94,6 +95,22 @@ export interface CheckState {
   lastCheckedAt: number | null
   /** The last check failed, or the wait for one ran out */
   failed: boolean
+  /**
+   * THE COPY ON SCREEN MAY BE BEHIND THE ACCOUNT, AND NOTHING HAS SAID OTHERWISE YET.
+   *
+   * True from opening, and from waking after the page was asleep (its timers
+   * stood still while it was hidden, so it heard nothing), until a check lands
+   * or the wait for one runs out. While it is true the tracker draws the running
+   * timer as "Checking…" rather than as the old copy has it. The owner,
+   * 2026-11-28: "it continues for a split second the previous running thing,
+   * even if it was closed on another browser/device".
+   *
+   * Not set by a wake after a page that was awake while hidden (a PC's tab
+   * behind another window): it kept hearing the account's change pings, so its
+   * copy is current, and its timer does not blink on every return.
+   * Absent: false.
+   */
+  unsure?: boolean
 }
 
 export interface ImportOffer {
@@ -183,6 +200,19 @@ export const KEEPALIVE_BUDGET_BYTES = 60 * 1024
 const PING_SETTLE_MS = 300
 /** Tab switches fire `focus` and `visibilitychange` together: one check for both */
 const FOCUS_CHECK_GAP_MS = 2_000
+/** How often a page that is awake notes that it is (see `ASLEEP_AFTER_MS`) */
+const HEARTBEAT_MS = 1_000
+/**
+ * A hidden page whose one-second heartbeat missed more than this was asleep: a
+ * phone in a pocket, a tab the browser froze, a computer that slept. It may
+ * have missed the account's change pings, so on waking its copy is `unsure`.
+ *
+ * Short, because a phone glanced at again 20 seconds after the PC stopped the
+ * timer is the owner's case. The cost: Chrome lets a tab hidden for over five
+ * minutes beat only once a minute, so a PC coming back to such a tab shows
+ * "Checking…" on its timer for the moment the check takes, as a phone does.
+ */
+export const ASLEEP_AFTER_MS = 10_000
 
 /**
  * Every request to the sync route goes through here, so each answer also tells
@@ -574,7 +604,7 @@ export function useTimetrackSync({
   const [status, setStatus] = useState<SyncStatus>("starting")
   const [pendingCount, setPendingCount] = useState(0)
   const [importOffer, setImportOffer] = useState<ImportOffer | null>(null)
-  const [check, setCheck] = useState<CheckState>({ checking: true, lastCheckedAt: null, failed: false })
+  const [check, setCheck] = useState<CheckState>({ checking: true, lastCheckedAt: null, failed: false, unsure: true })
   /** The account this device is signed into, once the first read says so: what the change feed listens to */
   const [account, setAccount] = useState<string | null>(null)
 
@@ -854,7 +884,7 @@ export function useTimetrackSync({
     checkWait.current = setTimeout(() => {
       checkWait.current = null
       checkingRef.current = false
-      setCheck((current) => (current.checking ? { ...current, checking: false, failed: true } : current))
+      setCheck((current) => (current.checking || current.unsure ? { ...current, checking: false, failed: true, unsure: false } : current))
     }, CHECK_WAIT_MS)
   }, [])
 
@@ -870,11 +900,11 @@ export function useTimetrackSync({
     checkingRef.current = false
     setCheck((current) =>
       outcome === "landed"
-        ? { checking: false, lastCheckedAt: serverNow(), failed: false }
+        ? { checking: false, lastCheckedAt: serverNow(), failed: false, unsure: false }
         : outcome === "failed"
-          ? { ...current, checking: false, failed: true }
-          : current.checking
-            ? { ...current, checking: false }
+          ? { ...current, checking: false, failed: true, unsure: false }
+          : current.checking || current.unsure
+            ? { ...current, checking: false, unsure: false }
             : current,
     )
   }, [])
@@ -2570,29 +2600,53 @@ export function useTimetrackSync({
    */
   useEffect(() => {
     let hidden = document.visibilityState === "hidden"
-    const wake = () => {
-      if (statusRef.current !== "local-only" && statusRef.current !== "signed-out") beginChecking()
+    /**
+     * ASLEEP OR AWAKE WHILE HIDDEN: a heartbeat that missed `ASLEEP_AFTER_MS`
+     * while the page was hidden means it was asleep and may have missed the
+     * other device's changes. Noted by the beat itself too, because the first
+     * thing a page does on waking can be the beat it owed, before the
+     * `visibilitychange` that says it is back.
+     */
+    let lastBeat = Date.now()
+    let slept = false
+    const beat = () => {
+      const now = Date.now()
+      if (hidden && now - lastBeat > ASLEEP_AFTER_MS) slept = true
+      lastBeat = now
+    }
+    const heartbeat = setInterval(beat, HEARTBEAT_MS)
+    const wake = (asleep: boolean) => {
+      if (statusRef.current !== "local-only" && statusRef.current !== "signed-out") {
+        // drawn before the page's first frame back, so the old timer is not on it
+        if (asleep && !unmounted.current) flushSync(() => setCheck((current) => (current.unsure ? current : { ...current, unsure: true })))
+        beginChecking()
+      }
       checkRef.current()
       resumeRef.current()
     }
     const onVisibility = () => {
       if (document.visibilityState === "hidden") {
+        beat()
         hidden = true
         sendOnLeaveRef.current?.()
         return
       }
       if (document.visibilityState !== "visible") return
       if (hidden) {
+        beat()
         hidden = false
-        wake()
+        const asleep = slept
+        slept = false
+        wake(asleep)
         return
       }
       checkRef.current()
       resumeRef.current()
     }
     const onPageHide = () => sendOnLeaveRef.current?.()
+    // back from the back-forward cache: a page in it is frozen, so it heard nothing
     const onPageShow = (event: PageTransitionEvent) => {
-      if (event.persisted) wake()
+      if (event.persisted) wake(true)
     }
     const onOnline = () => {
       checkRef.current()
@@ -2608,6 +2662,7 @@ export function useTimetrackSync({
     window.addEventListener("online", onOnline)
     window.addEventListener("focus", onFocus)
     return () => {
+      clearInterval(heartbeat)
       document.removeEventListener("visibilitychange", onVisibility)
       window.removeEventListener("pagehide", onPageHide)
       window.removeEventListener("pageshow", onPageShow)

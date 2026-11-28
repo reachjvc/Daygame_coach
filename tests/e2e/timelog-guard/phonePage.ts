@@ -101,6 +101,7 @@ export function phoneHooks() {
  * change to the page and on every frame, and keeps one line per place the
  * timer was seen running: the phone's bar, a "Running:" row in the list, the
  * PC's timer bar, the header pill, the tab's title. `window.__seen` holds them.
+ * Only what is drawn counts: text under `visibility: hidden` is not seen.
  *
  * `window.__watchIdle = true` also writes down the moment the page offers
  * Start (nothing running), for a timer that IS still running on the account.
@@ -111,20 +112,29 @@ export function runningWatch() {
   const note = (what: string) => {
     if (!w.__seen.includes(what)) w.__seen.push(what)
   }
+  const drawn = (el: Element | null | undefined): el is Element =>
+    !!el && el.checkVisibility({ visibilityProperty: true, opacityProperty: true })
+  /** the name is drawn inside `root`: a text node holding it whose element is visible */
+  const showsName = (root: Element | null | undefined, name: string) => {
+    if (!root) return false
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) if ((n.textContent ?? '').includes(name) && drawn(n.parentElement)) return true
+    return false
+  }
   const look = () => {
     const name = w.__watchFor
     if (!name) return
     const bar = document.querySelector('[data-testid="run-bar"]')
-    if (bar?.querySelector('button[aria-label="Stop timer"]') && (bar.textContent ?? '').includes(name)) note('the phone bar')
-    if (document.querySelector(`[aria-label^="Running: ${name},"]`)) note('a running row in the list')
+    if (drawn(bar?.querySelector('button[aria-label="Stop timer"]')) && showsName(bar, name)) note('the phone bar')
+    if (drawn(document.querySelector(`[aria-label^="Running: ${name},"]`))) note('a running row in the list')
     if (document.title.endsWith(` · ${name}`)) note(`the tab title "${document.title}"`)
     const pill = document.querySelector('button[aria-label="Stop the running timer"]')?.parentElement
-    if ((pill?.textContent ?? '').includes(name)) note('the header pill')
+    if (showsName(pill, name)) note('the header pill')
     const main = document.querySelector('main')
-    if (main?.querySelector('button[aria-label="Stop timer"]') && [...main.querySelectorAll('input')].some((i) => i.value === name)) {
+    if (drawn(main?.querySelector('button[aria-label="Stop timer"]')) && [...(main?.querySelectorAll('input') ?? [])].some((i) => i.value === name && drawn(i))) {
       note('the PC timer bar')
     }
-    if (w.__watchIdle && document.querySelector('button[aria-label="Start timer"]')) note('Start (nothing running)')
+    if (w.__watchIdle && drawn(document.querySelector('button[aria-label="Start timer"]'))) note('Start (nothing running)')
   }
   new MutationObserver(look).observe(document, { subtree: true, childList: true, characterData: true, attributes: true })
   const frame = () => {
