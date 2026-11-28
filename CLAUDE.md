@@ -14,7 +14,7 @@
 - It is cheap for you to "boil the ocean". Search more, investigate more, do more, before you get back to me. Check the data, the real site, real articles etc., rather than rely on memory or assumptions.
 - Assumptions are the enemy. Go deeper.
 - No technical jargon. ELI5, concisely.
-- Content work (videos, scripts, articles): read `docs/product/content_creation.md` first (what is going on now), then `docs/product/content_creation_process.md` (how we make it).
+- Content work (videos, scripts, articles): everything is in `docs/content/`. When I say "let's continue with content creation": read `docs/content/README.md`, then `docs/content/process.md` and every track file in `docs/content/tracks/`, then tell me where each track stands.
 - Clean up after yourself, but only where nothing can be lost. When a plan or other .md you wrote has done its job, delete it (git keeps every old version) and leave 1-3 lines in the matching doc below. Remove the worktrees, branches, servers and temporary files you made: only yours, only once their commits are on main, nothing is unsaved and no other session uses them. Files outside git that hold my words, my marks or results we may need are moved to a backup folder, never deleted.
 
 ## Docs
