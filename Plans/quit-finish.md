@@ -1,7 +1,8 @@
 # Quit tools: finish them one by one
 
-**Status 2026-11-26:** 13 nicotine tools are live and wait for you to try them. None is "done" yet. Nothing is
-being built right now: the next move is yours (see "Now").
+**Status 2026-11-28:** 13 nicotine tools are live. None is "done" yet. Being built now: a fix round on all 13
+(from the bug hunt of 2026-11-27) and your yeses of 2026-11-28 (B4, B2, question 5, question 8). Our own belief
+tool has a clickable draft that waits for your picks. Your next moves: see "Now".
 
 ## What this is
 
@@ -13,6 +14,9 @@ phone and computer, until you say "this is done". A done tool is not changed aga
 
 Status words: not started, building, checking, waiting for you, done (date and your words). Address:
 https://10kdaysclub.com/quit/nicotine/<id>. Checked 2026-11-26: the 13 load; "later" ones and coaching are "not found".
+Bug hunt of 2026-11-27 (independent checkers, phone and computer, live site): 82 findings, 3 break a tool, 22 hurt
+it, 57 polish; a second check confirmed them. The fix round on all 13 tools runs since 2026-11-28. Reports (private):
+`~/.cache/daygame-research/quit-finish/bughunt-2026-11-27/`. Best time to try a tool: after that round ships.
 
 | # | Tool | id | Status |
 |---|---|---|---|
@@ -32,7 +36,7 @@ https://10kdaysclub.com/quit/nicotine/<id>. Checked 2026-11-26: the 13 load; "la
 | 13 | What it gives you | gives | waiting for you since 2026-11-22 |
 | later | Tell someone, Money on the line, Clear-out list (you: "not sure if useful"), What helps besides apps, Who you are now | tell, stake, clear, besides, identity | not started (grey "Soon" on the menu) |
 | later | Talk to a coach | coach | hidden until you set price and guarantee (B3) |
-| new | Our own belief tool, for any area of life | – | studying real tools; waiting for your marks (see "Now") |
+| new | Our own belief tool, for any area of life | – | clickable draft v2; waits for your picks on the decision page (see "Now") |
 | next | Weed, alcohol, gaming, porn and more (your CLAUDE.md list) | – | not started, hidden (weed, alcohol, porn have data files) |
 
 ## Your decisions that still hold
@@ -62,6 +66,11 @@ https://10kdaysclub.com/quit/nicotine/<id>. Checked 2026-11-26: the 13 load; "la
     hard to quit"). "This is very good to know, because then we have some foundational pillars, and we just move
     things around slightly depending on the type of addiction." So our tool is built on shared pillar beliefs,
     with per-addiction wording on top. A 👍 on a wording also means he likes the replies under it.
+  - How you mark beliefs (2026-11-26): everything from the top of the list down to your last mark counts as
+    done; Claude moves it off the page before your next visit. A kept belief keeps all its wordings and replies
+    (👍 ones are favourites). You mark mostly with 👍, rarely Keep.
+  - 2026-11-27, on the Belief Picker: one common wording per pillar, ideally "I need X to cope with ___" naming
+    the situations, clickable per addiction.
   - tool r2's explainer page "is worth gold"; tool r4's guide and its guide to distortions: "take their words and things, then change things
     around strategically, then create a menu where everything seemlessly goes together".
 - How to work (2026-11-19): "just work independently, or give me the very worst contenders here in text".
@@ -76,35 +85,32 @@ https://10kdaysclub.com/quit/nicotine/<id>. Checked 2026-11-26: the 13 load; "la
 
 ## Now
 
-**1. Your try of the 13 live tools.** Tasks for 11 of them are on your daily page under 2026-11-20 and 2026-11-22.
-None is ticked, and the quit notes board has no notes yet.
+**1. Your try of the 13 live tools,** best once the fix round ships. Tasks for 11 of them are on your daily page
+under 2026-11-20 and 2026-11-22. None is ticked, and the quit notes board has no notes yet.
 - Next step for Claude: put the untried tools on a coming day of the daily page, a few per day, with the link
   and "say done or tell Claude what's wrong" (Claude's proposal).
 - When you leave a note: read the notes board first, fix only that tool, re-check it, ask you again.
 - When you say "done": add the tool id to `src/quit/data/finished.json` and write the date and your words in the
   table above.
 
-**2. Our own belief tool (study, round 3).** Claude studied about 25 real belief tools: working copies and
-video studies are on the look page. All their beliefs are on the **Belief Map** (published 2026-11-26): one block
-per single belief, Easyway's wording and reply first, then the same belief in other tools (592 beliefs, every line
-word for word). On 2026-11-26 he asked for everything open in one long list, so the **Belief List, all open** replaces it for deciding: every wording and reply side by side, nothing to expand.
-- 2026-11-25: you struck 44 beliefs and wrote two notes on the list: "this was hard for me to read, but probably
-  valuable" and "so many replications of the exact same words, it is a kind of bad job youve done here". Claude then
-  rebuilt the list: one row per belief, and a box per tool with a plain summary and that tool's own lines.
-- 2026-11-26: you found that version too hard to work with (one Cut hit several beliefs; competitor lines mixed).
-  You asked for: the belief as Easyway words it, their reply, addiction copies shown once, then the cousins from
-  other tools. Claude built that as the Belief Map. Your old strikes show there as "You struck this before".
-- 2026-11-26, round 1 on the all-open list: you went through the first 65 beliefs (Allen Carr's 10 and most of
-  EasyPeasy's) and kept 57. They are moved off the page; the record is `v5/round1-decisions.md` in the belief study.
-  527 beliefs left; the page now marks beliefs seen in 3+ addictions as "Pillar".
-- 2026-11-27, round 2: you went through every addiction section (102 more beliefs, 72 kept; record `v5/round2.json`).
-  130 kept in all. Left on the list: 425 life beliefs and 163 non-beliefs, no addiction beliefs.
-- 2026-11-27: the **Belief Picker** groups the 130 kept beliefs into 59 common beliefs (25 pillars across addictions,
-  7 thinking traps, porn-only, gambling-only, ideas, later). Per belief you pick the best words and the best answer,
-  and switch addictions on or off. Grouping is `v6/groups.json`. Your notes say the free open-source thought diary
-  was the copy that explained thinking traps best.
-- Next: you pick words and answers on the Belief Picker. Then Claude designs our tool from the picks and the copy you
-  liked best, each change as one plain question (Keep / Change). Then build, check, and you say done.
+**2. Our own belief tool.** Claude studied about 25 real belief tools and put all their beliefs (592) on one list.
+- 2026-11-25 to 11-27, you marked them in three rounds (the strikes, the Belief Map, then the Belief List, all
+  open). 130 beliefs kept (records `v5/round1-decisions.md`, `v5/round2.json` in the belief study). Left on the
+  list: 425 life beliefs and 163 non-beliefs, no addiction beliefs.
+- 2026-11-27: the **Belief Picker** groups the 130 into 59 common beliefs (25 pillars across addictions, 7
+  thinking traps, porn-only, gambling-only, ideas, later). Per belief you pick the best words and answer, and
+  switch addictions on or off. Grouping `v6/groups.json`. Your notes: the free open-source thought diary explained
+  thinking traps best. Say "refresh" and Claude rebuilds it without the lines you cut.
+- 2026-11-27, our tool started as a clickable draft. Screen 1: a grid of addictions with our own drawings
+  (layout idea from tool r1's grid). Nicotine then asks how you take it (smoking, vaping, snus). Screen 2: "X helps
+  me…" with short cards. Screen 3: one answer at a time.
+- Agreed with you (2026-11-27): the screen 1 layout; all 9 "X helps me…" cards stay; "stay thin" is hidden for
+  porn, gaming, phone and gambling, "be social" for porn. Not agreed yet: each card's words and each answer.
+- **Your move: the decision page.** First the answer style once (voice, length, extras, your voice or not), then
+  the 9 cards, each with the real tools' words, their answers and our draft; Claude's pick is pre-selected, so
+  one tap agrees.
+- Then Claude writes the 9 answers in our words in your style, then the other common beliefs (willpower, hard to
+  quit, can stop anytime…), then the lines per addiction. It goes into the site once you say done.
 - The 12 lies test stays as it is until you decide (see question 7).
 
 ## How a tool gets to "done"
@@ -125,28 +131,31 @@ word for word). On 2026-11-26 he asked for everything open in one long list, so 
 
 ## Questions only you can answer
 
+Your answer of 2026-11-28, "do all other things you want to recommend", is a yes to B4, B2, 5 and 8 below.
+
 1. **B1, save to your account.** Keep quit date, unit, price and the tools' answers on the server (one small new
    table in the live database)? Asked 2026-11-19, no answer yet. Recommendation: yes, it is your data rule.
-2. **B4, database fix.** Apply the tested fix that stops two phones overwriting each other's Black Box rows
-   (`supabase/migrations/20261120090000_vice_rows_newer_wins.sql`, undo file in `supabase/migrations/rollback/`)?
-   It changes no existing row. Approved 2026-11-28, tested on the local test stack (`tests/integration/db/viceRowsNewerWins.integration.test.ts`).
-   Checked 2026-11-28, read-only: not applied on live (one other approved migration, the workout delete/correct
-   functions, is also missing); `db push --remote` needs `--include-all`.
+2. **B4, database fix: yes (2026-11-28), live since 2026-11-28.** The fix stops two phones overwriting each other's
+   Black Box rows (`supabase/migrations/20261120090000_vice_rows_newer_wins.sql`, undo file in
+   `supabase/migrations/rollback/`). Tests: `tests/integration/db/viceRowsNewerWins.integration.test.ts`.
 3. **B3, coaching.** `src/quit/data/offer.json` holds $200 for 30 days and "If you're not nicotine-free in 30
    days, I keep working with you free until you are." You said "yes all of these are fine" (2026-11-18), then
    "not sure about the prices"; you were also weighing a $1.99-2.99/month membership (undecided). Keep, change or
    clear? Recommendation: decide once the first tools are done; the page stays hidden until then.
-4. **B2, privacy email.** The contact address for the quit pages (`src/quit/data/contact.json` is empty). Needed
-   before you promote the tools. Recommendation: the support@ address set up on 2026-11-22.
-5. **How people quit: which number first?** Lead with "About 84 in 100" (get free in their lifetime) instead of
-   "19 in 100"? Reviewers in all three rounds read "19 in 100" as bad news. Recommendation: yes, lead with 84.
+4. **B2, privacy email: yes (2026-11-28), being filled in** with the support@ address (`src/quit/data/contact.json`).
+5. **How people quit: lead with "About 84 in 100": yes (2026-11-28), being done.**
 6. **Next addiction, and when.** Recommendation (Claude's proposal): weed next (Claude's reading of your CLAUDE.md list), once
    2 or 3 nicotine tools are done, so their fixes carry over.
 7. **Belief tool and the 12 lies test.** When our new belief tool is ready, does it replace the 12 lies test?
    Recommendation: keep the 12 lies test untouched until then, and you choose with both in front of you.
-8. **The ~70 small choices in the old plan** (codes like R1–R7, K1–K8, H1–H10). Your daily-page tasks point to
-   them. They are Claude's defaults and already built. Recommendation: drop them; you raise what you dislike
-   while you try each tool. Old text: `git show 18efdb10:Plans/quit-finish.md`.
+8. **The ~70 small choices in the old plan: dropped (2026-11-28).** You raise what you dislike while you try each
+   tool. Old text: `git show 18efdb10:Plans/quit-finish.md`.
+9. **12 lies test: does "Somewhat" count?** Today only "Mostly" and "That's me" count, so twelve "Somewhat" answers
+   give "None of the 12 hold you", and the same page then lists them as "these pull a little". Count "Somewhat",
+   or change the headline when some pull a little? (bug hunt, 2026-11-27)
+10. **Does a slip day count as clean?** Today a run counts from day 1 to the slip day, both included, so totals never
+   drop. The record's money tab leaves slip days out, so the record contradicts itself. Keep it and say so, or leave
+   slip days out? (bug hunt, 2026-11-27)
 
 ## Where things are
 
@@ -157,7 +166,9 @@ word for word). On 2026-11-26 he asked for everything open in one long list, so 
   `~/.cache/daygame-research/one-pagers-v2/rulebook-private.md`. Source data: `docs/research/addiction-one-pagers/08-v3/`.
 - Your pages: daily page https://claude.ai/artifact/FJPtUMkjkJnEtwvn5J6M1t; quit notes board
   https://claude.ai/artifact/E2ThcB2qrCmcbCyJVhVdDJ (source `~/.cache/daygame-research/quit-finish/board/`);
-  belief tools look page https://claude.ai/artifact/AdANNvEXV3dMFoZsC3WrtF; Belief Picker https://claude.ai/artifact/VKfBXHKWF9nzGNH8sHT176
+  belief tools look page https://claude.ai/artifact/AdANNvEXV3dMFoZsC3WrtF; our belief tool, clickable draft
+  https://claude.ai/artifact/6D37ACGmteUj5e3A8eTJki (`~/.cache/daygame-research/quit-copy/beliefs/tool/v1/`, `v2/`);
+  its decision page https://claude.ai/artifact/AU2uQbdexwCYpsnn1onmoE (`tool/decide1/`: build.py, test.cjs); Belief Picker https://claude.ai/artifact/VKfBXHKWF9nzGNH8sHT176
   (`build6.py`, tests `test8.cjs`); Belief List, all open https://claude.ai/artifact/PmCDKP6rqMKBgnVkMsv6TX
   (`build5.py` on top of `build4.py`, tests `test7.cjs`); Belief Map
   https://claude.ai/artifact/55QSbJEd4RUizQfr9AwoWn (built by `round3/beliefs/page/build4.py`, tests `test6.cjs`, in
