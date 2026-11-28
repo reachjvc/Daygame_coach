@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { requirePremium } from "@/src/db/auth"
+import { aiCapReachedResponse } from "@/src/api_ai/capResponse"
 import { evaluateOpenerAttempt, persistScenarioAttempt } from "@/src/scenarios"
 
 const RequestSchema = z.object({
@@ -25,7 +26,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
   }
 
-  const result = await evaluateOpenerAttempt(parsed.data, auth.userId)
+  let result: Awaited<ReturnType<typeof evaluateOpenerAttempt>>
+  try {
+    result = await evaluateOpenerAttempt(parsed.data, auth.userId)
+  } catch (e) {
+    const capped = aiCapReachedResponse(e)
+    if (capped) return capped
+    throw e
+  }
 
   // Fire-and-forget: persist attempt for badge tracking
   void persistScenarioAttempt(auth.userId, "practice-openers", result.evaluation)

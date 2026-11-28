@@ -8,7 +8,7 @@
 // Feature Types
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type AIFeature = "keep-it-going" | "openers-evaluator" | "qa" | "articles"
+export type AIFeature = "keep-it-going" | "openers-evaluator" | "qa" | "articles" | "scenario-lab" | "vision-plan"
 
 export type AIOperation = "evaluate" | "generate_response" | "generate_close" | "generate_advice"
 
@@ -45,10 +45,8 @@ export interface AIUsageRow {
   response_time_ms: number | null
   error: string | null
   created_at: string
-  // Prompt/response content for debugging
-  system_prompt: string | null
-  user_prompt: string | null
-  ai_response: string | null
+  /** Null while the call's booked guess waits for its real price (src/db/aiSpendRepo.ts). */
+  settled_at: string | null
 }
 
 export interface AIUsageInsert {
@@ -68,10 +66,6 @@ export interface AIUsageInsert {
   total_cost_cents: number
   response_time_ms?: number
   error?: string
-  // Prompt/response content for debugging
-  system_prompt?: string
-  user_prompt?: string
-  ai_response?: string
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

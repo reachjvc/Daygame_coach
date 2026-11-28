@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { VisionReasonsRequestSchema, buildReasonsPrompt, parseReasonsResponse } from "@/src/goals/visionPlanService"
 import { queryVisionClaude } from "@/src/goals/visionPlanClaude"
+import { aiCapReachedResponse } from "@/src/api_ai/capResponse"
 
 const err = (msg: string, s: number) => NextResponse.json({ error: msg }, { status: s })
 
@@ -19,9 +20,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Validation failed", details: parsed.error.flatten() }, { status: 400 })
   try {
     const { goalTitle, why, existing, want } = parsed.data
-    const raw = await queryVisionClaude(buildReasonsPrompt(goalTitle, why, existing, want))
+    const raw = await queryVisionClaude(auth.userId, "reasons", buildReasonsPrompt(goalTitle, why, existing, want))
     return NextResponse.json({ reasons: parseReasonsResponse(raw, existing) })
   } catch (e) {
+    const capped = aiCapReachedResponse(e)
+    if (capped) return capped
     console.error("vision-plan reasons expansion failed:", e)
     return err(e instanceof Error ? e.message : "Reason expansion failed", 502)
   }

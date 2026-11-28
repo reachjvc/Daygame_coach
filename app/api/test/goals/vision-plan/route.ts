@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { VisionPlanRequestSchema, buildGoalGenPrompt, parseGoalGenResponse } from "@/src/goals/visionPlanService"
 import { queryVisionClaude } from "@/src/goals/visionPlanClaude"
+import { aiCapReachedResponse } from "@/src/api_ai/capResponse"
 
 const err = (msg: string, s: number) => NextResponse.json({ error: msg }, { status: s })
 
@@ -17,9 +18,11 @@ export async function POST(request: Request) {
   if (!parsed.success)
     return NextResponse.json({ error: "Validation failed", details: parsed.error.flatten() }, { status: 400 })
   try {
-    const raw = await queryVisionClaude(buildGoalGenPrompt(parsed.data))
+    const raw = await queryVisionClaude(auth.userId, "goals", buildGoalGenPrompt(parsed.data))
     return NextResponse.json({ goals: parseGoalGenResponse(raw) })
   } catch (e) {
+    const capped = aiCapReachedResponse(e)
+    if (capped) return capped
     console.error("vision-plan goal generation failed:", e)
     return err(e instanceof Error ? e.message : "Goal generation failed", 502)
   }

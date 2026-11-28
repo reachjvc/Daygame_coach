@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { LabRequestSchema } from "@/src/scenarios/schemas"
 import { startLabSession, labRespond, labDebrief } from "@/src/scenarios/scenarioLabService"
+import { aiCapReachedResponse } from "@/src/api_ai/capResponse"
 
 /**
  * POST /api/scenarios/lab — corpus-grounded Scenario Lab (test-page beta).
@@ -16,11 +17,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Validation failed", details: parsed.error.flatten() }, { status: 400 })
   const req = parsed.data
   try {
-    if (req.action === "start") return NextResponse.json(await startLabSession(req.kind, req.seed))
+    if (req.action === "start") return NextResponse.json(await startLabSession(auth.userId, req.kind, req.seed))
     if (req.action === "respond")
-      return NextResponse.json(await labRespond(req.kind, req.momentId, req.history, req.message))
-    return NextResponse.json(await labDebrief(req.kind, req.momentId, req.history))
+      return NextResponse.json(await labRespond(auth.userId, req.kind, req.momentId, req.history, req.message))
+    return NextResponse.json(await labDebrief(auth.userId, req.kind, req.momentId, req.history))
   } catch (e) {
+    const capped = aiCapReachedResponse(e)
+    if (capped) return capped
     console.error("scenario-lab failed:", e)
     return NextResponse.json({ error: e instanceof Error ? e.message : "Lab request failed" }, { status: 502 })
   }

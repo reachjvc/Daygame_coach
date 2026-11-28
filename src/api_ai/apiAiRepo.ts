@@ -64,27 +64,6 @@ export async function getUserAIUsage(userId: string, days = 30): Promise<AIUsage
   return (data || []) as AIUsageRow[]
 }
 
-/**
- * Calculate total spending for a user (all time)
- * @param userId User ID
- * @returns Total cost in cents
- * @throws Error if query fails
- */
-export async function getUserTotalSpending(userId: string): Promise<number> {
-  const supabase = await createServerSupabaseClient()
-
-  const { data, error } = await supabase
-    .from("ai_usage_logs")
-    .select("total_cost_cents")
-    .eq("user_id", userId)
-
-  if (error) {
-    throw new Error(`Failed to get total spending: ${error.message}`)
-  }
-
-  return (data || []).reduce((sum, row) => sum + Number(row.total_cost_cents), 0)
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Admin Queries
 // ─────────────────────────────────────────────────────────────────────────────

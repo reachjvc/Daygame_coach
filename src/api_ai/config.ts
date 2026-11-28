@@ -20,11 +20,14 @@ export const MODEL_PRICING: Record<
     cacheRead: number // USD per 1M cache read tokens
   }
 > = {
+  // Claude 3.5 Haiku's own prices. Until 2026-11-28 this row held Claude 3
+  // Haiku's ($0.25 / $1.25), which counted every call at under a third of its
+  // real price.
   "claude-3-5-haiku-20241022": {
-    input: 0.25,
-    output: 1.25,
-    cacheWrite: 0.30,
-    cacheRead: 0.03,
+    input: 0.8,
+    output: 4.0,
+    cacheWrite: 1.0,
+    cacheRead: 0.08,
   },
   "claude-3-5-sonnet-20241022": {
     input: 3.0,
@@ -52,6 +55,65 @@ export const MODEL_PRICING: Record<
 
 // User budget: $0.20 (1/50 of $10)
 export const USER_BUDGET_CENTS = 20
+
+/**
+ * EVERY FEATURE THAT CALLS CLAUDE, AND ITS PER-USER SPEND CAP (USD CENTS, ALL TIME).
+ *
+ * The owner sets these numbers. Each starts at the Scenarios chat's 20 cents.
+ * A person's calls in one feature stop once that feature's spend would pass
+ * its cap. Every call goes through src/api_ai/aiGuard.ts, which checks this
+ * list; a new AI feature needs its own line here before it can call Claude.
+ *
+ * "scenario-lab" and "vision-plan" run on the Claude program (Max
+ * subscription), which bills no tokens: their spend is the price the program
+ * reports for the tokens it used, and its own hidden instructions make each
+ * call cost several cents.
+ */
+export const AI_SPEND_CAPS_CENTS = {
+  "keep-it-going": USER_BUDGET_CENTS, // Scenarios chat
+  "scenario-lab": USER_BUDGET_CENTS, // Scenario Lab (test page)
+  "vision-plan": USER_BUDGET_CENTS, // Vision plan (test pages only, off on the live site)
+} as const satisfies Record<string, number>
+
+export type CappedAIFeature = keyof typeof AI_SPEND_CAPS_CENTS
+
+/** What a person sees when a feature's cap is reached. */
+export const AI_CAP_REACHED_MESSAGE =
+  "You've used all your AI practice for now. Message us if you'd like more."
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Booking a call before it runs (src/api_ai/aiGuard.ts)
+//
+// A call books its expected cost first, so calls fired together cannot all
+// slip under the cap. The guess is meant to be high; the real price replaces it
+// the moment the call returns.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Prompt characters per token when guessing a call's cost. Real text runs about 4 in English. */
+export const ESTIMATE_CHARS_PER_TOKEN = 3
+
+/** The Claude program adds its own instructions to every prompt: tokens to add to the guess. */
+export const CLI_OVERHEAD_TOKENS = 30_000
+
+/** The Claude program has no output limit to read: output tokens to assume for the guess. */
+export const CLI_OUTPUT_TOKENS_GUESS = 1_500
+
+/**
+ * Prices for a model this table does not list (and for the Claude program,
+ * whose model is not reported up front): the most expensive row, so a guess
+ * or a count is never too low.
+ */
+export function pricingFor(model: string): (typeof MODEL_PRICING)[ModelName] {
+  const known = MODEL_PRICING[model as ModelName]
+  if (known) return known
+  const rows = Object.values(MODEL_PRICING)
+  return {
+    input: Math.max(...rows.map((r) => r.input)),
+    output: Math.max(...rows.map((r) => r.output)),
+    cacheWrite: Math.max(...rows.map((r) => r.cacheWrite)),
+    cacheRead: Math.max(...rows.map((r) => r.cacheRead)),
+  }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Warning Thresholds

@@ -1,7 +1,7 @@
 {
   "_comment": "Lint errors that already existed, by file and rule. May only shrink. Regenerate with: node scripts/lint-ratchet.mjs --update (add --accept-new to bless a new one, deliberately).",
   "_format": "eslint-findings-v1",
-  "total": 287,
+  "total": 284,
   "files": {
     "app/api/goals/[id]/route.ts": {
       "@typescript-eslint/no-unused-expressions: Expected an assignment or function call and instead saw an expression.": 1
@@ -419,13 +419,10 @@
     },
     "src/scenarios/keepitgoing/chat.ts": {
       "@typescript-eslint/no-unused-vars: 'RUBRIC' is defined but never used.": 1,
-      "react-hooks/rules-of-hooks: React Hook \"useClaudeCode\" is called in function \"evaluateWithAI\" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word \"use\".": 3,
+      "react-hooks/rules-of-hooks: React Hook \"useClaudeCode\" is called in function \"evaluateWithAI\" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word \"use\".": 1,
       "react-hooks/rules-of-hooks: React Hook \"useClaudeCode\" is called in function \"generateAIResponse\" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word \"use\".": 1,
       "react-hooks/rules-of-hooks: React Hook \"useClaudeCode\" is called in function \"generateCloseResponse\" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word \"use\".": 1,
       "react-hooks/rules-of-hooks: React Hook \"useClaudeCode\" is called in function \"generateExitResponse\" that is neither a React function component nor a custom React Hook function. React component names must start with an uppercase letter. React Hook names must start with the word \"use\".": 1
-    },
-    "src/scenarios/keepitgoing/claudeCode.ts": {
-      "@typescript-eslint/no-require-imports: A `require()` style import is forbidden.": 1
     },
     "src/scenarios/keepitgoing/generator.ts": {
       "prefer-const: 'newExitRisk' is never reassigned. Use 'const' instead.": 1

@@ -3,6 +3,7 @@ import { requireAuth } from "@/src/db/auth"
 import { VisionReportRequestSchema, buildReportCommentaryPrompt, parseReportCommentary } from "@/src/goals/visionPlanService"
 import type { VisionMonthlyReport } from "@/src/goals/visionPlanService"
 import { queryVisionClaude } from "@/src/goals/visionPlanClaude"
+import { aiCapReachedResponse } from "@/src/api_ai/capResponse"
 
 const err = (msg: string, s: number) => NextResponse.json({ error: msg }, { status: s })
 
@@ -19,9 +20,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Validation failed", details: parsed.error.flatten() }, { status: 400 })
   try {
     const report = parsed.data.report as unknown as VisionMonthlyReport
-    const raw = await queryVisionClaude(buildReportCommentaryPrompt(parsed.data.vision, report))
+    const raw = await queryVisionClaude(auth.userId, "report", buildReportCommentaryPrompt(parsed.data.vision, report))
     return NextResponse.json({ commentary: parseReportCommentary(raw) })
   } catch (e) {
+    const capped = aiCapReachedResponse(e)
+    if (capped) return capped
     console.error("vision-plan report commentary failed:", e)
     return err(e instanceof Error ? e.message : "Report commentary failed", 502)
   }

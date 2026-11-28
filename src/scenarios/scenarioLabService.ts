@@ -10,12 +10,14 @@
  * Test-lab only (served behind /api/scenarios/lab, page /test/scenario-lab).
  * Fail-closed: missing dataset/principles or empty LLM output throws — the
  * route surfaces an explicit error, never a fallback (CLAUDE.md rule 15).
+ * Every Claude call goes through the AI guard, booked against the person's
+ * "scenario-lab" spend cap (AiCapReachedError when it is used up).
  */
 
 import fs from "fs"
 import path from "path"
 
-import { queryClaudeHeadless, queryClaudeHeadlessJSON } from "@/src/shared/claudeHeadless"
+import { askClaudeCli, askClaudeCliJSON, type AiCall } from "@/src/api_ai/aiGuard"
 import { clampScore } from "./types"
 import type {
   LabChatMessage,
@@ -26,6 +28,8 @@ import type {
   LabStartResult,
 } from "./types"
 import { hashSeed } from "./shared/seeding"
+
+const labCall = (userId: string, operation: string): AiCall => ({ userId, feature: "scenario-lab", operation })
 
 const MINING_DIR = () => path.join(process.cwd(), "data", "scenario-mining")
 
@@ -70,11 +74,12 @@ export function pickLabMoment(kind: LabKind, seed: string): LabMoment {
 // Session start
 // ---------------------------------------------------------------------------
 
-export async function startLabSession(kind: LabKind, seed: string): Promise<LabStartResult> {
+export async function startLabSession(userId: string, kind: LabKind, seed: string): Promise<LabStartResult> {
   const moment = pickLabMoment(kind, seed)
   if (kind === "coldread") {
     // LLM writes what the man SEES, without giving away the coach's conclusion.
-    const scene = await queryClaudeHeadless(
+    const scene = await askClaudeCli(
+      labCall(userId, "lab_scene"),
       `A dating coach on the street made this cold read about a woman:\n"${moment.trigger}"\n` +
         `Context right before it:\n${moment.context.join("\n") || "(conversation just started)"}\n\n` +
         `Write 2-3 sentences describing what a man approaching her SEES — her outfit, vibe, ` +
@@ -109,6 +114,7 @@ function historyBlock(history: LabChatMessage[]): string {
 }
 
 export async function labRespond(
+  userId: string,
   kind: LabKind,
   momentId: string,
   history: LabChatMessage[],
@@ -149,7 +155,9 @@ export async function labRespond(
     `Return JSON only: {"reply": "her spoken reply", "done": true|false} — "done" true only if she naturally ` +
     `ends the exchange (has to go, or turn ${LAB_MAX_TURNS}+ reached).`
 
-  const parsed = await queryClaudeHeadlessJSON<{ reply: string; done?: boolean }>(prompt, { timeoutMs: 90_000 })
+  const parsed = await askClaudeCliJSON<{ reply: string; done?: boolean }>(labCall(userId, "lab_reply"), prompt, {
+    timeoutMs: 90_000,
+  })
   if (!parsed.reply) throw new Error("Sim returned no reply")
   return { reply: parsed.reply, turn, done: Boolean(parsed.done) || turn >= LAB_MAX_TURNS }
 }
@@ -159,19 +167,21 @@ export async function labRespond(
 // ---------------------------------------------------------------------------
 
 export async function labDebrief(
+  userId: string,
   kind: LabKind,
   momentId: string,
   history: LabChatMessage[]
 ): Promise<LabDebriefResult> {
   const moment = findMoment(kind, momentId)
   const principles = loadLabPrinciples(kind)
-  const parsed = await queryClaudeHeadlessJSON<{
+  const parsed = await askClaudeCliJSON<{
     score: number
     feedback: string
     bestMove: string
     weakestLine: string
     rewrite: string
   }>(
+    labCall(userId, "lab_debrief"),
     `You judge in-field dating conversations using these principles distilled from real coach transcripts:\n\n` +
       `${principles}\n\n---\n\n` +
       `A user practiced this scenario. Their conversation with the simulated woman:\n${historyBlock(history)}\n\n` +

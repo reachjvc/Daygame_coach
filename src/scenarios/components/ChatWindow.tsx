@@ -102,8 +102,13 @@ export function VoiceChatWindow({ onClose, scenarioType, situationId }: VoiceCha
       });
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        // The AI spend cap: a short line from the coach, not an error.
+        if (errorData.code === "AI_CAP_REACHED") {
+          addMessage("coach", errorData.error, { coachLevel: "small" });
+          return;
+        }
         console.error("API Error:", response.status, response.statusText);
-        const errorData = await response.json();
         addMessage("ai", `Error: ${errorData.error || response.statusText}`);
         return;
       }

@@ -2,16 +2,24 @@
  * Keep It Going - AI Chat Integration
  *
  * Uses Claude to generate woman's responses based on conversation context.
- * Supports both Claude Code (headless) and Anthropic API.
+ * Supports both Claude Code (headless) and Anthropic API. Every call goes
+ * through the AI guard (src/api_ai/aiGuard.ts), which books it against the
+ * person's spend cap first and throws AiCapReachedError when there is no room.
  */
 
-import { generateText } from "ai"
-import { anthropic } from "@ai-sdk/anthropic"
+/** The model the API calls use. */
+const chatModel = () => process.env.AI_MODEL || "claude-3-5-haiku-20241022"
+
+const call = (userId: string, operation: string, context: KeepItGoingContext): AiCall => ({
+  userId,
+  feature: "keep-it-going",
+  operation,
+  scenarioId: context.situation.id,
+})
 
 import type { Language, KeepItGoingContext, ResponseQuality, CloseOutcome, EvalResult, InterestBucket } from "./types"
-import { useClaudeCode, queryClaudeCodeJSON, queryClaudeCode } from "./claudeCode"
-import { logAIUsage, checkUserBudget } from "@/src/api_ai/apiAiService"
-import type { ModelName } from "@/src/api_ai/types"
+import { useClaudeCode } from "./claudeCode"
+import { askClaude, askClaudeCli, askClaudeCliJSON, type AiCall } from "@/src/api_ai/aiGuard"
 import { getInterestBucket, getBucketProfile, PROFILES, RUBRIC } from "./realisticProfiles"
 import { getPhase } from "./generator"
 
@@ -128,17 +136,6 @@ export async function evaluateWithAI(
   context: KeepItGoingContext,
   userId: string
 ): Promise<EvalResult> {
-  console.log("[evaluateWithAI] Called, useClaudeCode() =", useClaudeCode())
-  console.log("[evaluateWithAI] USE_CLAUDE_CODE env =", process.env.USE_CLAUDE_CODE)
-
-  // Skip budget check for Claude Code mode (no API cost, no Supabase context)
-  if (!useClaudeCode()) {
-    const budget = await checkUserBudget(userId)
-    if (!budget.withinBudget) {
-      throw new Error("Budget exceeded - cannot evaluate response")
-    }
-  }
-
   const situationContext =
     language === "da"
       ? `Sted: ${context.situation.location[language]}. ${context.situation.setup[language]}`
@@ -187,11 +184,14 @@ His response: "${userMessage}"
 
 Evaluate in ${language === "da" ? "Danish" : "English"}. Score based on likely effect at this temperature, not technique.`
 
-  // Use Claude Code if enabled (no tracking for local CLI)
+  // Use Claude Code if enabled
   if (useClaudeCode()) {
     const evalSystemPrompt = getEvalSystemPrompt()
     const fullPrompt = `${evalSystemPrompt}\n\n${userPrompt}`
-    const parsed = queryClaudeCodeJSON<EvalResult & { line_score?: number; trajectory_score?: number; trajectory_signals?: string }>(fullPrompt)
+    const parsed = await askClaudeCliJSON<EvalResult & { line_score?: number; trajectory_score?: number; trajectory_signals?: string }>(
+      call(userId, "evaluate", context),
+      fullPrompt
+    )
     return {
       score: Math.max(1, Math.min(10, parsed.line_score ?? parsed.score)),
       feedback: parsed.feedback,
@@ -202,73 +202,15 @@ Evaluate in ${language === "da" ? "Danish" : "English"}. Score based on likely e
     }
   }
 
-  // Use Anthropic API with tracking
-  const startTime = Date.now()
-  const model = (process.env.AI_MODEL || "claude-3-5-haiku-20241022") as ModelName
-
-  // DEBUG: Log EXACTLY what we're sending
-  console.log("[evaluateWithAI] PROMPT DEBUG:", {
-    model,
-    envModel: process.env.AI_MODEL,
-    systemPromptLength: getEvalSystemPrompt().length,
-    userPromptLength: userPrompt.length,
-    systemPromptPreview: getEvalSystemPrompt().substring(0, 100) + "...",
-    userPromptFull: userPrompt,
-    estimatedTokens: Math.ceil((getEvalSystemPrompt().length + userPrompt.length) / 4),
-  })
-
-  const result = await generateText({
-    model: anthropic(model),
+  const text = await askClaude(call(userId, "evaluate", context), {
+    model: chatModel(),
     system: getEvalSystemPrompt(),
     messages: [{ role: "user", content: userPrompt }],
     maxOutputTokens: 250,
     temperature: 0.3,
   })
 
-  // DEBUG: Log response metadata including actual model
-  const actualModel = (result.response as { modelId?: string })?.modelId || "unknown"
-  console.log("[evaluateWithAI] Response:", {
-    requestedModel: model,
-    actualModel,
-    usage: result.usage,
-    providerMetadata: result.providerMetadata,
-  })
-
-  // Log AI usage (with error handling to prevent crashes)
-  try {
-    console.log(`[evaluateWithAI] Logging AI usage for user ${userId}`)
-    await logAIUsage({
-      userId,
-      feature: "keep-it-going",
-      scenarioId: context.situation.id,
-      model,
-      operation: "evaluate",
-      usage: {
-        inputTokens: result.usage.inputTokens ?? 0,
-        outputTokens: result.usage.outputTokens ?? 0,
-        cacheCreationTokens: result.providerMetadata?.anthropic?.cacheCreationInputTokens as number | undefined,
-        cacheReadTokens: result.providerMetadata?.anthropic?.cacheReadInputTokens as number | undefined,
-      },
-      responseTimeMs: Date.now() - startTime,
-      systemPrompt: getEvalSystemPrompt(),
-      userPrompt,
-      aiResponse: result.text,
-    })
-    console.log(`[evaluateWithAI] Successfully logged AI usage`)
-  } catch (logError) {
-    console.error(`[evaluateWithAI] FAILED to log AI usage:`, logError)
-    // Don't throw - continue execution even if logging fails
-  }
-
-  // Check budget again and log warning if threshold crossed
-  const updatedBudget = await checkUserBudget(userId)
-  if (updatedBudget.warningLevel !== "none") {
-    console.warn(
-      `[evaluateWithAI] User ${userId} budget warning: ${updatedBudget.warningLevel} (${Math.round(updatedBudget.usagePercentage * 100)}%)`
-    )
-  }
-
-  const parsed = JSON.parse(result.text.trim())
+  const parsed = JSON.parse(text.trim())
   return {
     score: Math.max(1, Math.min(10, parsed.line_score ?? parsed.score)),
     feedback: parsed.feedback,
@@ -395,12 +337,6 @@ export async function generateAIResponse(options: GenerateResponseOptions): Prom
   const { context, userMessage, quality, conversationHistory, userId } = options
   const { language, situation } = context
 
-  // Check budget before making API call
-  const budget = await checkUserBudget(userId)
-  if (!budget.withinBudget) {
-    throw new Error("Budget exceeded - cannot generate response")
-  }
-
   const systemPrompt = buildSystemPrompt(context, quality)
   const bucket = getInterestBucket(context.interestLevel)
   const profile = getBucketProfile(bucket)
@@ -413,78 +349,37 @@ export async function generateAIResponse(options: GenerateResponseOptions): Prom
     { role: "user", content: userMessage },
   ]
 
-  // Use Claude Code if enabled (no tracking for local CLI)
+  // Use Claude Code if enabled
   if (useClaudeCode()) {
     const conversationText = messages
       .map((m) => `${m.role === "user" ? "Him" : "Her"}: ${m.content}`)
       .join("\n")
     const fullPrompt = `${systemPrompt}\n\nConversation so far:\n${conversationText}\n\nRespond as her (1-2 sentences max, no quotes around response):`
-    const response = queryClaudeCode(fullPrompt).trim()
+    const response = (await askClaudeCli(call(userId, "generate_response", context), fullPrompt)).trim()
     const violations = validateWomanResponse(response, bucket, profile)
     if (violations.length === 0) return response
 
     const retryPrompt = `${systemPrompt}\n\nConversation so far:\n${conversationText}\n\nYour previous response violated constraints:\n- ${violations.join(
       "\n- "
     )}\n\nRewrite as her (obey ALL rules, no quotes):`
-    const retry = queryClaudeCode(retryPrompt).trim()
+    const retry = (await askClaudeCli(call(userId, "generate_response_retry", context), retryPrompt)).trim()
     const retryViolations = validateWomanResponse(retry, bucket, profile)
     return retryViolations.length ? clampWomanResponse(retry, bucket, profile) : retry
   }
 
-  // Use Anthropic API with tracking
-  const startTime = Date.now()
-  const model = (process.env.AI_MODEL || "claude-3-5-haiku-20241022") as ModelName
-
-  const result = await generateText({
-    model: anthropic(model),
+  const firstText = await askClaude(call(userId, "generate_response", context), {
+    model: chatModel(),
     system: systemPrompt,
     messages: messages.map((m) => ({ role: m.role, content: m.content })),
     maxOutputTokens: 100,
     temperature: 0.8,
   })
 
-  // Log AI usage (with error handling to prevent crashes)
-  try {
-    console.log(`[generateAIResponse] Logging AI usage for user ${userId}`)
-    // Format conversation for logging
-    const conversationForLog = messages.map((m) => `${m.role}: ${m.content}`).join("\n")
-    await logAIUsage({
-      userId,
-      feature: "keep-it-going",
-      scenarioId: context.situation.id,
-      model,
-      operation: "generate_response",
-      usage: {
-        inputTokens: result.usage.inputTokens ?? 0,
-        outputTokens: result.usage.outputTokens ?? 0,
-        cacheCreationTokens: result.providerMetadata?.anthropic?.cacheCreationInputTokens as number | undefined,
-        cacheReadTokens: result.providerMetadata?.anthropic?.cacheReadInputTokens as number | undefined,
-      },
-      responseTimeMs: Date.now() - startTime,
-      systemPrompt,
-      userPrompt: conversationForLog,
-      aiResponse: result.text,
-    })
-    console.log(`[generateAIResponse] Successfully logged AI usage`)
-  } catch (logError) {
-    console.error(`[generateAIResponse] FAILED to log AI usage:`, logError)
-    // Don't throw - continue execution even if logging fails
-  }
-
-  // Check budget again and log warning if threshold crossed
-  const updatedBudget = await checkUserBudget(userId)
-  if (updatedBudget.warningLevel !== "none") {
-    console.warn(
-      `[generateAIResponse] User ${userId} budget warning: ${updatedBudget.warningLevel} (${Math.round(updatedBudget.usagePercentage * 100)}%)`
-    )
-  }
-
-  let text = result.text.trim()
+  let text = firstText.trim()
   const violations = validateWomanResponse(text, bucket, profile)
   if (violations.length === 0) return text
 
   // One retry with lower temperature and explicit constraint reminder.
-  const retryStartTime = Date.now()
   const retrySystemPrompt = `${systemPrompt}
 
 IMPORTANT: Your previous response violated constraints:
@@ -492,38 +387,15 @@ IMPORTANT: Your previous response violated constraints:
 
 Rewrite your response to comply. Output only the corrected response (no quotes).`
 
-  const retryResult = await generateText({
-    model: anthropic(model),
-    system: retrySystemPrompt,
-    messages: messages.map((m) => ({ role: m.role, content: m.content })),
-    maxOutputTokens: 100,
-    temperature: 0.3,
-  })
-
-  try {
-    const conversationForLog = messages.map((m) => `${m.role}: ${m.content}`).join("\n")
-    await logAIUsage({
-      userId,
-      feature: "keep-it-going",
-      scenarioId: context.situation.id,
-      model,
-      operation: "generate_response_retry",
-      usage: {
-        inputTokens: retryResult.usage.inputTokens ?? 0,
-        outputTokens: retryResult.usage.outputTokens ?? 0,
-        cacheCreationTokens: retryResult.providerMetadata?.anthropic?.cacheCreationInputTokens as number | undefined,
-        cacheReadTokens: retryResult.providerMetadata?.anthropic?.cacheReadInputTokens as number | undefined,
-      },
-      responseTimeMs: Date.now() - retryStartTime,
-      systemPrompt: retrySystemPrompt,
-      userPrompt: conversationForLog,
-      aiResponse: retryResult.text,
+  text = (
+    await askClaude(call(userId, "generate_response_retry", context), {
+      model: chatModel(),
+      system: retrySystemPrompt,
+      messages: messages.map((m) => ({ role: m.role, content: m.content })),
+      maxOutputTokens: 100,
+      temperature: 0.3,
     })
-  } catch (logError) {
-    console.error(`[generateAIResponse] FAILED to log retry AI usage:`, logError)
-  }
-
-  text = retryResult.text.trim()
+  ).trim()
   const retryViolations = validateWomanResponse(text, bucket, profile)
   return retryViolations.length ? clampWomanResponse(text, bucket, profile) : text
 }
@@ -719,12 +591,6 @@ export async function generateCloseResponse(
 ): Promise<string> {
   const { language, situation } = context
 
-  // Check budget before making API call
-  const budget = await checkUserBudget(userId)
-  if (!budget.withinBudget) {
-    throw new Error("Budget exceeded - cannot generate close response")
-  }
-
   const outcomeInstructions: Record<Language, Record<CloseOutcome, string>> = {
     da: {
       success: "Du giver ham dit nummer. Du er interesseret og glad for samtalen.",
@@ -746,60 +612,20 @@ KONTEKST / CONTEXT:
 
 ${outcomeInstructions[language][outcome]}`
 
-  // Use Claude Code if enabled (no tracking for local CLI)
+  // Use Claude Code if enabled
   if (useClaudeCode()) {
     const fullPrompt = `${systemPrompt}\n\nHim: ${userCloseMessage}\n\nRespond as her (1-2 sentences max, no quotes around response):`
-    const response = queryClaudeCode(fullPrompt)
-    return response
+    return askClaudeCli(call(userId, "generate_close", context), fullPrompt)
   }
 
-  // Use Anthropic API with tracking
-  const startTime = Date.now()
-  const model = (process.env.AI_MODEL || "claude-3-5-haiku-20241022") as ModelName
-
-  const result = await generateText({
-    model: anthropic(model),
+  const text = await askClaude(call(userId, "generate_close", context), {
+    model: chatModel(),
     system: systemPrompt,
     messages: [{ role: "user", content: userCloseMessage }],
     maxOutputTokens: 100,
     temperature: 0.8,
   })
-
-  // Log AI usage (with error handling to prevent crashes)
-  try {
-    console.log(`[generateCloseResponse] Logging AI usage for user ${userId}`)
-    await logAIUsage({
-      userId,
-      feature: "keep-it-going",
-      scenarioId: context.situation.id,
-      model,
-      operation: "generate_close",
-      usage: {
-        inputTokens: result.usage.inputTokens ?? 0,
-        outputTokens: result.usage.outputTokens ?? 0,
-        cacheCreationTokens: result.providerMetadata?.anthropic?.cacheCreationInputTokens as number | undefined,
-        cacheReadTokens: result.providerMetadata?.anthropic?.cacheReadInputTokens as number | undefined,
-      },
-      responseTimeMs: Date.now() - startTime,
-      systemPrompt,
-      userPrompt: userCloseMessage,
-      aiResponse: result.text,
-    })
-    console.log(`[generateCloseResponse] Successfully logged AI usage`)
-
-    // Check budget again and log warning if threshold crossed
-    const updatedBudget = await checkUserBudget(userId)
-    if (updatedBudget.warningLevel !== "none") {
-      console.warn(
-        `[generateCloseResponse] User ${userId} budget warning: ${updatedBudget.warningLevel} (${Math.round(updatedBudget.usagePercentage * 100)}%)`
-      )
-    }
-  } catch (logError) {
-    console.error(`[generateCloseResponse] FAILED to log AI usage:`, logError)
-    // Don't throw - continue execution even if logging fails
-  }
-
-  return result.text.trim()
+  return text.trim()
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -816,12 +642,6 @@ export async function generateExitResponse(
   userId: string
 ): Promise<string> {
   const { language, situation } = context
-
-  // Check budget before making API call
-  const budget = await checkUserBudget(userId)
-  if (!budget.withinBudget) {
-    throw new Error("Budget exceeded - cannot generate exit response")
-  }
 
   const exitInstructions: Record<Language, string> = {
     da: `Du forlader samtalen. Årsag: ${endReason || "du har mistet interessen"}.
@@ -845,47 +665,18 @@ KONTEKST / CONTEXT:
 
 ${exitInstructions[language]}`
 
-  // Use Claude Code if enabled (no tracking for local CLI)
+  // Use Claude Code if enabled
   if (useClaudeCode()) {
     const fullPrompt = `${systemPrompt}\n\nRespond as her leaving (1 sentence max, no quotes around response):`
-    const response = queryClaudeCode(fullPrompt)
-    return response
+    return askClaudeCli(call(userId, "generate_exit", context), fullPrompt)
   }
 
-  // Use Anthropic API with tracking
-  const startTime = Date.now()
-  const model = (process.env.AI_MODEL || "claude-3-5-haiku-20241022") as ModelName
-
-  const result = await generateText({
-    model: anthropic(model),
+  const text = await askClaude(call(userId, "generate_exit", context), {
+    model: chatModel(),
     system: systemPrompt,
     messages: [{ role: "user", content: "Generate exit response" }],
     maxOutputTokens: 50,
     temperature: 0.8,
   })
-
-  // Log AI usage (with error handling to prevent crashes)
-  try {
-    await logAIUsage({
-      userId,
-      feature: "keep-it-going",
-      scenarioId: context.situation.id,
-      model,
-      operation: "generate_exit",
-      usage: {
-        inputTokens: result.usage.inputTokens ?? 0,
-        outputTokens: result.usage.outputTokens ?? 0,
-        cacheCreationTokens: result.providerMetadata?.anthropic?.cacheCreationInputTokens as number | undefined,
-        cacheReadTokens: result.providerMetadata?.anthropic?.cacheReadInputTokens as number | undefined,
-      },
-      responseTimeMs: Date.now() - startTime,
-      systemPrompt,
-      userPrompt: "exit",
-      aiResponse: result.text,
-    })
-  } catch (logError) {
-    console.error(`[generateExitResponse] FAILED to log AI usage:`, logError)
-  }
-
-  return result.text.trim()
+  return text.trim()
 }

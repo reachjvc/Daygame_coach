@@ -5,11 +5,10 @@
  * API routes and scenarios should import from this service, not directly from apiAiRepo.
  */
 
-import { MODEL_PRICING, USER_BUDGET_CENTS, getWarningLevel } from "./config"
+import { USER_BUDGET_CENTS, getWarningLevel, pricingFor } from "./config"
 import {
   logAIUsage as repoLogAIUsage,
   getUserAIUsage as repoGetUserAIUsage,
-  getUserTotalSpending as repoGetUserTotalSpending,
   getAllUsersSpending as repoGetAllUsersSpending,
 } from "./apiAiRepo"
 import { createAdminSupabaseClient } from "@/src/db/server"
@@ -20,7 +19,6 @@ import type {
   AIFeature,
   TokenUsage,
   CostBreakdown,
-  BudgetStatus,
   WarningLevel,
 } from "./types"
 
@@ -34,8 +32,8 @@ import type {
  * @param usage Token usage from AI SDK
  * @returns Cost breakdown in cents
  */
-export function calculateCost(model: ModelName, usage: TokenUsage): CostBreakdown {
-  const pricing = MODEL_PRICING[model]
+export function calculateCost(model: string, usage: TokenUsage): CostBreakdown {
+  const pricing = pricingFor(model)
 
   // Convert per-million-token pricing to per-token, then to cents
   const inputCostCents = (usage.inputTokens / 1_000_000) * pricing.input * 100
@@ -54,29 +52,8 @@ export function calculateCost(model: ModelName, usage: TokenUsage): CostBreakdow
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Budget Management
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Check if user is within budget
- * @param userId User ID
- * @returns Budget status with warning level
- */
-export async function checkUserBudget(userId: string): Promise<BudgetStatus> {
-  const totalSpentCents = await repoGetUserTotalSpending(userId)
-  const remainingCents = USER_BUDGET_CENTS - totalSpentCents
-  const usagePercentage = totalSpentCents / USER_BUDGET_CENTS
-  const warningLevel = getWarningLevel(usagePercentage)
-
-  return {
-    withinBudget: remainingCents > 0,
-    totalSpentCents,
-    remainingCents: Math.max(0, remainingCents),
-    usagePercentage,
-    warningLevel,
-  }
-}
+// Budget checks live in the AI guard (src/api_ai/aiGuard.ts): every call books
+// its cost against the cap in the database before it runs.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Usage Logging
@@ -95,10 +72,6 @@ export async function logAIUsage(params: {
   usage: TokenUsage
   responseTimeMs?: number
   error?: string
-  // Prompt/response content for debugging
-  systemPrompt?: string
-  userPrompt?: string
-  aiResponse?: string
 }): Promise<void> {
   const costs = calculateCost(params.model, params.usage)
 
@@ -119,9 +92,6 @@ export async function logAIUsage(params: {
     total_cost_cents: costs.totalCostCents,
     response_time_ms: params.responseTimeMs,
     error: params.error,
-    system_prompt: params.systemPrompt,
-    user_prompt: params.userPrompt,
-    ai_response: params.aiResponse,
   }
 
   await repoLogAIUsage(insert)

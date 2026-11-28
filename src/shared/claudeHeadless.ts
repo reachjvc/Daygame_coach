@@ -5,9 +5,9 @@
  * Fail-closed: empty output or a dead CLI throws — callers surface an explicit
  * error, never a fallback (CLAUDE.md rule 15).
  *
- * Users: src/goals/visionPlanClaude.ts, scripts/scenario-engine/,
- * src/scenarios/ lab chat. The sync variant in scenarios/keepitgoing/claudeCode.ts
- * predates this and is intentionally untouched.
+ * Users: scripts/scenario-engine/ (`queryClaudeHeadless`), and on the site
+ * only the AI guard (src/api_ai/aiGuard.ts, `queryClaudeHeadlessWithCost`),
+ * which every feature that calls Claude goes through.
  */
 
 import { execFile } from "child_process"
@@ -43,18 +43,15 @@ export type ClaudeHeadlessOptions = {
   timeoutMs?: number
 }
 
-/** Run one headless prompt through the Claude CLI and return its raw text. */
-export async function queryClaudeHeadless(
-  prompt: string,
-  options: ClaudeHeadlessOptions = {}
-): Promise<string> {
+/** Run the Claude CLI once with `extraArgs` before the prompt; returns its trimmed stdout. */
+async function runClaude(prompt: string, extraArgs: string[], options: ClaudeHeadlessOptions): Promise<string> {
   // ANTHROPIC_API_KEY in the server env (e.g. .env.local) overrides the CLI's
   // Max-subscription OAuth and breaks headless calls — strip it for the child.
   const env = { ...process.env }
   delete env.ANTHROPIC_API_KEY
   // Linux caps a single argv entry at ~128KB (E2BIG) — pipe big prompts via stdin.
   const viaStdin = prompt.length > 100_000
-  const args = viaStdin ? ["--print"] : ["--print", "-p", prompt]
+  const args = viaStdin ? ["--print", ...extraArgs] : ["--print", ...extraArgs, "-p", prompt]
   const pending = execFileAsync(getClaudePath(), args, {
     encoding: "utf-8",
     timeout: options.timeoutMs ?? 180_000,
@@ -65,9 +62,64 @@ export async function queryClaudeHeadless(
   if (viaStdin) pending.child.stdin?.write(prompt)
   pending.child.stdin?.end()
   const { stdout } = await pending
-  const out = stdout.trim()
+  return stdout.trim()
+}
+
+/**
+ * Run one headless prompt through the Claude CLI and return its raw text.
+ * For scripts. The site calls Claude only through src/api_ai/aiGuard.ts,
+ * which uses `queryClaudeHeadlessWithCost`.
+ */
+export async function queryClaudeHeadless(
+  prompt: string,
+  options: ClaudeHeadlessOptions = {}
+): Promise<string> {
+  const out = await runClaude(prompt, [], options)
   if (!out) throw new Error("Claude CLI returned no output")
   return out
+}
+
+export type ClaudeHeadlessAnswer = {
+  text: string
+  /** The price the CLI reports for the tokens this call used, in USD; null when it reports none. */
+  costUsd: number | null
+}
+
+/**
+ * One headless prompt, answered as the CLI's JSON result so the call's cost
+ * comes back with its text (`--output-format json`: `result`, `is_error`,
+ * `total_cost_usd`). Fail-closed: no text, or an answer the CLI marks as an
+ * error, throws.
+ */
+export async function queryClaudeHeadlessWithCost(
+  prompt: string,
+  options: ClaudeHeadlessOptions = {}
+): Promise<ClaudeHeadlessAnswer> {
+  const out = await runClaude(prompt, ["--output-format", "json"], options)
+  let parsed: { result?: unknown; is_error?: unknown; total_cost_usd?: unknown }
+  try {
+    parsed = JSON.parse(out)
+  } catch {
+    throw new Error("Claude CLI returned an answer that is not its JSON result")
+  }
+  const costUsd = typeof parsed.total_cost_usd === "number" && Number.isFinite(parsed.total_cost_usd)
+    ? parsed.total_cost_usd
+    : null
+  const text = typeof parsed.result === "string" ? parsed.result.trim() : ""
+  if (parsed.is_error === true) {
+    throw Object.assign(new Error(`Claude CLI reported an error: ${text.slice(0, 200)}`), { costUsd })
+  }
+  if (!text) throw Object.assign(new Error("Claude CLI returned no output"), { costUsd })
+  return { text, costUsd }
+}
+
+/** Parse a model answer that must be JSON; strips ``` fences first. */
+export function parseClaudeJSON<T>(raw: string): T {
+  const cleaned = raw
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```\s*$/, "")
+    .trim()
+  return JSON.parse(cleaned) as T
 }
 
 /** Headless prompt that must return JSON; strips ``` fences before parsing. */
@@ -75,10 +127,5 @@ export async function queryClaudeHeadlessJSON<T>(
   prompt: string,
   options: ClaudeHeadlessOptions = {}
 ): Promise<T> {
-  const raw = await queryClaudeHeadless(prompt, options)
-  const cleaned = raw
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```\s*$/, "")
-    .trim()
-  return JSON.parse(cleaned) as T
+  return parseClaudeJSON<T>(await queryClaudeHeadless(prompt, options))
 }
