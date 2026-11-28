@@ -2,8 +2,8 @@
 
 Every note the owner has given on the addiction one-pagers, turned into a rule
 that applies to **every page at once**. He approves a rule once; he does not
-review each section on each page again. When he gives a new note, it becomes a
-new numbered rule here first, then every page is rebuilt from it.
+review each section on each page again. A new note fixes that one thing; it does
+not become a new rule here ("You keep wanting to make too fixed rules", chg-1).
 
 Each rule gives: the rule, his words (or the handoff that summarised them),
 the date, why it exists, and how it is checked. **Build** means
