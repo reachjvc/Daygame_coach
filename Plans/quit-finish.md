@@ -150,12 +150,11 @@ Your answer of 2026-11-28, "do all other things you want to recommend", is a yes
    Recommendation: keep the 12 lies test untouched until then, and you choose with both in front of you.
 8. **The ~70 small choices in the old plan: dropped (2026-11-28).** You raise what you dislike while you try each
    tool. Old text: `git show 18efdb10:Plans/quit-finish.md`.
-9. **12 lies test: does "Somewhat" count?** Today only "Mostly" and "That's me" count, so twelve "Somewhat" answers
-   give "None of the 12 hold you", and the same page then lists them as "these pull a little". Count "Somewhat",
-   or change the headline when some pull a little? (bug hunt, 2026-11-27)
-10. **Does a slip day count as clean?** Today a run counts from day 1 to the slip day, both included, so totals never
-   drop. The record's money tab leaves slip days out, so the record contradicts itself. Keep it and say so, or leave
-   slip days out? (bug hunt, 2026-11-27)
+9. **12 lies test: does "Somewhat" count?** Decided by Claude on 2026-11-28 (he: the open questions "might be
+   irrelevant"): "Somewhat" means the belief still partly holds him; all-"Somewhat" no longer says "none hold you".
+   Being built in the fix round. He can reverse it while trying the tool.
+10. **Does a slip day count as clean?** Decided by Claude on 2026-11-28: no. Days and money both leave the slip day
+   out, with one short line saying so. Being built in the fix round. He can reverse it.
 
 ## Where things are
 
