@@ -26,6 +26,6 @@ export async function POST(request: Request) {
     const capped = aiCapReachedResponse(e)
     if (capped) return capped
     console.error("vision-plan reasons expansion failed:", e)
-    return err(e instanceof Error ? e.message : "Reason expansion failed", 502)
+    return err("Reason expansion failed", 502)
   }
 }

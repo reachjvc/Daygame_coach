@@ -26,6 +26,6 @@ export async function POST(request: Request) {
     const capped = aiCapReachedResponse(e)
     if (capped) return capped
     console.error("vision-plan report commentary failed:", e)
-    return err(e instanceof Error ? e.message : "Report commentary failed", 502)
+    return err("Report commentary failed", 502)
   }
 }

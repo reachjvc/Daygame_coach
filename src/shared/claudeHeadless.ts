@@ -13,7 +13,7 @@
 import { execFile } from "child_process"
 import { promisify } from "util"
 import { existsSync, readdirSync } from "fs"
-import { homedir } from "os"
+import { homedir, tmpdir } from "os"
 import { join } from "path"
 
 const execFileAsync = promisify(execFile)
@@ -43,8 +43,32 @@ export type ClaudeHeadlessOptions = {
   timeoutMs?: number
 }
 
+/**
+ * THE SITE'S CALLS GET A CLAUDE THAT CAN ONLY ANSWER.
+ *
+ * The site's prompts carry text a signed-in person typed. Run with its
+ * defaults, the CLI would have its tools (shell, files, web), the project's
+ * and the owner's settings (which may allow every tool) and his MCP
+ * connections, in the project folder — so a typed "ignore the scene and run
+ * this" could run code on the machine. For the site the CLI gets no tools, no
+ * settings files, no MCP servers, no slash commands, and an empty folder.
+ */
+export const SITE_LOCKDOWN_ARGS = [
+  "--tools",
+  "",
+  "--strict-mcp-config",
+  "--setting-sources",
+  "",
+  "--disable-slash-commands",
+]
+
 /** Run the Claude CLI once with `extraArgs` before the prompt; returns its trimmed stdout. */
-async function runClaude(prompt: string, extraArgs: string[], options: ClaudeHeadlessOptions): Promise<string> {
+async function runClaude(
+  prompt: string,
+  extraArgs: string[],
+  options: ClaudeHeadlessOptions,
+  cwd?: string
+): Promise<string> {
   // ANTHROPIC_API_KEY in the server env (e.g. .env.local) overrides the CLI's
   // Max-subscription OAuth and breaks headless calls — strip it for the child.
   const env = { ...process.env }
@@ -57,6 +81,7 @@ async function runClaude(prompt: string, extraArgs: string[], options: ClaudeHea
     timeout: options.timeoutMs ?? 180_000,
     maxBuffer: 4 * 1024 * 1024,
     env,
+    cwd,
   })
   // Write the prompt (stdin mode) or close stdin so the CLI doesn't stall on it.
   if (viaStdin) pending.child.stdin?.write(prompt)
@@ -86,8 +111,8 @@ export type ClaudeHeadlessAnswer = {
 }
 
 /**
- * One headless prompt, answered as the CLI's JSON result so the call's cost
- * comes back with its text (`--output-format json`: `result`, `is_error`,
+ * One headless prompt for the site, locked down (SITE_LOCKDOWN_ARGS) and
+ * answered as the CLI's JSON result so the call's cost comes back with its text (`--output-format json`: `result`, `is_error`,
  * `total_cost_usd`). Fail-closed: no text, or an answer the CLI marks as an
  * error, throws.
  */
@@ -95,7 +120,7 @@ export async function queryClaudeHeadlessWithCost(
   prompt: string,
   options: ClaudeHeadlessOptions = {}
 ): Promise<ClaudeHeadlessAnswer> {
-  const out = await runClaude(prompt, ["--output-format", "json"], options)
+  const out = await runClaude(prompt, [...SITE_LOCKDOWN_ARGS, "--output-format", "json"], options, tmpdir())
   let parsed: { result?: unknown; is_error?: unknown; total_cost_usd?: unknown }
   try {
     parsed = JSON.parse(out)

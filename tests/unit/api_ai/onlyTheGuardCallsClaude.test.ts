@@ -27,13 +27,20 @@ const ALLOWED = new Map([
 
 /** Each way code could reach Claude, as a pattern on code with comments blanked. */
 const WAYS_TO_CLAUDE: Array<[string, RegExp]> = [
-  ["imports the AI SDK's Anthropic provider", /from\s+["']@ai-sdk\/anthropic["']|require\(\s*["']@ai-sdk\/anthropic["']\s*\)/],
-  ["imports the Anthropic SDK", /from\s+["']@anthropic-ai\/[^"']+["']|require\(\s*["']@anthropic-ai\//],
   [
-    "imports a model call from the AI SDK",
-    /import\s*\{[^}]*\b(generateText|streamText|generateObject|streamObject)\b[^}]*\}\s*from\s*["']ai["']/,
+    "loads the AI SDK's Anthropic provider",
+    /(?:from|import\(|require\()\s*["']@ai-sdk\/anthropic["']/,
   ],
-  ["imports the Claude CLI helper", /from\s+["'][^"']*shared\/claudeHeadless["']/],
+  ["loads the Anthropic SDK", /(?:from|import\(|require\()\s*["']@anthropic-ai\/[^"']+["']/],
+  [
+    "takes a model call from the AI SDK",
+    /(?:import|export)\s*(?:type\s+)?\{[^}]*\b(generateText|streamText|generateObject|streamObject)\b[^}]*\}\s*from\s*["']ai["']/,
+  ],
+  [
+    "loads the whole AI SDK",
+    /import\s*\*\s*as\s+\w+\s+from\s*["']ai["']|export\s*\*\s*from\s*["']ai["']|(?:import|require)\(\s*["']ai["']\s*\)/,
+  ],
+  ["loads the Claude CLI helper", /(?:from|import\(|require\()\s*["'][^"']*shared\/claudeHeadless["']/],
   ["names the Anthropic API's address", /api\.anthropic\.com/],
   ["runs a child process that names claude", /child_process[\s\S]*\bclaude\b|\bclaude\b[\s\S]*child_process/i],
 ]
@@ -81,7 +88,7 @@ describe("the spend-cap guard is the only way to Claude", () => {
 
   test("on the site, only the guard imports the Claude CLI helper", () => {
     const importers = files
-      .filter((f) => /from\s+["'][^"']*shared\/claudeHeadless["']/.test(code(f.text)))
+      .filter((f) => /(?:from|import\(|require\()\s*["'][^"']*shared\/claudeHeadless["']/.test(code(f.text)))
       .map((f) => f.rel)
 
     expect(importers).toEqual(["src/api_ai/aiGuard.ts"])
@@ -89,10 +96,14 @@ describe("the spend-cap guard is the only way to Claude", () => {
 
   // The scan proves itself on code it must catch, and on prose it must not.
   test.each([
-    ['import { anthropic } from "@ai-sdk/anthropic"', "imports the AI SDK's Anthropic provider"],
-    ['import Anthropic from "@anthropic-ai/sdk"', "imports the Anthropic SDK"],
-    ['import { zodSchema, generateText } from "ai"', "imports a model call from the AI SDK"],
-    ['import { queryClaudeHeadless } from "@/src/shared/claudeHeadless"', "imports the Claude CLI helper"],
+    ['import { anthropic } from "@ai-sdk/anthropic"', "loads the AI SDK's Anthropic provider"],
+    ['const { anthropic } = await import("@ai-sdk/anthropic")', "loads the AI SDK's Anthropic provider"],
+    ['import Anthropic from "@anthropic-ai/sdk"', "loads the Anthropic SDK"],
+    ['import { zodSchema, generateText } from "ai"', "takes a model call from the AI SDK"],
+    ['export { generateText } from "ai"', "takes a model call from the AI SDK"],
+    ['import * as ai from "ai"', "loads the whole AI SDK"],
+    ['const ai = await import("ai")', "loads the whole AI SDK"],
+    ['import { queryClaudeHeadless } from "@/src/shared/claudeHeadless"', "loads the Claude CLI helper"],
     ['await fetch("https://api.anthropic.com/v1/messages")', "names the Anthropic API's address"],
     ['import { execSync } from "child_process"\nexecSync("claude --print hi")', "runs a child process that names claude"],
   ])("catches %s", (snippet, way) => {
@@ -101,5 +112,9 @@ describe("the spend-cap guard is the only way to Claude", () => {
 
   test("does not count a comment that mentions Claude", () => {
     expect(waysToClaude('// we used to import { generateText } from "ai" here\n/* @ai-sdk/anthropic */')).toEqual([])
+  })
+
+  test("does not count a harmless import from the AI SDK", () => {
+    expect(waysToClaude('import { zodSchema } from "ai"')).toEqual([])
   })
 })

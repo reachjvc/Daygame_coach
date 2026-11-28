@@ -137,7 +137,7 @@ async function guarded<T>(
 
 /** An API error with a status code: the API answered, and bills nothing for an error answer. */
 function apiAnsweredWithError(e: unknown): boolean {
-  if (APICallError.isInstance(e)) return e.statusCode !== undefined
+  if (APICallError.isInstance(e)) return e.statusCode !== undefined && e.statusCode >= 400
   if (RetryError.isInstance(e)) return apiAnsweredWithError(e.lastError)
   return false
 }

@@ -25,6 +25,6 @@ export async function POST(request: Request) {
     const capped = aiCapReachedResponse(e)
     if (capped) return capped
     console.error("scenario-lab failed:", e)
-    return NextResponse.json({ error: e instanceof Error ? e.message : "Lab request failed" }, { status: 502 })
+    return NextResponse.json({ error: "Lab request failed" }, { status: 502 })
   }
 }

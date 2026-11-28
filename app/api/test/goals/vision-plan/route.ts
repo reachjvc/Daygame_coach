@@ -24,6 +24,6 @@ export async function POST(request: Request) {
     const capped = aiCapReachedResponse(e)
     if (capped) return capped
     console.error("vision-plan goal generation failed:", e)
-    return err(e instanceof Error ? e.message : "Goal generation failed", 502)
+    return err("Goal generation failed", 502)
   }
 }
