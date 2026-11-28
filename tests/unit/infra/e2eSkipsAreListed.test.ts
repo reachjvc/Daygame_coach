@@ -51,6 +51,8 @@ const KNOWN_SKIPS: Record<string, string> = {
     "the spec makes its own phone and PC, so it runs once, in timelog-guard-desktop; the phone project skips it and runs the stories instead",
   "tests/e2e/timelog-guard/audit-a3.spec.ts › describe: the phone with no signal or a bad one":
     "the spec makes its own phone and PC, so it runs once, in timelog-guard-desktop; the phone project skips it and runs the stories instead",
+  "tests/e2e/timelog-guard/reopen-first-glance.spec.ts › (file)":
+    "the spec makes its own phone and PC, so it runs once, in timelog-guard-desktop; the phone project skips it and runs the stories instead",
   "tests/e2e/timelog-guard/reopen.spec.ts › (file)":
     "the spec makes its own phone and PC, so it runs once, in timelog-guard-desktop; the phone project skips it and runs the stories instead",
   "tests/e2e/timelog-guard/reopen.spec.ts › describe: phone opens the Time Log with no signal, then signal returns":
