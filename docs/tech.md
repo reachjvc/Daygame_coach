@@ -32,6 +32,7 @@ Shipping:
 Test database and dev servers:
 - One shared test database (Docker stack `supabase_db_daygame-tests`) for every checkout. `test-stack.mjs up`, or the integration config, run from a new worktree can rebuild it under other sessions' runs.
 - Its base is `tests/db/baseline.sql` (stamped 20261110130000) plus the newer migrations; the migration history cannot be replayed from nothing (`supabase db reset` fails). Refresh the base with `scripts/db/baseline.sh` once production has newer migrations (`--check` shows drift). Never hand-write a test schema: one once hid a feature that never saved.
+- A migration older than the baseline stamp is skipped by the test stack unless it is named in `OLDER_NOT_YET_LIVE` in `scripts/db/test-stack.mjs` (`test-stack.mjs plan` lists what is built on top). The two listed there went live on 2026-11-28: remove them when the baseline is next refreshed.
 - To test a new migration: `docker exec -i supabase_db_daygame-tests psql -U postgres -v ON_ERROR_STOP=1 < file`, then run a copy of the integration config without its `globalSetup` line, with `TEST_STACK_ENV` set.
 - A test acts as if your migration is missing: check the column with psql, delete `tests/db/supabase/.temp/assembled.sha256`, then `node scripts/db/test-stack.mjs up`.
 - The app from a worktree: `next dev --webpack -p <port>` with `NEXT_DIST_DIR=.next-<name>` (Turbopack panics on a symlinked `node_modules`). Give it the test stack's keys (`node scripts/db/test-stack.mjs env`), never `.env.local`: that is the live database.
