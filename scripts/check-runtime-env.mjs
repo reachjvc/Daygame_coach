@@ -48,7 +48,6 @@ export const READ_IN_CODE = {
   STRIPE_SECRET_KEY: { kind: "optional", why: "payments; unset, src/settings/stripe.ts says Stripe is not configured" },
   GOOGLE_SERVICE_ACCOUNT_JSON: { kind: "optional", why: "Google Calendar sync and the exercise sheet import" },
   GOOGLE_EXERCISE_SHEET_ID: { kind: "optional", why: "the exercise sheet import" },
-  AI_PROVIDER: { kind: "optional", why: "which model provider structured output uses; \"claude\" when unset" },
   AI_MODEL: { kind: "optional", why: "which Claude model; a fixed model name when unset" },
   OLLAMA_API_URL: { kind: "optional", why: "Q&A and value inference through Ollama; unset, they say Ollama is not configured" },
   OLLAMA_MODEL: { kind: "optional", why: "which Ollama model; llama3.1 when unset" },
