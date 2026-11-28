@@ -48,6 +48,13 @@ Ideas he liked that wait for a reel: `ideas.md`.
 Reels often point at the quit tools. He makes the tools ready before the reels go out: "all reels should
 point at tools, and i will make them ready before i release the reels" (2026-11-27).
 
+## Competitors to beat
+
+His picks (2026-11-26): #1 a quit-porn app, #2 a porn-quit creator, #3 a men's identity coach whose website tools
+he tried ("there's something real in the way this guy approaches it"), #4 added 2026-11-27 (CN1-3). His rule: post
+at least as many videos a week as they do, in better quality. Files and the weekly post count:
+`~/research/competitors/` (private).
+
 ## Where things are
 
 - His notes, word for word: `~/research/content/notes-history.md` (private).

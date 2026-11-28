@@ -6,6 +6,7 @@ Folders under `~/.cache/daygame-research/content/`.
 ## Now
 
 **Tier list reel** ("top reasons why youre GOONMAXXING", his idea 2026-11-26, from a competitor app's 1.1M-view tier list). Round 2 on the page "Content Jobs Night" https://claude.ai/artifact/4a1jyytkH4W6rVrfr4gFsD, marked 2026-11-28 (CJ1-*).
+- Why: "We should definitely try to imitate this one very soon, the view to follower count is crazy" (1.1M views on a 308-follower account). Breakdown: `~/research/competitors/` (private).
 - Cells he likes: "snowbunny" in FAIR ENOUGH (move "wawake at 3 am" down), "it is cardio", "self care sunday funday", "watched a volleyball game", "Just one look", "Your .001 inch of ucovered skin in DECEMBER", "cultural study", "I can stop whenever". Unclear ones out ("what is sunday scaries?"). "We should research this a lot, come up with a good amount of them, and i choose" (CJ1-11).
 - Show new cells in a list beside the current ones, in the row Claude would put them (CJ1-12).
 - End card: the 10K Days Club call to action is fine; the background is not it (CJ1-4).
@@ -13,7 +14,11 @@ Folders under `~/.cache/daygame-research/content/`.
 - Tool mentions (17 ways, a 6-way rotation): he couldn't judge text without clips and doubts the test (CJ1-5, 13, 14).
 - Files: `track3-tierlist/` (NOTES.md; round 2 stills in `r2/`); research `night-2026-11-28/contentjobs/`.
 
-**Learning from the top of the niche.** A free daily tracker reads about 46 niche accounts (`~/.cache/daygame-research/quit-reels/tracker/`); plan and open calls: `Plans/track3-creator-list.md`. Page "Reels Dashboard" https://claude.ai/artifact/NAWTjR6Ueyim4YTzyHjhfq is the main dashboard. Reading works through his free Apify account; posting through Meta's route is blocked (2026-11-23).
+**Learning from the top of the niche.**
+- A free daily tracker reads about 46 niche accounts (`~/.cache/daygame-research/quit-reels/tracker/`); plan and open calls: `Plans/track3-creator-list.md`. His ask for the next version: likes and comments against the account's average, views per follower, and the KPIs the content experts use (outliers 3x+ usual, followers gained per view, cover image for DM shares).
+- Page "Reels Dashboard" https://claude.ai/artifact/NAWTjR6Ueyim4YTzyHjhfq is the main dashboard (expert KPIs plus his: times usual, views per follower, likes and comments against usual, shares; competitors; posting pace). Updated by hand; builder `~/.cache/daygame-research/quit-reels/dashboard/`. A daily self-update waits for his 👍.
+- Page "Viral Quit Reels" (his ask "more of the super viral reels"): 14 reels from a search of 172 (300K+ views, all addictions), grouped by format. Data: `~/.cache/daygame-research/quit-reels/viral/`.
+- Reading works through his free Apify account; posting through Meta's route is blocked (2026-11-23).
 
 ## His standing asks for this track
 
