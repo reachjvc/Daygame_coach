@@ -13,10 +13,6 @@ Folders under `~/.cache/daygame-research/content/`.
 - Tool mentions (17 ways, a 6-way rotation): he couldn't judge text without clips and doubts the test (CJ1-5, 13, 14).
 - Files: `track3-tierlist/` (NOTES.md; round 2 stills in `r2/`); research `night-2026-11-28/contentjobs/`.
 
-**Weed timeline** (what happens day by day after quitting weed, still reels). Round 2 page https://claude.ai/artifact/NAG8KTYes4CESEwYjFua9f: no marks yet.
-- Round 1: A and B "pretty much good to just be posted as is ... on brand"; B "can be an a b c test"; he likes the 2-second end card. Careful with study-specific facts: "the 73 days ... is not really a real fact" (WT1-4).
-- Files: `reel-weed-timeline/round2/` (NOTES.md, `build/rows.py` holds every row with its sources).
-
 **Learning from the top of the niche.** A free daily tracker reads about 46 niche accounts (`~/.cache/daygame-research/quit-reels/tracker/`); plan and open calls: `Plans/track3-creator-list.md`. Page "Reels Dashboard" https://claude.ai/artifact/NAWTjR6Ueyim4YTzyHjhfq is the main dashboard. Reading works through his free Apify account; posting through Meta's route is blocked (2026-11-23).
 
 ## His standing asks for this track

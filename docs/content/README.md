@@ -32,7 +32,7 @@ for next week, should be to optimize the production process" (M28-3).
 
 ## Tracks
 
-His (2026-11-22): what each track is for, and the shares of Tracks 1 and 4.
+His (2026-11-22): what each track is for, and the shares of Tracks 1 and 4. Track 5 is his (2026-11-26).
 Claude's: the track names and "the rest" for Track 2.
 
 | Track | What | Share of posts | File |
@@ -41,6 +41,7 @@ Claude's: the track names and "the rest" for Track 2.
 | 2. Our own films | Animated reels with his story and core ideas | the rest | `tracks/2-own-films.md` |
 | 3. Text reels | Short, mostly text; also pictures and carousels | not set | `tracks/3-text-reels.md` |
 | 4. Selling | Reels that sell his coaching | 2-10% at most | `tracks/4-selling.md` |
+| 5. Timeline reels | What happens day by day after quitting, one per addiction | not set | `tracks/5-timeline-reels.md` |
 
 Ideas he liked that wait for a reel: `ideas.md`.
 
@@ -53,7 +54,7 @@ point at tools, and i will make them ready before i release the reels" (2026-11-
 - Strategy that must stay out of this public repo (selling offer, copying approach, names behind the
   codes used here): `~/research/content-strategy/` (private).
 - Content research: `~/research/content-experts/00-master.md` (private). (Claude) Read its top tips
-  before designing a piece. Lines marked "AGAINST HIS DECISION" there lose to his words.
+  before designing a piece. Its "Claude's suggestion" lines are Claude's ideas; where he has spoken, his words sit under them and win.
 - Approved scripts: `~/.cache/daygame-research/content/approved/`.
 - Name and look: `docs/product/look.md`. Anything published says 10K Days Club.
 </content>
