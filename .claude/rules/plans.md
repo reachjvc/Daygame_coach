@@ -7,7 +7,6 @@ paths:
 - Small job, short plan. Plain words first (what changes, why, what he will see); file paths underneath.
 - Say whose a pick or limit is: Claude's own picks read as Claude's, never as facts.
 - Be critical of your own plan: what it costs, what can be cut, what simpler way exists.
-- Phases are working app states, each with its acceptance test and model (big model plans and reviews; Sonnet builds; Haiku only for mechanical checks).
-- Try each blocker once for real (read-only probes, dry runs) and write what came back. Flag destructive steps. Say what is checked and what is from memory.
+- Try each blocker once for real (read-only probes, dry runs) and write what came back. Flag destructive steps. Always recheck, never just use memory of a previous run. If it fails, try to fix it and re-run. If it succeeds, note the result and move on.
 - Open questions: one line each, with a recommendation and the cost if wrong. Mark anything that costs money.
 - Keep the status line at the top current.
