@@ -716,6 +716,12 @@ export function useTimetrackSync({
    * sent out of the queue on disk — see `forgetSentOnDisk`.
    */
   const inFlight = useRef(new Set<AbortController>())
+  /**
+   * The page was asleep while hidden (see `ASLEEP_AFTER_MS`): its next wake is
+   * `unsure`. Not cleared by a check that lands while it is still hidden: that
+   * answer may be one asked before the sleep, handed over on thaw.
+   */
+  const sleptWhileHidden = useRef(false)
   /** The 3-second limit on the current "Checking…" (D2) */
   const checkWait = useRef<ReturnType<typeof setTimeout> | null>(null)
   /**
@@ -2608,10 +2614,9 @@ export function useTimetrackSync({
      * `visibilitychange` that says it is back.
      */
     let lastBeat = Date.now()
-    let slept = false
     const beat = () => {
       const now = Date.now()
-      if (hidden && now - lastBeat > ASLEEP_AFTER_MS) slept = true
+      if (hidden && now - lastBeat > ASLEEP_AFTER_MS) sleptWhileHidden.current = true
       lastBeat = now
     }
     const heartbeat = setInterval(beat, HEARTBEAT_MS)
@@ -2635,8 +2640,8 @@ export function useTimetrackSync({
       if (hidden) {
         beat()
         hidden = false
-        const asleep = slept
-        slept = false
+        const asleep = sleptWhileHidden.current
+        sleptWhileHidden.current = false
         wake(asleep)
         return
       }
