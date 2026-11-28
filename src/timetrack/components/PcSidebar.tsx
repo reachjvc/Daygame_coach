@@ -23,6 +23,7 @@ import { formatClock } from "../timetrackFormatService"
 import type { TimeEntry } from "../types"
 import type { Section } from "../trackerAddressService"
 import type { ManageTab } from "./ManageView"
+import { useTimerUnsure } from "./timerUnsure"
 
 /** Where a sidebar row goes: a section, and for Manage's rows the tab inside it */
 export type SidebarPlace = { section: Section; manageTab?: ManageTab }
@@ -71,6 +72,8 @@ export function PcSidebar({
   /** the ✎ beside the running clock: opens the running entry */
   onEditRunning: (entry: TimeEntry) => void
 }) {
+  // the old copy's timer, not confirmed yet (`TimerUnsureContext`): the row says "Timer" until it is
+  const unsure = useTimerUnsure()
   return (
     <nav
       aria-label="Tracker"
@@ -82,7 +85,7 @@ export function PcSidebar({
           {group.rows.map((row) => {
             const Icon = row.icon
             const here = isHere(row.place, screen, manageTab)
-            const clock = row.place.section === "timer" && running
+            const clock = row.place.section === "timer" && !unsure && running
             return (
               <div
                 key={row.label}

@@ -100,7 +100,7 @@ export function phoneHooks() {
  * the timer (`window.__watchFor = 'Alpha'`). From then on it looks after every
  * change to the page and on every frame, and keeps one line per place the
  * timer was seen running: the phone's bar, a "Running:" row in the list, the
- * PC's timer bar, the header pill, the tab's title. `window.__seen` holds them.
+ * PC's timer bar, its sidebar clock, the header pill, the tab's title. `window.__seen` holds them.
  * Only what is drawn counts: text under `visibility: hidden` is not seen.
  *
  * `window.__watchIdle = true` also writes down the moment the page offers
@@ -128,6 +128,7 @@ export function runningWatch() {
     if (drawn(bar?.querySelector('button[aria-label="Stop timer"]')) && showsName(bar, name)) note('the phone bar')
     if (drawn(document.querySelector(`[aria-label^="Running: ${name},"]`))) note('a running row in the list')
     if (document.title.endsWith(` · ${name}`)) note(`the tab title "${document.title}"`)
+    if (drawn(document.querySelector('nav[aria-label="Tracker"] button[aria-label^="Timer, running"]'))) note('the PC sidebar clock')
     const pill = document.querySelector('button[aria-label="Stop the running timer"]')?.parentElement
     if (showsName(pill, name)) note('the header pill')
     const main = document.querySelector('main')
