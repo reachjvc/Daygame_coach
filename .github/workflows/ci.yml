@@ -75,6 +75,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # The Time Log's guard tests change only with the owner's yes (his answer,
+      # 2026-11-28): every commit this push adds to main's history that touches
+      # them carries an `Owner-approved: "<his words>"` line, or only deletes a
+      # fixed bug's test.fail mark. The same check runs before each commit
+      # (.husky/commit-msg); this one cannot be skipped. scripts/ci/timelog-lock.mjs.
+      - name: Time Log tests are locked
+        run: |
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          node scripts/ci/timelog-lock.mjs --range "$(git merge-base origin/main HEAD)..HEAD"
+
       # Lint errors may only go down, the same bargain as the type ratchet
       # below. A bare `eslint .` failed here for days on 492 pre-existing
       # errors, which trains everyone to ignore a red tick; 140 of those turned

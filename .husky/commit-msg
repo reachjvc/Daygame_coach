@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# The Time Log's guard tests change only with the owner's yes (his answer,
+# 2026-11-28). A commit touching them needs an `Owner-approved: "<his words>"`
+# line; deleting a fixed bug's test.fail mark needs none. CI checks the same
+# in job `static` (ci.yml), so --no-verify does not get a change onto main.
+#
+# Every worktree runs the shared checkout's hooks, with its own folder as the
+# working directory: a worktree made before the lock existed has no script to
+# run, and CI judges its commits instead.
+[ -f scripts/ci/timelog-lock.mjs ] || exit 0
+node scripts/ci/timelog-lock.mjs --staged "$1"
